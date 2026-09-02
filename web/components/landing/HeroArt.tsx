@@ -8,7 +8,7 @@ export function HeroArt() {
       aria-label="ხელი, რომელიც კალმით წერს"
       className={styles.artSvg}
     >
-      <circle cx="204" cy="166" r="130" fill="var(--hero-circle)" />
+      <circle cx="204" cy="166" r="130" fill="var(--blue)" />
 
       <g
         fill="none"
@@ -24,7 +24,7 @@ export function HeroArt() {
       <g transform="rotate(45 150 306)">
         <rect x="134" y="48" width="32" height="226" rx="16" fill="var(--ink)" />
         <rect x="134" y="92" width="32" height="5" fill="var(--paper)" />
-        <rect x="159" y="58" width="7" height="48" rx="3.4" fill="var(--hero-circle)" />
+        <rect x="159" y="58" width="7" height="48" rx="3.4" fill="var(--blue)" />
         <path d="M134 240 h32 v34 h-32 z" fill="var(--paper)" />
         <path d="M134 240 h32 v6 h-32 z" fill="var(--ink)" />
         <path d="M150 308 L 134 268 Q 150 256 166 268 Z" fill="var(--ink)" />

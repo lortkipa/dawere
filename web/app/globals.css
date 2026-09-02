@@ -11,7 +11,7 @@
   --ink: #1d1f20;
   --accent: #3f6183;
   --surface: #faf8f4;
-  --hero-circle: #5980a6;
+  --blue: #5980a6;
 
   --hairline: rgba(29, 31, 32, 0.14);
   --hairline-strong: rgba(29, 31, 32, 0.2);
@@ -19,6 +19,7 @@
   --ink-soft: rgba(29, 31, 32, 0.72);
   --ink-faint: rgba(29, 31, 32, 0.55);
   --scrim: rgba(29, 31, 32, 0.45);
+  --danger: #8a3b34;
 }
 
 html {
