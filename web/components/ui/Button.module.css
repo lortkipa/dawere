@@ -1,0 +1,76 @@
+/* Variant and size rules sit inside :where() so they carry no specificity —
+   callers can override any of them with a single class of their own. */
+
+.base {
+  font-family: var(--font-sans), sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+:where(.solid) {
+  color: var(--paper);
+  background: var(--ink);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+:where(.solid):hover {
+  background: var(--accent);
+}
+
+:where(.solid.sm) {
+  font-size: 14px;
+  padding: 10px 20px;
+}
+
+:where(.solid.lg) {
+  font-size: 17px;
+  padding: 16px 34px;
+}
+
+:where(.ghost) {
+  font-size: 14px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+}
+
+:where(.ghost):hover {
+  color: var(--accent);
+}
+
+:where(.outline) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 14px 20px;
+  background: #ffffff;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+
+:where(.outline):hover {
+  border-color: var(--ink);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+:where(.fullWidth) {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  :where(.outline) {
+    padding: 14px 16px;
+    font-size: 14px;
+    gap: 10px;
+  }
+}

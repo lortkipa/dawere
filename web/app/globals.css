@@ -5,12 +5,39 @@
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+
+  --paper: #f4f1ea;
+  --ink: #1d1f20;
+  --accent: #3f6183;
+  --surface: #faf8f4;
+  --hero-circle: #5980a6;
+
+  --hairline: rgba(29, 31, 32, 0.14);
+  --hairline-strong: rgba(29, 31, 32, 0.2);
+  --ink-muted: rgba(29, 31, 32, 0.78);
+  --ink-soft: rgba(29, 31, 32, 0.72);
+  --ink-faint: rgba(29, 31, 32, 0.55);
+  --scrim: rgba(29, 31, 32, 0.45);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  padding: 2rem;
-  font-family: system-ui, sans-serif;
-  line-height: 1.6;
+  background: var(--paper);
+  font-family: var(--font-sans), sans-serif;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent);
 }

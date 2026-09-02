@@ -1,0 +1,24 @@
+.footer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 22px clamp(20px, 4vw, 40px);
+  border-top: 1px solid var(--hairline);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.footer a {
+  color: var(--ink-soft);
+}
+
+.footer a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .footer {
+    justify-content: flex-start;
+  }
+}

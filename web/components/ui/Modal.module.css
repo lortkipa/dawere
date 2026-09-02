@@ -1,0 +1,52 @@
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 16px 16px 36px;
+  box-shadow: 0 40px 80px -40px rgba(29, 31, 32, 0.5);
+}
+
+.closeRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.close {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--ink-faint);
+  font-size: 19px;
+  line-height: 1;
+}
+
+.close:hover {
+  background: rgba(29, 31, 32, 0.07);
+  color: var(--ink);
+}
+
+.body {
+  display: grid;
+  gap: 10px;
+  margin: 12px clamp(8px, 5vw, 24px) 0;
+}
