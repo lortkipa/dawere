@@ -19,7 +19,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ka" className={`${sans.variable} ${serif.variable}`}>
+    <html
+      lang="ka"
+      className={`${sans.variable} ${serif.variable}`}
+      // globals.css sets `scroll-behavior: smooth`; this lets Next suspend it for
+      // the duration of a route transition so navigations do not animate.
+      data-scroll-behavior="smooth"
+    >
       <body>{children}</body>
     </html>
   );

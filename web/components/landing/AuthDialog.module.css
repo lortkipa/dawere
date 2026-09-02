@@ -1,0 +1,5 @@
+/* The form is a grid item in the modal body and exists only to carry the server
+   action; the button inside it does all the visual work. */
+.form {
+  margin: 0;
+}
