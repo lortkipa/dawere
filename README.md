@@ -9,7 +9,7 @@ index well. The chat is a panel beside them, not a replacement for them.
 
 ## Stack
 
-| | |
+| Layer | Choice |
 |---|---|
 | Framework | Next.js 15, App Router, TypeScript |
 | Styling | CSS |
