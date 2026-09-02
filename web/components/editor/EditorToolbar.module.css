@@ -1,0 +1,123 @@
+.root {
+  display: grid;
+  /* minmax(0, 1fr) so the track cannot be widened by .tools' full row of
+     buttons — that row is meant to scroll inside itself, not to set the width
+     of the page around it. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  /* Narrow screens scroll the toolbar sideways rather than wrapping it into a
+     second row that would push the writing surface down. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tools::-webkit-scrollbar {
+  display: none;
+}
+
+.tool {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.tool:hover:not(:disabled) {
+  background: rgba(29, 31, 32, 0.07);
+  color: var(--ink);
+}
+
+.tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.on,
+.on:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.divider {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--hairline);
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.linkField {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.linkField:focus {
+  outline: 0;
+  border-color: var(--ink);
+}
+
+.linkApply {
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ink);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  color: var(--paper);
+  cursor: pointer;
+}
+
+.linkApply:hover {
+  background: var(--accent);
+}
+
+.linkCancel {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.linkCancel:hover {
+  background: rgba(29, 31, 32, 0.07);
+  color: var(--ink);
+}

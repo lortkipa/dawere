@@ -20,6 +20,11 @@
   --ink-faint: rgba(29, 31, 32, 0.55);
   --scrim: rgba(29, 31, 32, 0.45);
   --danger: #8a3b34;
+  --success: #3d6b4c;
+
+  /* Every route's top bar is exactly this tall — the floor is the dashboard's
+     44px search field plus its padding and hairline. */
+  --nav-height: 69px;
 }
 
 html {

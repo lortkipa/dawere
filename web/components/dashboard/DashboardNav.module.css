@@ -6,6 +6,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px clamp(14px, 2vw, 24px);
+  min-height: var(--nav-height);
   padding: 12px clamp(16px, 4vw, 40px);
   border-bottom: 1px solid var(--hairline);
   background: rgba(244, 241, 234, 0.92);

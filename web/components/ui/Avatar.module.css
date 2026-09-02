@@ -1,0 +1,14 @@
+/* Sizing is left to the caller's className: the account menu fills a bordered
+   button with it, the article byline pins it to a fixed circle. */
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--blue);
+  color: var(--paper);
+  font-family: var(--font-serif), serif;
+  font-weight: 600;
+  object-fit: cover;
+}

@@ -1,20 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { signOutAction } from "@/app/actions/auth";
+import { Avatar } from "@/components/ui/Avatar";
 import { GearIcon } from "@/components/icons/GearIcon";
 import { SignOutIcon } from "@/components/icons/SignOutIcon";
 import { UserIcon } from "@/components/icons/UserIcon";
+import type { Account } from "@/lib/account";
 import styles from "./AccountMenu.module.css";
 
-type AccountMenuProps = {
-  name: string;
-  email: string;
-  image: string | null;
-};
+/** The signed-in person's control, in the top bar of every route they reach. */
+export function AccountMenu({ account }: { account: Account }) {
+  const { name, email, image } = account;
 
-export function AccountMenu({ name, email, image }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -98,35 +96,5 @@ export function AccountMenu({ name, email, image }: AccountMenuProps) {
         </div>
       )}
     </div>
-  );
-}
-
-type AvatarProps = {
-  name: string;
-  image: string | null;
-  size: number;
-  className: string;
-};
-
-/** The OAuth picture when there is one, otherwise the first letter of the name. */
-function Avatar({ name, image, size, className }: AvatarProps) {
-  if (image) {
-    return (
-      <Image
-        src={image}
-        alt=""
-        width={size}
-        height={size}
-        className={`${styles.avatar} ${className}`}
-      />
-    );
-  }
-
-  return (
-    <span className={`${styles.avatar} ${className}`} aria-hidden="true">
-      {/* No toUpperCase: Georgian is unicameral, and uppercasing it in JS
-          swaps mkhedruli for mtavruli glyphs the display font may not have. */}
-      {Array.from(name.trim())[0] ?? ""}
-    </span>
   );
 }

@@ -1,0 +1,137 @@
+.bar {
+  display: grid;
+  /* minmax(0, 1fr), not the default auto: an auto track never shrinks below its
+     widest row's min-content, and the URL is one unbreakable string. Without
+     this the whole panel — and the page with it — is as wide as that string. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin: 0 0 clamp(36px, 5vw, 52px);
+  padding: 18px clamp(16px, 3vw, 24px);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.date {
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 6px 0 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  /* The tail of a slug matters least — clip there, not in the middle. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(29, 31, 32, 0.07);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.copy:hover {
+  background: rgba(29, 31, 32, 0.12);
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px clamp(24px, 5vw, 44px);
+  margin: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+}
+
+.statLabel {
+  order: 2;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.statValue {
+  order: 1;
+  margin: 0;
+  font-family: var(--font-serif), serif;
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+/* Delete sits next to an outline pill, so it takes the same shape rather than
+   reading as loose text beside a button. It stays the quieter of the two — a
+   tinted outline until hover, where it commits to the full red it means. */
+.delete {
+  gap: 9px;
+  min-height: 40px;
+  padding: 10px 18px;
+  border: 1px solid rgba(138, 59, 52, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 14px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.delete:hover {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--paper);
+  text-decoration: none;
+}
+
+.edit {
+  gap: 9px;
+  min-height: 40px;
+  padding: 10px 18px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.edit:hover {
+  background: transparent;
+  transform: none;
+}
+
+@media (max-width: 480px) {
+  /* Two pills at full padding overflow a narrow bar; let them share the row. */
+  .edit,
+  .delete {
+    flex: 1;
+    padding: 10px 12px;
+  }
+}

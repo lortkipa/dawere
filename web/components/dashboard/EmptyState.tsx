@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/Button";
 import styles from "./EmptyState.module.css";
 
 export function EmptyState() {
@@ -65,8 +65,9 @@ export function EmptyState() {
 
       <div className={styles.copy}>
         <h1 className={styles.heading}>ჯერ არაფერი გაქვს დაწერილი</h1>
-        {/* Goes to the editor once that route exists. */}
-        <Button className={styles.cta}>დაწერე პირველი ბლოგი</Button>
+        <ButtonLink href="/write" className={styles.cta}>
+          დაწერე პირველი ბლოგი
+        </ButtonLink>
       </div>
     </main>
   );

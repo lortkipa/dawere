@@ -74,3 +74,31 @@
     gap: 10px;
   }
 }
+
+/* Layout stays weightless like the variants above, so a caller can still hide
+   or re-lay-out a ButtonLink with a single class. It beats :where(.outline)'s
+   display on source order alone. */
+:where(a.base) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Colour is the exception: globals.css paints every <a> accent on hover, which
+   on a solid pill would repaint the label to match its own background. Beating
+   that `a:hover` needs real specificity. */
+
+a.solid,
+a.solid:hover {
+  color: var(--paper);
+}
+
+a.ghost,
+a.outline,
+a.outline:hover {
+  color: var(--ink);
+}
+
+a.ghost:hover {
+  color: var(--accent);
+}

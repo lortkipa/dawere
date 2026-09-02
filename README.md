@@ -16,6 +16,7 @@ index well. The chat is a panel beside them, not a replacement for them.
 | Database | Postgres 16 + pgvector, self-hosted via Docker Compose |
 | ORM | Drizzle |
 | Auth | Auth.js v5 — Google + Facebook OAuth, no passwords |
+| Editor | TipTap 3, storing plain HTML sanitised server-side |
 | UI language | Georgian only |
 
 ## Running locally
@@ -68,6 +69,44 @@ every later sign-in reads and writes nothing.
 
 Sessions are signed JWT cookies, so there is no session table and no per-request database
 read.
+
+## Writing and reading
+
+| Route | Who it is for |
+|---|---|
+| `/write` | A new article. The first save creates the row and moves you to `/write/<id>`. |
+| `/write/<id>` | Editing your own article. Anyone else's id is a 404. |
+| `/a/<slug>` | The article itself — the URL you hand to readers. |
+| `/dashboard` | Everything you have written, drafts included. |
+
+An article is a **draft** until you publish it, and a draft has no address at
+all: publishing is what mints the slug. That slug is then frozen. Retitle a
+published piece as often as you like — the link people have already shared keeps
+working, and the publication date does not move either.
+
+Slugs are the title romanised (`როგორ დავწერო` → `rogor-davtsero`) plus eight
+random hex characters. The suffix, not a lookup, is what makes them unique, so
+publishing never has to search for a free name or retry on a clash.
+
+### Two views of one page
+
+`/a/<slug>` renders differently for the person who wrote it. Readers get the
+article: title, byline, date, reading time. The author gets all of that plus a
+panel above it holding the public URL with a copy button, the article's stats —
+views, words, reading time — and the two buttons only they have, **editing**
+and **delete**. Deletion asks first and cannot be undone.
+
+Views are counted from the reader's browser, once per page view, so that a link
+prefetch or a re-render never inflates the number. An author reading their own
+article is not a view.
+
+### Article HTML
+
+The editor stores plain HTML, and the reader renders it verbatim. Everything on
+the way in therefore passes through `lib/html.ts`, which allows exactly the tags
+the toolbar can produce and nothing else. That runs in the Server Action rather
+than in the editor, because a Server Action is a POST endpoint that anybody can
+call without going near our editor.
 
 ## Production build
 

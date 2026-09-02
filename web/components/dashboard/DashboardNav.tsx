@@ -2,19 +2,14 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/Button";
 import { PencilIcon } from "@/components/icons/PencilIcon";
 import { SearchIcon } from "@/components/icons/SearchIcon";
-import { AccountMenu } from "./AccountMenu";
+import type { Account } from "@/lib/account";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import styles from "./DashboardNav.module.css";
 
-type DashboardNavProps = {
-  name: string;
-  email: string;
-  image: string | null;
-};
-
-export function DashboardNav({ name, email, image }: DashboardNavProps) {
+export function DashboardNav({ account }: { account: Account }) {
   // The query only drives the field itself for now — it starts filtering once
   // there is an article list under it.
   const [query, setQuery] = useState("");
@@ -85,13 +80,12 @@ export function DashboardNav({ name, email, image }: DashboardNavProps) {
           <SearchIcon size={17} />
         </button>
 
-        {/* Goes to the editor once that route exists. */}
-        <Button className={styles.write}>
+        <ButtonLink href="/write" className={styles.write}>
           <PencilIcon />
           <span className={styles.writeLabel}>სტატიის დაწერა</span>
-        </Button>
+        </ButtonLink>
 
-        <AccountMenu name={name} email={email} image={image} />
+        <AccountMenu account={account} />
       </div>
     </nav>
   );
