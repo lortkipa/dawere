@@ -24,9 +24,6 @@ const ENTITIES: Record<string, string> = {
   "&nbsp;": " ",
 };
 
-/** Words per minute — the figure behind the "N წუთი" on every article. */
-const READING_SPEED = 180;
-
 /** Excerpts are cut to roughly this many characters, at a word boundary. */
 const EXCERPT_LENGTH = 180;
 
@@ -76,11 +73,7 @@ export function wordCount(text: string): number {
   return text ? text.split(" ").length : 0;
 }
 
-export function readingMinutes(words: number): number {
-  return Math.max(1, Math.round(words / READING_SPEED));
-}
-
-/** The lede shown on dashboard cards and used as the page's meta description. */
+/** The lede shown on an author's cards and used as the page's meta description. */
 export function excerptFrom(text: string): string {
   if (text.length <= EXCERPT_LENGTH) return text;
 

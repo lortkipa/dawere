@@ -1,0 +1,84 @@
+.result {
+  display: grid;
+  gap: 10px;
+}
+
+/* Mark, line, note — one centred column, whichever way it went. */
+.head {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.mark {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 50%;
+}
+
+.heading {
+  margin: 0 0 7px;
+  font-family: var(--font-serif), serif;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  /* Server messages can carry an address or a word with no break in it. */
+  overflow-wrap: anywhere;
+}
+
+.buttons {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dismiss {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+/* The tone is the whole difference between the two dialogs. */
+.done .mark {
+  background: rgba(61, 107, 76, 0.12);
+  color: var(--success);
+}
+
+.done .heading {
+  color: var(--success);
+}
+
+.done .dismiss {
+  background: var(--success);
+}
+
+.done .dismiss:hover {
+  background: #33593f;
+}
+
+.failed .mark {
+  background: rgba(138, 59, 52, 0.11);
+  color: var(--danger);
+}
+
+.failed .heading {
+  color: var(--danger);
+}
+
+.failed .dismiss {
+  background: var(--danger);
+}
+
+.failed .dismiss:hover {
+  background: #6f2f2a;
+}

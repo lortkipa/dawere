@@ -9,7 +9,7 @@ import { saveArticle } from "@/app/actions/articles";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { ArrowLeftIcon } from "@/components/icons/ArrowLeftIcon";
 import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
+import { ResultModal } from "@/components/ui/ResultModal";
 import prose from "@/components/article/Prose.module.css";
 import type { Account } from "@/lib/account";
 import { EditorToolbar } from "./EditorToolbar";
@@ -128,10 +128,8 @@ export function Editor({ account, article }: EditorProps) {
     }
 
     setBusy(null);
-    // The article the author just made is a different event from a save on one
-    // that already existed, so the dialog says which of the two happened. The
-    // reader's address goes with it: from here the only place left to go is the
-    // article itself.
+    // The slug rides along: once an article is public, the only place left to
+    // go from here is the article itself.
     setDone({ kind: isNew ? "created" : "saved", slug: result.slug });
   }
 
@@ -140,7 +138,7 @@ export function Editor({ account, article }: EditorProps) {
       {/* Same metrics as every other route's bar — what changes is only what
           sits in it. */}
       <header className={styles.bar}>
-        <Link href="/dashboard" className={styles.wordmark}>
+        <Link href={`/${account.handle}`} className={styles.wordmark}>
           dawere
         </Link>
 
@@ -153,9 +151,9 @@ export function Editor({ account, article }: EditorProps) {
 
         <div className={styles.tools}>
           <Link
-            href="/dashboard"
+            href={`/${account.handle}`}
             className={styles.back}
-            aria-label="უკან, ჩემს სტატიებზე"
+            aria-label="უკან, ჩემს გვერდზე"
           >
             <ArrowLeftIcon />
           </Link>
@@ -217,77 +215,53 @@ export function Editor({ account, article }: EditorProps) {
         </div>
       </main>
 
-      {/* The counterpart to the failure dialog below, in the same shape: a mark
-          over a line saying what happened, and one button out. */}
-      <Modal
+      {/* The article that was just made is a different event from a save on one
+          that already existed, so the dialog says which of the two happened. */}
+      <ResultModal
         open={done !== null}
         onClose={() => setDone(null)}
-        label={done?.kind === "created" ? "სტატია შეიქმნა" : "შენახულია"}
+        tone="done"
+        heading={
+          done?.kind === "created"
+            ? done.slug
+              ? "სტატია გამოქვეყნდა"
+              : "სტატია შეიქმნა"
+            : "ცვლილებები შენახულია"
+        }
+        note={
+          done?.kind === "created"
+            ? "სტატია შენს სიაშია და მისი ბმული მზადაა."
+            : "ყველა ცვლილება ჩაიწერა."
+        }
       >
-        <div className={styles.doneHead}>
-          <span className={styles.doneMark} aria-hidden="true">
-            <CheckGlyph />
-          </span>
-
-          <h2 className={styles.doneHeading}>
-            {done?.kind === "created"
-              ? done.slug
-                ? "სტატია გამოქვეყნდა"
-                : "სტატია შეიქმნა"
-              : "ცვლილებები შენახულია"}
-          </h2>
-          <p className={styles.doneNote}>
-            {done?.kind === "created"
-              ? "სტატია შენს სიაშია და მისი ბმული მზადაა."
-              : "ყველა ცვლილება ჩაიწერა."}
-          </p>
-        </div>
-
-        <div className={styles.doneButtons}>
-          {done?.slug && (
-            <Button
-              fullWidth
-              className={styles.doneGo}
-              onClick={() => router.push(`/a/${done.slug}`)}
-            >
-              სტატიის ნახვა
-            </Button>
-          )}
+        {done?.slug && (
           <Button
             fullWidth
-            variant={done?.slug ? "outline" : "solid"}
-            className={done?.slug ? styles.doneStay : styles.doneGo}
-            onClick={() => setDone(null)}
+            className={styles.doneGo}
+            onClick={() => router.push(`/a/${done.slug}`)}
           >
-            {done?.slug ? "წერის გაგრძელება" : "კარგი"}
+            სტატიის ნახვა
           </Button>
-        </div>
-      </Modal>
-
-      {/* A failed save is worth stopping for, and the same dialog the rest of
-          the app uses is how this one stops you. */}
-      <Modal
-        open={error !== null}
-        onClose={() => setError(null)}
-        label="გამოქვეყნება ვერ მოხერხდა"
-      >
-        <div className={styles.errorHead}>
-          <span className={styles.errorMark} aria-hidden="true">
-            <AlertGlyph />
-          </span>
-
-          <h2 className={styles.errorHeading}>გამოქვეყნება ვერ მოხერხდა</h2>
-          <p className={styles.errorNote}>{error}</p>
-        </div>
-
+        )}
         <Button
           fullWidth
-          className={styles.errorDismiss}
-          onClick={() => setError(null)}
+          variant={done?.slug ? "outline" : "solid"}
+          className={done?.slug ? styles.doneStay : styles.doneGo}
+          onClick={() => setDone(null)}
         >
-          კარგი
+          {done?.slug ? "წერის გაგრძელება" : "კარგი"}
         </Button>
-      </Modal>
+      </ResultModal>
+
+      {/* A failed save is worth stopping for, in the same dialog and the other
+          colour. */}
+      <ResultModal
+        open={error !== null}
+        onClose={() => setError(null)}
+        tone="failed"
+        heading="გამოქვეყნება ვერ მოხერხდა"
+        note={error ?? undefined}
+      />
     </div>
   );
 }
@@ -297,35 +271,3 @@ type Done = {
   /** Present once the article is public — the address to hand the author. */
   slug: string | null;
 };
-
-function CheckGlyph() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.7" />
-      <path
-        d="M8.2 12.3l2.6 2.6 5-5.4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function AlertGlyph() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.7" />
-      <path
-        d="M12 7.4v5.4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-      <circle cx="12" cy="16.3" r="1.05" fill="currentColor" />
-    </svg>
-  );
-}

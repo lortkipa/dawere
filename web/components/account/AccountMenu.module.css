@@ -112,3 +112,9 @@
 .signOut:hover {
   background: rgba(138, 59, 52, 0.09);
 }
+
+/* globals.css paints every <a> accent on hover, which on these two would move
+   the label away from the button beside them. The tint is the whole hover. */
+a.item:hover {
+  color: var(--ink);
+}

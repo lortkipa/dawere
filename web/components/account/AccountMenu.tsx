@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { signOutAction } from "@/app/actions/auth";
 import { Avatar } from "@/components/ui/Avatar";
 import { GearIcon } from "@/components/icons/GearIcon";
@@ -11,10 +12,12 @@ import styles from "./AccountMenu.module.css";
 
 /** The signed-in person's control, in the top bar of every route they reach. */
 export function AccountMenu({ account }: { account: Account }) {
-  const { name, email, image } = account;
+  const { name, email, image, handle } = account;
 
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+
+  const close = () => setOpen(false);
 
   useEffect(() => {
     if (!open) return;
@@ -22,10 +25,10 @@ export function AccountMenu({ account }: { account: Account }) {
     // pointerdown rather than click, so the menu is already gone by the time a
     // click lands on whatever is underneath it.
     const onPointerDown = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
+      if (!root.current?.contains(event.target as Node)) close();
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") close();
     };
 
     document.addEventListener("pointerdown", onPointerDown);
@@ -70,15 +73,26 @@ export function AccountMenu({ account }: { account: Account }) {
           </div>
 
           <div className={styles.items}>
-            {/* Neither route exists yet; both land with the pages themselves. */}
-            <button type="button" className={styles.item} role="menuitem">
+            {/* The author's own address, and the page as readers get it —
+                what they have published, and nothing they have not. */}
+            <Link
+              href={`/${handle}`}
+              className={styles.item}
+              role="menuitem"
+              onClick={close}
+            >
               <UserIcon />
               ჩემი გვერდი
-            </button>
-            <button type="button" className={styles.item} role="menuitem">
+            </Link>
+            <Link
+              href="/settings"
+              className={styles.item}
+              role="menuitem"
+              onClick={close}
+            >
               <GearIcon />
               პარამეტრები
-            </button>
+            </Link>
 
             <div className={styles.divider} />
 

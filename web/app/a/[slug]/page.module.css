@@ -64,3 +64,9 @@
   color: var(--ink-faint);
   white-space: nowrap;
 }
+
+/* The name is a link when the author still has a page to reach. */
+a.author:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

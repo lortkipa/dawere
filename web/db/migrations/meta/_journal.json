@@ -15,6 +15,13 @@
       "when": 1788383601123,
       "tag": "0001_productive_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788426516469,
+      "tag": "0002_lovely_morlocks",
+      "breakpoints": true
     }
   ]
 }

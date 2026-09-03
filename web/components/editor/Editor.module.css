@@ -10,7 +10,7 @@
   background: var(--paper);
 }
 
-/* Deliberately the same metrics as DashboardNav and ArticleNav — the editor is
+/* Deliberately the same metrics as DashboardNav and AppNav — the editor is
    a different room in the same building, not a taller one. */
 .bar {
   position: sticky;
@@ -26,7 +26,7 @@
   backdrop-filter: blur(10px);
 }
 
-/* Same cluster and gap as the dashboard's and the article's, so the avatar
+/* Same cluster and gap as the app bar's and the article's, so the avatar
    lands in the same place on every route. */
 .tools {
   display: flex;
@@ -159,48 +159,8 @@
   gap: 10px;
 }
 
-/* The saved/published dialog. Same column as the failure one below — mark,
-   line, note, button — in the one colour the app uses for "this worked". */
-.doneHead {
-  display: grid;
-  justify-items: center;
-  text-align: center;
-}
-
-.doneMark {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 14px;
-  border-radius: 50%;
-  background: rgba(61, 107, 76, 0.12);
-  color: var(--success);
-}
-
-.doneHeading {
-  margin: 0 0 7px;
-  font-family: var(--font-serif), serif;
-  font-size: 20px;
-  line-height: 1.25;
-  font-weight: 500;
-  color: var(--success);
-}
-
-.doneNote {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--ink-soft);
-}
-
-.doneButtons {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
+/* The two buttons the publish dialog adds to the shared one in
+   components/ui/ResultModal — its own „კარგი“ covers every other case. */
 .doneGo {
   min-height: 44px;
   font-size: 14px;
@@ -223,56 +183,6 @@
 .doneStay:hover {
   background: transparent;
   transform: none;
-}
-
-/* The failed-save dialog. Unlike the delete confirmation — which is asking a
-   question and keeps its neutral face — this one is reporting damage, so the
-   danger tone is carried by a mark above the text and by the single button
-   that closes it. The mark leads the column, centred over what it is about. */
-.errorHead {
-  display: grid;
-  justify-items: center;
-  text-align: center;
-}
-
-.errorMark {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 14px;
-  border-radius: 50%;
-  background: rgba(138, 59, 52, 0.11);
-  color: var(--danger);
-}
-
-.errorHeading {
-  margin: 0 0 7px;
-  font-family: var(--font-serif), serif;
-  font-size: 20px;
-  line-height: 1.25;
-  font-weight: 500;
-  color: var(--danger);
-}
-
-.errorNote {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--ink-soft);
-  overflow-wrap: anywhere;
-}
-
-.errorDismiss {
-  min-height: 44px;
-  margin-top: 10px;
-  font-size: 14px;
-  background: var(--danger);
-}
-
-.errorDismiss:hover {
-  background: #6f2f2a;
 }
 
 .primary {

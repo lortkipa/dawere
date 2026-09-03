@@ -1,0 +1,110 @@
+.list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: clamp(18px, 3.4vw, 24px);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* Deliberately not a transform: a transformed element becomes the containing
+   block for `position: fixed` descendants, and the delete dialog is one of
+   them — its scrim covers the viewport but still counts as a hover of the card
+   it is nested in, so a lift here would drag the dialog into the card. */
+.card:hover {
+  border-color: var(--hairline-strong);
+  box-shadow: 0 14px 30px -22px rgba(29, 31, 32, 0.6);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(20px, 2.4vw, 23px);
+  line-height: 1.35;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* The heading's link stretched over the whole card, so the target is the card
+   rather than one line of it. A pseudo-element, not a wrapping <a>, because the
+   author's buttons below cannot legally sit inside a link. */
+.title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.excerpt {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  /* Two lines of the lede; the article itself is one click away. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Above the overlay, or the card's own link would swallow the clicks. */
+.owner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  /* The buttons carry 9px of their own padding above the label, so the rule
+     needs less room under it than over it to sit optically centred. */
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+}
+
+/* One class, which is all it takes to retune Button's and the delete trigger's
+   metrics — both keep theirs inside :where(). */
+.action {
+  gap: 8px;
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+
+/* The card is already tinted on hover, so its buttons need a mark of their own
+   to read as separate targets. */
+.action:hover {
+  background: rgba(29, 31, 32, 0.07);
+  text-decoration: none;
+}
+
+@media (max-width: 420px) {
+  /* Two labels at full padding overflow a narrow card; let them share the row. */
+  .owner {
+    gap: 0;
+  }
+
+  .action {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 6px;
+  }
+}

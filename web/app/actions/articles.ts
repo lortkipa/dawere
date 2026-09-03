@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, RedirectType } from "next/navigation";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -12,6 +12,7 @@ import {
   toPlainText,
   wordCount,
 } from "@/lib/html";
+import { currentAccount } from "@/lib/account";
 import { slugFromTitle } from "@/lib/slug";
 
 /**
@@ -37,10 +38,10 @@ export type SaveResult =
   | { ok: false; error: string };
 
 export async function saveArticle(input: SaveInput): Promise<SaveResult> {
-  const session = await auth();
-  if (!session?.user?.id) return { ok: false, error: "ჯერ უნდა შეხვიდე." };
+  const account = await currentAccount();
+  if (!account) return { ok: false, error: "ჯერ უნდა შეხვიდე." };
 
-  const authorId = session.user.id;
+  const authorId = account.id;
 
   if (typeof input?.title !== "string" || typeof input?.html !== "string") {
     return { ok: false, error: "სტატია ვერ შეინახა." };
@@ -88,7 +89,7 @@ export async function saveArticle(input: SaveInput): Promise<SaveResult> {
       .values({ authorId, ...content, ...(input.publish ? published : {}) })
       .returning(returning);
 
-    revalidate(created.slug);
+    revalidate(account.handle, created.slug);
     return { ok: true, ...created };
   }
 
@@ -109,21 +110,42 @@ export async function saveArticle(input: SaveInput): Promise<SaveResult> {
     .where(and(eq(articles.id, input.id), eq(articles.authorId, authorId)))
     .returning(returning);
 
-  revalidate(saved.slug);
+  revalidate(account.handle, saved.slug);
   return { ok: true, ...saved };
 }
 
-export async function deleteArticle(id: string): Promise<void> {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/");
+/**
+ * Always ends in a redirect, because the page that called this may be the
+ * article's own and has to leave. A list that survives its own row passes
+ * `returnTo` to come back to itself instead — checked here rather than trusted,
+ * since a Server Action is a POST endpoint anyone can call.
+ */
+export async function deleteArticle(
+  id: string,
+  returnTo?: string,
+): Promise<void> {
+  const account = await currentAccount();
+  if (!account) redirect("/");
 
   const [deleted] = await db
     .delete(articles)
-    .where(and(eq(articles.id, id), eq(articles.authorId, session.user.id)))
+    .where(and(eq(articles.id, id), eq(articles.authorId, account.id)))
     .returning({ slug: articles.slug });
 
-  revalidate(deleted?.slug ?? null);
-  redirect("/dashboard");
+  revalidate(account.handle, deleted?.slug ?? null);
+
+  const back = sitePath(returnTo);
+  // A Server Action pushes by default, which on the way back to the page the
+  // author is already on would leave a second entry for it in their history —
+  // one that looks, from the back button, like nothing happened.
+  if (back) redirect(back, RedirectType.replace);
+
+  redirect(`/${account.handle}`);
+}
+
+/** A path on this site and nothing else: no scheme, no host, no `//evil.com`. */
+function sitePath(candidate: string | undefined): string | null {
+  return candidate && /^\/[^/\\]/.test(candidate) ? candidate : null;
 }
 
 /**
@@ -149,7 +171,8 @@ export async function recordView(id: string): Promise<void> {
     );
 }
 
-function revalidate(slug: string | null) {
-  revalidatePath("/dashboard");
+/** The two pages an article appears on: its author's, and its own. */
+function revalidate(handle: string, slug: string | null) {
+  revalidatePath(`/${handle}`);
   if (slug) revalidatePath(`/a/${slug}`);
 }

@@ -13,8 +13,14 @@ import {
  * with Google today and Facebook tomorrow lands on the same `users` row and picks
  * up a second `accounts` row — see `allowDangerousEmailAccountLinking` in auth.ts.
  *
- * Name and image are written once, when the row is created, and never touched
- * again on later sign-ins.
+ * OAuth fills `name` and `image` once, when the row is created, and never touches
+ * them again: from then on they are the author's to change in /settings.
+ *
+ * `handle` is the author's own address — `/nikoloz-e722ded8`, the public page at
+ * app/[handle]. Nobody chooses it: it is the first word of `name` plus the head
+ * of `id`, minted at sign-up in auth.ts and recomputed whenever the name
+ * changes. Unique all the same, because two people would have to share both
+ * halves to collide.
  */
 export const users = pgTable("users", {
   id: text("id")
@@ -24,6 +30,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
+  handle: text("handle").notNull().unique(),
+  bio: text("bio").notNull().default(""),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
@@ -88,7 +96,7 @@ export const articles = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
-  // The dashboard's only query: this author's articles, newest edit first.
+  // The author page's only query: this author's articles, newest first.
   (article) => [
     index("articles_author_updated_idx").on(article.authorId, article.updatedAt),
   ],

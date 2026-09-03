@@ -30,23 +30,29 @@
 }
 
 .cta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   min-height: 40px;
   padding: 10px 20px;
   font-size: 14px;
 }
 
-/* The outline variant is a white pill by default, which reads as a card on
-   this paper background. Here it is just a bordered label. */
-.plain,
-.plain:hover {
-  background: transparent;
-  transform: none;
-}
-
 @media (max-width: 560px) {
-  /* Only the signed-in variant goes: below this the avatar alone carries the
-     way back to the dashboard. A signed-out visitor keeps their one call. */
-  .plain {
+  /* The pencil says it on its own once there is no room for the words, the
+     way it does in the editor's bar. A signed-out visitor's call is words
+     only, so it keeps them. */
+  .actions .cta {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .ctaLabel {
     display: none;
   }
 }

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { articles } from "@/db/schema";
-import { accountFrom } from "@/lib/account";
+import { currentAccount } from "@/lib/account";
 import { formatDate } from "@/lib/date";
-import { ArticleNav } from "@/components/article/ArticleNav";
+import { siteOrigin } from "@/lib/url";
+import { AppNav } from "@/components/nav/AppNav";
 import { AuthorBar } from "@/components/article/AuthorBar";
 import { ViewPing } from "@/components/article/ViewPing";
 import { SiteFooter } from "@/components/landing/Footer";
@@ -20,7 +20,7 @@ import styles from "./page.module.css";
 const findArticle = cache((slug: string) =>
   db.query.articles.findFirst({
     where: eq(articles.slug, slug),
-    with: { author: { columns: { name: true, image: true } } },
+    with: { author: { columns: { name: true, image: true, handle: true } } },
   }),
 );
 
@@ -51,21 +51,20 @@ export default async function ArticlePage(props: PageProps<"/a/[slug]">) {
 
   if (!article) notFound();
 
-  const session = await auth();
-  const isAuthor = session?.user?.id === article.authorId;
+  const viewer = await currentAccount();
+  const isAuthor = viewer?.id === article.authorId;
 
   // Only publishing mints a slug, so a draft has no address to reach in the
   // first place. This is what keeps that true if unpublishing ever lands.
   if (article.status !== "published" && !isAuthor) notFound();
 
   const published = article.publishedAt ?? article.createdAt;
-  // Built from the request, so it is the address the author would actually
-  // hand someone — localhost while developing, the real host in production.
-  const url = isAuthor ? await publicUrl(slug) : null;
+  const authorName = article.author?.name?.trim() || "ავტორი";
+  const url = isAuthor ? `${await siteOrigin()}/a/${slug}` : null;
 
   return (
     <div className={styles.page}>
-      <ArticleNav account={session ? accountFrom(session) : null} />
+      <AppNav account={viewer} />
 
       <main className={styles.main}>
         {url && (
@@ -93,9 +92,18 @@ export default async function ArticlePage(props: PageProps<"/a/[slug]">) {
                   runs out of width, the date wraps under the name instead of
                   under the avatar. */}
               <div className={styles.bylineText}>
-                <span className={styles.author}>
-                  {article.author?.name?.trim() || "ავტორი"}
-                </span>
+                {/* The byline is the way to the rest of what this person wrote;
+                    an article with no author row left is only a name. */}
+                {article.author ? (
+                  <Link
+                    href={`/${article.author.handle}`}
+                    className={styles.author}
+                  >
+                    {authorName}
+                  </Link>
+                ) : (
+                  <span className={styles.author}>{authorName}</span>
+                )}
                 <span className={styles.meta}>
                   <time dateTime={published.toISOString()}>
                     {formatDate(published)}
@@ -121,13 +129,4 @@ export default async function ArticlePage(props: PageProps<"/a/[slug]">) {
       <SiteFooter />
     </div>
   );
-}
-
-/** The address a reader would receive, built from the request they arrived on. */
-async function publicUrl(slug: string) {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("host") ?? "";
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
-
-  return `${protocol}://${host}/a/${slug}`;
 }
