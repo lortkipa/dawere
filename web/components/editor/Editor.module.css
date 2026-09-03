@@ -34,8 +34,8 @@
   gap: clamp(10px, 1.6vw, 18px);
 }
 
-/* The way out, next to the account it belongs beside. The wordmark links to
-   the same place, but this is the one you find without reading. */
+/* The way out, next to the account it belongs beside — back to the author's
+   own page, which is where the article being written belongs. */
 .back {
   flex: 0 0 auto;
   width: 40px;

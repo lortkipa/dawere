@@ -138,7 +138,9 @@ export function Editor({ account, article }: EditorProps) {
       {/* Same metrics as every other route's bar — what changes is only what
           sits in it. */}
       <header className={styles.bar}>
-        <Link href={`/${account.handle}`} className={styles.wordmark}>
+        {/* The wordmark is the same door everywhere: back to the feed. The
+            way back to what is being written from is the arrow on the right. */}
+        <Link href="/feed" className={styles.wordmark}>
           dawere
         </Link>
 
