@@ -5,9 +5,12 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { articles, users } from "@/db/schema";
 import { currentAccount } from "@/lib/account";
+import { followerCount, isFollowing } from "@/lib/follows";
 import { AppNav } from "@/components/nav/AppNav";
 import { SiteFooter } from "@/components/landing/Footer";
 import { PostList, type Post } from "@/components/author/PostList";
+import { AuthDialogProvider } from "@/components/landing/AuthDialogProvider";
+import { FollowButton } from "@/components/follow/FollowButton";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Avatar } from "@/components/ui/Avatar";
@@ -66,7 +69,6 @@ export default async function AuthorPage(props: PageProps<"/[handle]">) {
         title: articles.title,
         slug: articles.slug,
         excerpt: articles.excerpt,
-        views: articles.views,
         publishedAt: articles.publishedAt,
         updatedAt: articles.updatedAt,
       })
@@ -80,72 +82,89 @@ export default async function AuthorPage(props: PageProps<"/[handle]">) {
       .orderBy(desc(articles.publishedAt)),
   ]);
 
+  // Second pass rather than a third branch of the one above: whether the viewer
+  // already follows this author is only answerable once we know who they are.
+  const [followers, following] = await Promise.all([
+    followerCount(author.id),
+    isFollowing(viewer?.id, author.id),
+  ]);
+
   // Publishing is what mints a slug, so a published row always has one; this
   // narrows the column's type rather than dropping anything.
   const posts = rows.filter((row): row is Post => row.slug !== null);
 
   const isMe = viewer?.id === author.id;
   const name = author.name?.trim() || "ავტორი";
-  // Already in hand, so the totals cost nothing beyond the query above.
-  const views = posts.reduce((total, post) => total + post.views, 0);
 
   return (
-    <div className={styles.page}>
-      <AppNav account={viewer} />
+    // The follow button is the one control here a signed-out visitor can reach
+    // for, so the dialog that signs them in has to be on this page too.
+    <AuthDialogProvider>
+      <div className={styles.page}>
+        <AppNav account={viewer} />
 
-      <main className={styles.main}>
-        <header className={styles.head}>
-          <div className={styles.identity}>
-            <Avatar
-              name={name}
-              image={author.image}
-              size={88}
-              className={styles.avatar}
+        <main className={styles.main}>
+          <header className={styles.head}>
+            <div className={styles.identity}>
+              <Avatar
+                name={name}
+                image={author.image}
+                size={88}
+                className={styles.avatar}
+              />
+
+              <div className={styles.who}>
+                <h1 className={styles.name}>{name}</h1>
+                <p className={styles.meta}>
+                  {posts.length} სტატია · {followers} გამომწერი
+                </p>
+              </div>
+            </div>
+
+            {author.bio && <p className={styles.bio}>{author.bio}</p>}
+
+            <div className={styles.actions}>
+              {isMe ? (
+                <ButtonLink
+                  variant="outline"
+                  href="/settings"
+                  className={styles.edit}
+                >
+                  გვერდის რედაქტირება
+                </ButtonLink>
+              ) : (
+                // Nobody is offered their own page: the row the table refuses is
+                // the row the button never asks for.
+                <FollowButton
+                  authorId={author.id}
+                  following={following}
+                  signedIn={viewer !== null}
+                />
+              )}
+            </div>
+          </header>
+
+          {posts.length === 0 ? (
+            <EmptyState
+              level={2}
+              heading={
+                isMe
+                  ? "ჯერ არაფერი გამოგიქვეყნებია"
+                  : "ამ ავტორს ჯერ არაფერი გამოუქვეყნებია"
+              }
+              action={isMe ? { href: "/write", label: "სტატიის დაწერა" } : undefined}
             />
-
-            <div className={styles.who}>
-              <h1 className={styles.name}>{name}</h1>
-              <p className={styles.meta}>
-                {posts.length} სტატია · {views} ნახვა
-              </p>
-            </div>
-          </div>
-
-          {author.bio && <p className={styles.bio}>{author.bio}</p>}
-
-          {isMe && (
-            <div className={styles.mine}>
-              <ButtonLink
-                variant="outline"
-                href="/settings"
-                className={styles.edit}
-              >
-                გვერდის რედაქტირება
-              </ButtonLink>
-            </div>
+          ) : (
+            <PostList
+              posts={posts}
+              owner={isMe}
+              returnTo={`/${author.handle}`}
+            />
           )}
-        </header>
+        </main>
 
-        {posts.length === 0 ? (
-          <EmptyState
-            level={2}
-            heading={
-              isMe
-                ? "ჯერ არაფერი გამოგიქვეყნებია"
-                : "ამ ავტორს ჯერ არაფერი გამოუქვეყნებია"
-            }
-            action={isMe ? { href: "/write", label: "სტატიის დაწერა" } : undefined}
-          />
-        ) : (
-          <PostList
-            posts={posts}
-            owner={isMe}
-            returnTo={`/${author.handle}`}
-          />
-        )}
-      </main>
-
-      <SiteFooter />
-    </div>
+        <SiteFooter />
+      </div>
+    </AuthDialogProvider>
   );
 }

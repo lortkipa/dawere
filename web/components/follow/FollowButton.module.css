@@ -1,0 +1,34 @@
+/* Both variants are the same pill, so the button does not resize as it flips:
+   only its fill, its border and its word change. */
+.follow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 132px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 999px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.follow:disabled {
+  /* Mid-write, and already painted as though it were done — dimming it would
+     undo the point of painting it early. Only the pointer says to wait. */
+  cursor: progress;
+}
+
+/* Outline's own hover lifts the pill and darkens its edge; this one is about to
+   take something away, so it wears the danger ink instead and stays put. */
+.following,
+.following:hover {
+  background: transparent;
+  transform: none;
+}
+
+.following:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+

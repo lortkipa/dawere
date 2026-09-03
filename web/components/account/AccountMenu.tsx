@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOutAction } from "@/app/actions/auth";
 import { Avatar } from "@/components/ui/Avatar";
+import { FeedIcon } from "@/components/icons/FeedIcon";
 import { GearIcon } from "@/components/icons/GearIcon";
 import { SignOutIcon } from "@/components/icons/SignOutIcon";
 import { UserIcon } from "@/components/icons/UserIcon";
@@ -73,6 +74,20 @@ export function AccountMenu({ account }: { account: Account }) {
           </div>
 
           <div className={styles.items}>
+            {/* Where reading happens, and where signing in lands. The wordmark
+                leads here too, but only from a page that has one a reader
+                recognises as home — from /settings or an article this is the
+                way back to it. */}
+            <Link
+              href="/feed"
+              className={styles.item}
+              role="menuitem"
+              onClick={close}
+            >
+              <FeedIcon />
+              სიახლეები
+            </Link>
+
             {/* The author's own address, and the page as readers get it —
                 what they have published, and nothing they have not. */}
             <Link

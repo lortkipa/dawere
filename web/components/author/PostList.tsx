@@ -12,7 +12,6 @@ export type Post = {
   title: string;
   slug: string;
   excerpt: string;
-  views: number;
   publishedAt: Date | null;
   updatedAt: Date;
 };
@@ -44,8 +43,7 @@ export function PostList({ posts, owner, returnTo }: PostListProps) {
             {post.excerpt && <p className={styles.excerpt}>{post.excerpt}</p>}
 
             <p className={styles.meta}>
-              {formatDate(post.publishedAt ?? post.updatedAt)} · {post.views}{" "}
-              ნახვა
+              {formatDate(post.publishedAt ?? post.updatedAt)}
             </p>
 
             {owner && (

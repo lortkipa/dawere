@@ -65,7 +65,7 @@
   overflow-wrap: anywhere;
 }
 
-.mine {
+.actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;

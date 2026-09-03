@@ -1,12 +1,21 @@
 import { ButtonLink } from "@/components/ui/Button";
+import { SearchField } from "@/components/nav/SearchField";
 import styles from "./EmptyState.module.css";
 
 type EmptyStateProps = {
   heading: string;
+  /** A line under the heading, where the heading alone leaves a question open. */
+  note?: string;
   /** 1 where nothing else on the page claims that level, 2 where it does. */
   level?: 1 | 2;
   /** The way out. Absent when the viewer has no way out of this page. */
   action?: { href: string; label: string };
+  /**
+   * The way out is a search, so the field itself stands here rather than a
+   * button to a page that is one — the reader can type the name they came with
+   * instead of clicking through and finding the same empty prompt again.
+   */
+  search?: boolean;
 };
 
 /**
@@ -16,15 +25,25 @@ type EmptyStateProps = {
  * told a fact, not offered a way to fix it — and the drawing recentres itself
  * on the pages alone when the badge is gone.
  */
-export function EmptyState({ heading, level = 1, action }: EmptyStateProps) {
+export function EmptyState({
+  heading,
+  note,
+  level = 1,
+  action,
+  search = false,
+}: EmptyStateProps) {
   const Heading = level === 1 ? "h1" : "h2";
+
+  // The badge marks a state the viewer can do something about; a field is as
+  // much of a way out as a button is.
+  const actionable = Boolean(action) || search;
 
   return (
     <div className={styles.empty}>
       <svg
-        width={action ? 260 : 200}
+        width={actionable ? 260 : 200}
         height="200"
-        viewBox={action ? "0 0 260 200" : "20 0 200 200"}
+        viewBox={actionable ? "0 0 260 200" : "20 0 200 200"}
         aria-hidden="true"
         className={styles.art}
       >
@@ -64,9 +83,15 @@ export function EmptyState({ heading, level = 1, action }: EmptyStateProps) {
           <rect x="88" y="104" width="60" height="4" rx="2" />
         </g>
 
-        {action && (
+        {actionable && (
           <>
-            <circle cx="196" cy="150" r="26" fill="var(--blue)" opacity="0.16" />
+            <circle
+              cx="196"
+              cy="150"
+              r="26"
+              fill="var(--blue)"
+              opacity="0.16"
+            />
             <circle
               cx="196"
               cy="150"
@@ -87,6 +112,10 @@ export function EmptyState({ heading, level = 1, action }: EmptyStateProps) {
 
       <div className={styles.copy}>
         <Heading className={styles.heading}>{heading}</Heading>
+        {note && <p className={styles.note}>{note}</p>}
+        {search && (
+          <SearchField collapsible={false} className={styles.search} />
+        )}
         {action && (
           <ButtonLink href={action.href} className={styles.cta}>
             {action.label}

@@ -86,6 +86,8 @@ show, because a token minted at sign-in would otherwise keep showing a name chan
 
 | Route | Who it is for |
 |---|---|
+| `/feed` | The newest article from each person you follow. Where signing in lands. |
+| `/search` | Authors and articles for one term. Public, like everything it finds. |
 | `/write` | A new article. The first save creates the row and moves you to `/write/<id>`. |
 | `/write/<id>` | Editing your own article. Anyone else's id is a 404. |
 | `/a/<slug>` | The article itself — the URL you hand to readers. |
@@ -130,9 +132,10 @@ reader can see. They are still in the export, and still open in the editor at th
 `/write/<id>`; nothing links to them. An article's byline links here, which is what turns
 one piece into a way into the rest.
 
-There is no separate private list. One page is the whole of it: the wordmark leads here from
-every route a signed-in person can reach, the avatar menu names it **ჩემი გვერდი**, signing
-in lands on it, and deleting an article comes back to it.
+There is no separate private list. One page is the whole of it: the avatar menu names it
+**ჩემი გვერდი** from every route a signed-in person can reach, an article's byline arrives
+here, and deleting an article comes back to it. The wordmark does not lead here — it leads
+to the feed, because your own page is where you publish to and the feed is where you read.
 
 Each article is a card, and the whole card is the link — the heading stretches an overlay
 over it rather than the page wrapping everything in an `<a>`, which would make the author's
@@ -154,6 +157,88 @@ get, along with the plus badge on the art. Nothing there is theirs to start.
 Handles sit at the first segment of the site, so they share that space with every route
 dawere owns — and cannot collide with one, because a handle always ends in a hyphen and
 eight hex characters. Nothing has to be reserved: there is no way to be called `settings`.
+
+## Following and the feed
+
+Following is one row — `follows(follower_id, following_id)` — and the pair is its key, so
+following twice is the same row rather than a second one and unfollowing is a delete of a
+row addressed by exactly what the button already knows. Both columns cascade off `users`,
+so a deleted account takes its side of every relationship with it. A check constraint
+refuses a self-follow; the action refuses it too, which is what turns a constraint
+violation into a sentence somebody can read.
+
+The key answers the feed's question — *who does this reader follow* — and
+`follows_following_idx` answers the author page's — *how many follow them*.
+
+**The button** is one control for both directions, because there is one row and it is
+either there or it is not. It takes the state it wants to be in rather than a verb, so a
+double click ends where a single one would. It paints the new state before the write
+answers: the write is one row, and the round trip is not worth charging every click for the
+rare wrong answer — a failure puts the button back and says why. A signed-out visitor is
+shown the same button; it opens the sign-in dialog first, which is why `/<handle>` carries
+the same `AuthDialogProvider` the landing page does.
+
+**`/feed`** is **one article per author**: the newest thing each person you follow has
+published, newest first. The join *is* the filter — an article is a candidate exactly when
+a row says its author is followed by this reader — and `distinct on (author_id)`, ordered
+by author then date, is what cuts that to the latest of each. The cut happens in the scan
+rather than over rows already fetched, and the page's own order is the layer above it.
+
+One each rather than everything, because a feed of every article is a feed of whoever
+published most that week. One row apiece makes it a list of the *people* you follow, and
+their page — where everything they have written is — is one click away on every card.
+
+It is the only page assembled from more than one author, and the only one that is nobody's
+address: a feed is a view of a reader, not something to hand out, so a signed-out visitor
+is sent to `/`. It is also where signing in lands. Auth comes back to `/`, which is what
+redirects, so the handle never has to be read to know where a new account starts.
+
+An empty feed is two different states and says which. **Nobody followed yet** is the one
+with a way out, so it gets both: the button to **ავტორების ძებნა**, and under it **the
+people publishing right now** — everyone who has published, minus you and minus anybody you
+already follow, most recently published first — each with the one button that would end the
+emptiness. Ranking on recency rather than popularity, because there is no popularity worth
+ranking on yet and a page written this morning is the one worth reading. **Followed authors
+who have not published** offers nothing, because there is nothing to do about it but wait.
+
+Both those lists of people are one component (`components/author/AuthorList`) — the empty
+feed's suggestions and a search's authors are the same rows asking the same question, so
+they are not two designs. It is deliberately not a card: the cards on both pages are
+articles, and a hairline row keeps that difference visible.
+
+## Search
+
+One field, in the bar every page carries, searching **both** things there are to find: the
+people and what they published. A reader looking for something does not yet know which of
+the two it is, so `/search?q=` answers with authors above articles rather than making them
+choose a tab first.
+
+It is a page with an address rather than a live dropdown, so a search is linkable,
+back-buttonable and shareable like everything else here. The field submits and navigates;
+on `/search` it opens holding what that page searched for, so the field and the results
+agree about what the question was.
+
+Everything it can find is public, so search is public too — a signed-out visitor gets the
+same results, with the follow buttons asking them to sign in first, which is why `/search`
+carries the same `AuthDialogProvider` `/<handle>` does. Drafts are not results: a draft has
+no address and no reader.
+
+Matching is `ILIKE` substring over names and handles for people, titles and excerpts for
+articles — not full-text, because Postgres ships no Georgian stemming and a reader typing
+half a title is what the field is for. `%` and `_` are escaped into themselves: they mean
+something to `ILIKE` and nothing to the person typing them. Authors are ranked by how much
+they have published, articles by recency. A term under two characters is not searched at
+all — one letter matches most of the site.
+
+Below 720px the field and the wordmark cannot both have their width, so the field collapses
+into the icon beside the avatar: one tap to a page that *is* a field.
+
+## Getting to the feed
+
+The wordmark leads there from every route a signed-in person can reach, and the avatar menu
+names it **სიახლეები** above **ჩემი გვერდი** — the two halves of the platform, reading and
+publishing, in the one control that is on every page. `/settings` and an article both have
+that menu, so neither is a dead end.
 
 ## Settings
 

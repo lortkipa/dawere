@@ -34,3 +34,19 @@
   padding: 14px 30px;
   font-size: 15px;
 }
+
+/* Sits directly under the heading rather than in the gap the action uses, so a
+   state with both reads as one block with a button after it. */
+.note {
+  margin: -8px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+/* Wider than the bar's copy of the field, because here it is the thing being
+   offered rather than something tucked between a wordmark and a button. */
+.search {
+  width: min(100%, 380px);
+  max-width: none;
+}

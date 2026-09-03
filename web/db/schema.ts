@@ -1,5 +1,6 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+  check,
   index,
   integer,
   pgTable,
@@ -102,8 +103,62 @@ export const articles = pgTable(
   ],
 );
 
+/**
+ * One row per "A reads B". The pair is the key, so following twice is the same
+ * row rather than a second one, and unfollowing is a delete of a row addressed
+ * by exactly what the button knows.
+ *
+ * Both sides cascade off `users`: a deleted account leaves nobody following a
+ * page that no longer exists, and disappears from everyone else's feed with the
+ * articles it took with it.
+ *
+ * The primary key already answers "who does A follow", which is the feed's
+ * question and the button's. `follows_following_idx` answers the other
+ * direction — "how many follow B" — which the author's page asks.
+ */
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followingId: text("following_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (follow) => [
+    primaryKey({ columns: [follow.followerId, follow.followingId] }),
+    index("follows_following_idx").on(follow.followingId),
+    // The action refuses it too; this is the guarantee rather than the check —
+    // a self-follow would put an author's own articles in their own feed.
+    check(
+      "follows_not_self",
+      sql`${follow.followerId} <> ${follow.followingId}`,
+    ),
+  ],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   articles: many(articles),
+  // Two relations over one table, so each names the side it stands on: a row is
+  // this user's `following` when they are the follower, and one of their
+  // `followers` when they are the followed.
+  following: many(follows, { relationName: "follower" }),
+  followers: many(follows, { relationName: "following" }),
+}));
+
+export const followsRelations = relations(follows, ({ one }) => ({
+  follower: one(users, {
+    fields: [follows.followerId],
+    references: [users.id],
+    relationName: "follower",
+  }),
+  following: one(users, {
+    fields: [follows.followingId],
+    references: [users.id],
+    relationName: "following",
+  }),
 }));
 
 export const articlesRelations = relations(articles, ({ one }) => ({

@@ -19,14 +19,13 @@
   letter-spacing: 0.01em;
 }
 
-.spacer {
-  flex: 1;
-}
-
 .actions {
   display: flex;
   align-items: center;
   gap: clamp(10px, 1.6vw, 18px);
+  /* The field in the middle takes the slack, so the actions sit at the end of
+     the bar whether it is there or not. */
+  margin-left: auto;
 }
 
 .cta {

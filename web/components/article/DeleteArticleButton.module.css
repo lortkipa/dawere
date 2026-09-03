@@ -6,13 +6,20 @@
   gap: 8px;
   min-height: 40px;
   padding: 10px 14px;
-  color: var(--danger);
 }
 
 :where(.trigger:hover) {
-  color: var(--danger);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Colour is the exception to the weightlessness above, and carries real
+   specificity: Button's ghost variant paints its label ink and repaints it
+   accent on hover, and deleting reads red wherever it is used — label and its
+   icon, which strokes with currentColor, at rest and under the pointer. */
+.trigger,
+.trigger:hover {
+  color: var(--danger);
 }
 
 .heading {

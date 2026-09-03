@@ -3,9 +3,8 @@
 import { signIn, signOut } from "@/auth";
 
 export async function signInWithGoogle() {
-  // Not the author's own page, though that is where this ends: the handle is
-  // read from the row, and the row does not exist yet the first time through.
-  // `/` sends a signed-in person on to it.
+  // `/` rather than `/feed`: the row does not exist yet the first time through,
+  // and the landing page is what sends a signed-in person on to their feed.
   await signIn("google", { redirectTo: "/" });
 }
 
