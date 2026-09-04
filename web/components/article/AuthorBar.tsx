@@ -13,6 +13,8 @@ type AuthorBarProps = {
   /** The article's public address, exactly as a reader would receive it. */
   url: string;
   views: number;
+  /** The author never sees the like button, so this is where their count is. */
+  likes: number;
   publishedAt: string;
 };
 
@@ -26,6 +28,7 @@ export function AuthorBar({
   title,
   url,
   views,
+  likes,
   publishedAt,
 }: AuthorBarProps) {
   const [copied, setCopied] = useState(false);
@@ -65,6 +68,10 @@ export function AuthorBar({
         <div className={styles.stat}>
           <dt className={styles.statLabel}>ნახვა</dt>
           <dd className={styles.statValue}>{views}</dd>
+        </div>
+        <div className={styles.stat}>
+          <dt className={styles.statLabel}>მოწონება</dt>
+          <dd className={styles.statValue}>{likes}</dd>
         </div>
       </dl>
 

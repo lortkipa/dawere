@@ -70,3 +70,12 @@ a.author:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Under the article, before the conversation about it: what a reader can do
+   with the piece now that they have read it. */
+.reactions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: clamp(30px, 5vw, 42px) 0 0;
+}

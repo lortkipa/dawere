@@ -1,0 +1,449 @@
+/* The one description of what a conversation under an article looks like.
+   Imported by every piece of it — the section, the field, the reply and the
+   delete — because they are four files of one design rather than four designs. */
+
+.section {
+  /* An avatar and the gap after it. Everything in a thread lines up past this
+     one measure: the body under the name that signs it, the replies under the
+     comment they answer, the field under the thread it joins. */
+  --avatar: 32px;
+  --gutter: 44px;
+
+  margin: clamp(44px, 7vw, 68px) 0 0;
+  padding: clamp(28px, 4vw, 36px) 0 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(20px, 3vw, 24px);
+  font-weight: 600;
+}
+
+/* The number rides the heading as a token rather than as more of the sentence:
+   it is a count of what is below, not another word in the title. */
+.total {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(29, 31, 32, 0.07);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The composer */
+
+/* Field and buttons share one border, so the whole thing reads as the one place
+   you write rather than as a box with a button parked under it. */
+.form {
+  border: 1px solid var(--hairline-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form:focus-within {
+  border-color: var(--ink);
+  box-shadow: 0 14px 30px -24px rgba(29, 31, 32, 0.6);
+}
+
+.field {
+  display: block;
+  width: 100%;
+  min-height: 88px;
+  padding: 15px 16px 6px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink);
+  /* Taller when there is more to say; never wider than the column. */
+  resize: vertical;
+}
+
+.field:focus {
+  /* The border above lights up for the whole composer, field included. */
+  outline: none;
+}
+
+.field::placeholder {
+  color: var(--ink-faint);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 10px 10px;
+}
+
+.submit {
+  min-height: 38px;
+  padding: 9px 20px;
+  font-size: 14px;
+}
+
+.submit:disabled {
+  background: rgba(29, 31, 32, 0.16);
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.cancel {
+  min-height: 38px;
+  padding: 9px 14px;
+  font-size: 14px;
+  color: var(--ink-faint);
+}
+
+/* What a signed-out reader gets where the composer would be: the same block,
+   saying what has to happen before it becomes one. */
+.prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.promptText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.signIn {
+  min-height: 38px;
+  padding: 9px 20px;
+  font-size: 14px;
+  border-radius: 999px;
+}
+
+.empty {
+  margin: 26px 0 0;
+  padding-left: var(--gutter);
+  font-size: 14px;
+  color: var(--ink-faint);
+}
+
+/* Threads */
+
+.threads {
+  list-style: none;
+  margin: 30px 0 0;
+  padding: 0;
+}
+
+/* A rule between conversations rather than more air: two threads a paragraph
+   apart read as one long thread. */
+.threads > li + li {
+  margin-top: 26px;
+  padding-top: 26px;
+  border-top: 1px solid var(--hairline);
+}
+
+/* The gap here is the one between a comment and the replies to it. It is less
+   than half the gap between one reply and the next (`.replies` below), which is
+   how the page says whose reply is whose without drawing a line to say it. */
+.thread {
+  display: grid;
+  gap: 10px;
+}
+
+/* Every reply is drawn a size under the comment it answers, and every reply the
+   same size as every other: one step down from the head of the conversation,
+   not a size per level, which four levels in would be a thread of thumbnails.
+   Both measures live here rather than on the comment, because the list of
+   replies below it has to line up against them too. */
+.nested {
+  --avatar: 26px;
+  --gutter: 36px;
+}
+
+/* One comment, laid out against the gutter: the avatar in it, everything the
+   person said past it. */
+.comment {
+  display: grid;
+  grid-template-columns: var(--avatar) minmax(0, 1fr);
+  grid-template-areas:
+    "avatar head"
+    ".      body"
+    ".      tools";
+  column-gap: calc(var(--gutter) - var(--avatar));
+  row-gap: 5px;
+}
+
+.avatar {
+  grid-area: avatar;
+  width: var(--avatar);
+  height: var(--avatar);
+  /* The initial inside it is a share of the circle, so the one rule dresses a
+     thread's avatar and a reply's smaller one alike. */
+  font-size: calc(var(--avatar) * 0.44);
+}
+
+/* As tall as the avatar it sits beside, so the name is centred against the face
+   however the row wraps. */
+.head {
+  grid-area: head;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 9px;
+  min-height: var(--avatar);
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+a.name:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Whose article this is, said once beside their name. A reader scanning a long
+   thread is looking for exactly this, and the alternative is reading every
+   handle against the byline at the top of the page. */
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(63, 97, 131, 0.12);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Whom this answers, once the indent has stopped saying it. Only on the replies
+   deep enough to have lost that — above them it would repeat what the eye can
+   already see. */
+.replyingTo {
+  font-size: 12px;
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+
+.date {
+  font-size: 13px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* Stored as the plain text it was typed as, so the line breaks in it are the
+   writer's own and are printed rather than collapsed. */
+.body {
+  grid-area: body;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Whose reply this is gets said three ways, and a rule down the side of the
+   thread is none of them — a conversation five deep drawn that way is a page of
+   pinstripes.
+
+   It is said by where the reply starts: one gutter in, so its own name lands on
+   the line its parent's body did. By its size: one step down, on `.nested`. And
+   by proximity — 10px from the comment it answers against 24px from the reply
+   beside it, so it sits nearer what it is talking to than what it is not.
+
+   `.level` is the same list past MAX_INDENT with the step taken out, because
+   another gutter that deep would leave the words in a stripe. The other two
+   cues carry it alone there, and the comment says whom it answers on top. */
+.replies,
+.level {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 24px;
+}
+
+.replies {
+  padding-left: var(--gutter);
+}
+
+/* What can be done with a comment, under what it says: the like, the reply, and
+   the composer the reply opens into — which takes the whole row, because it is
+   the same field the top of the page carries. */
+.tools {
+  grid-area: tools;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 4px;
+}
+
+.tools .form {
+  flex: 1 0 100%;
+  margin-top: 8px;
+}
+
+/* Buttons */
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.tool:hover {
+  color: var(--ink);
+}
+
+/* The article's like at a comment's size: bare text like the reply beside it,
+   not a pill, because a pill on every line of a conversation is a column of
+   pills. The count only appears once there is one — a nought under everything
+   said on the page is noise. */
+.like {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 13px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.like:hover,
+.liked {
+  color: var(--danger);
+}
+
+.like:disabled {
+  /* Mid-write, and already painted as though it were done — dimming it would
+     undo the point of painting it early. Only the pointer says to wait. */
+  cursor: progress;
+}
+
+/* Your own comment's count, which is the button with nothing to press: you
+   cannot like it, so it says how many did and stops there. */
+.tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.likeCount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sits at the end of the head row, away from the name and the date it belongs
+   to: those say who and when, and this is the one thing to be done about it. */
+.remove {
+  margin-left: auto;
+}
+
+.remove:hover {
+  color: var(--danger);
+}
+
+/* The delete confirmation, which is the article's dialog at a comment's size. */
+
+.confirmHeading {
+  margin: 0 0 12px;
+  font-family: var(--font-serif), serif;
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.confirmNote {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.confirmButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.confirmCancel,
+.confirmDelete {
+  flex: 1;
+  min-height: 46px;
+}
+
+.confirmDelete {
+  background: var(--danger);
+}
+
+.confirmDelete:hover {
+  background: #6f2f29;
+}
+
+@media (max-width: 480px) {
+  /* A name, a badge, a date and a delete do not fit across a phone, and the
+     word is the half of the delete that can go: the mark says it on its own,
+     and the label is hidden rather than dropped so the button is still called
+     something to anyone who cannot see the mark. */
+  .removeLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .remove {
+    justify-content: center;
+    gap: 0;
+    width: 28px;
+    height: 28px;
+    margin-right: -6px;
+  }
+}
+
+@media (max-width: 420px) {
+  /* The gutter costs a fifth of a narrow screen, and a reply's costs it twice.
+     A comment keeps its own — it is what makes one legible — but a reply steps
+     in by less than the words it answers and gives the difference back to them.
+     The size and the spacing say whose reply it is on their own here. */
+  .section {
+    --gutter: 40px;
+  }
+
+  .nested {
+    --gutter: 34px;
+  }
+
+  .empty {
+    padding-left: 0;
+  }
+
+  .replies {
+    padding-left: 18px;
+  }
+}

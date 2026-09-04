@@ -29,6 +29,20 @@
       "when": 1788431305138,
       "tag": "0003_goofy_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788465615643,
+      "tag": "0004_tired_black_tom",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788514773145,
+      "tag": "0005_spooky_sunspot",
+      "breakpoints": true
     }
   ]
 }

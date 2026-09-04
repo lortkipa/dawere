@@ -107,9 +107,9 @@ publishing never has to search for a free name or retry on a clash.
 
 `/a/<slug>` renders differently for the person who wrote it. Readers get the
 article: title, byline, date. The author gets all of that plus a panel above it
-holding the public URL with a copy button, how many views it has, and the two
-buttons only they have, **editing** and **delete**. Deletion asks first and
-cannot be undone.
+holding the public URL with a copy button, how many views and likes it has, and
+the two buttons only they have, **editing** and **delete**. Deletion asks first
+and cannot be undone.
 
 Views are counted from the reader's browser, once per page view, so that a link
 prefetch or a re-render never inflates the number. An author reading their own
@@ -122,6 +122,96 @@ the way in therefore passes through `lib/html.ts`, which allows exactly the tags
 the toolbar can produce and nothing else. That runs in the Server Action rather
 than in the editor, because a Server Action is a POST endpoint that anybody can
 call without going near our editor.
+
+## Under the article
+
+Two things a reader can do with a piece once they have read it, both of them on
+`/a/<slug>` and nowhere else.
+
+### Liking
+
+One row — `likes(article_id, user_id)` — and the pair is its key, so liking twice is
+the same row rather than a second one and unliking is a delete of a row addressed by
+exactly what the button already knows. The key is also both questions the page asks:
+how many liked it is a prefix of it, and whether this reader is one of them is a
+point lookup on the whole.
+
+The button is the follow button's shape for an article. One control for both
+directions, taking the state it wants to be in rather than a verb, painting it before
+the write answers and putting it back if the answer disagrees. It carries its own
+count, because that is the only place a reader is shown one.
+
+The author is not offered it at all: liking your own article is the article's version
+of following yourself, and their count is already in the panel above the piece, beside
+the views — the same line the view counter draws, where reading your own article is
+not a view. No check constraint can say so here, though. Whose article this is lives
+in another table, so the action is the only place that can refuse it.
+
+### Comments
+
+A row is a thread when its `parent_id` is null and a reply when it points at one, and
+it may point at any comment on the same article: a reply to a reply to a reply is a
+chain of them, as deep as the conversation goes. Depth costs nothing to read back,
+because a reply is always written after the comment it answers — one indexed scan in
+that order hands back every parent before the rows that name it, so the tree is built
+by pushing each row onto a parent already in hand.
+
+Every level is ordered by likes, most first. The sort is stable and the count is its
+only key, so everything nobody has liked keeps the order the scan gave it: threads
+newest first, the way a page of comments is read, and the replies inside one oldest
+first, the way a conversation is. Until somebody likes something the order is the one
+it always was — which is the point. A like lifts a comment out of that order rather
+than replacing it.
+
+There is a reply control on every comment, because a reply answers the comment it sits
+under and not the conversation at large. Whose reply it is gets said three ways, and a
+rule down the side of the thread is none of them: a conversation five deep drawn that
+way is a page of pinstripes. It is said by where the reply starts — one gutter in, so
+its own name lands on the line its parent's body did. By its size — a 26px avatar under
+the thread's 32px, one step down and then no further, because a size per level four
+deep is a thread of thumbnails. And by proximity — 10px from the comment it answers
+against 24px from the reply beside it, so it sits nearer what it is talking to than
+what it is not.
+
+What bounds a thread is the page, not the column. The indent follows a chain four
+levels and then stops: past that the replies keep coming at the level they reached,
+and each says whom it is answering — `↳ name`, beside the name that wrote it — because
+that is the job the indent was doing until it ran out of screen to do it in. The other
+two cues carry it alone there. The data knows nothing of any of this; only
+`CommentSection` counts depth.
+
+A comment is stored as the plain text it was typed as. Nothing sanitises it because
+nothing renders it as HTML: the page prints the characters, so `<script>` is five
+words of a sentence and not a tag. That is the opposite of an article, which *is*
+HTML and is cleaned on the way in — two different kinds of thing, treated as such.
+
+Deleting is offered to two people: whoever wrote the comment, and whoever wrote the
+article it sits under, which is what makes an author's own page theirs to keep. It
+asks first, like every delete here, and says how many replies are going with it — the
+whole chain below it, not just the answers directly to it. `parent_id` cascades onto
+itself and keeps cascading, because a reply to something nobody can read is not worth
+keeping.
+
+Comments are liked too, on `comment_likes(comment_id, user_id)` — the article's table
+for the conversation, and the same key doing the same two jobs. A separate table rather
+than a nullable `comment_id` on `likes`, because they are two different things being
+liked and one key over both would have to say "exactly one of these is null" to stay
+honest. Every comment's count and the reader's own state arrive with the threads, in a
+single scan grouped by `comment_id`, rather than a query per comment; the count is only
+drawn once there is one, because a nought under every line is a column of noise. You
+cannot like your own comment, for the same reason an author cannot like their own
+article — the tally still stands there, with no button under it.
+
+Only the field, the reply control, the like and the delete ship as JavaScript; the
+conversation itself is rendered on the server with the article above it. A posted
+comment appears because the action revalidates this page, not because the client
+patches it in — one description of the page, on the server, whether it is being read
+or has just been written to.
+
+A signed-out reader gets every one of these controls, each asking them to sign in
+first, which is why `/a/<slug>` carries the same `AuthDialogProvider` `/<handle>` and
+`/search` do. A draft gets none of them: it has no address and therefore no readers,
+so there is nothing under it to have liked it or said anything about.
 
 ## The author's page
 

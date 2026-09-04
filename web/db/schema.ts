@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   check,
   index,
   integer,
@@ -139,8 +140,110 @@ export const follows = pgTable(
   ],
 );
 
+/**
+ * One row per "this reader liked this article". Like a follow, the pair is the
+ * key: liking twice is the same row rather than a second one, and unliking is a
+ * delete of a row addressed by exactly what the button already knows.
+ *
+ * The key is also both questions the article page asks — how many liked it, and
+ * whether this reader is one of them — because the first is a prefix of it and
+ * the second is a point lookup on the whole of it.
+ *
+ * There is no `likes_not_self` to match `follows_not_self`: whose article this
+ * is lives in another table, so the action is the only place that can refuse it.
+ */
+export const likes = pgTable(
+  "likes",
+  {
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (like) => [primaryKey({ columns: [like.articleId, like.userId] })],
+);
+
+/**
+ * A comment is plain text, never HTML: unlike an article it is rendered as the
+ * characters it holds, so there is nothing here for `lib/html.ts` to clean and
+ * nothing a crafted body could reach.
+ *
+ * `parentId` is what makes a reply a reply, and it may point at any comment on
+ * the same article — a reply to a reply to a reply is a chain of them, as deep
+ * as the conversation goes. What bounds the thread is the page, not the column:
+ * the indent stops after a few levels and the rest of the chain hangs at that
+ * one, which is where `replyingTo` in lib/comments.ts starts saying who is
+ * being answered.
+ *
+ * It cascades onto itself: deleting a comment takes the replies to it, and
+ * theirs, all the way down — a reply to something nobody can read is not worth
+ * keeping.
+ */
+export const comments = pgTable(
+  "comments",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    parentId: text("parent_id").references((): AnyPgColumn => comments.id, {
+      onDelete: "cascade",
+    }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  // The article page's only question: everything said under this article, in
+  // the order it was said. However deep the chains run they come back in that
+  // one scan, because a reply is written after the comment it answers — so the
+  // tree is built from rows already in hand, in lib/comments.ts.
+  (comment) => [
+    index("comments_article_created_idx").on(
+      comment.articleId,
+      comment.createdAt,
+    ),
+  ],
+);
+
+/**
+ * One row per "this reader liked this comment" — `likes` for the conversation
+ * rather than the piece, and the same shape: the pair is the key, so liking
+ * twice is the same row and unliking is a delete of a row addressed by exactly
+ * what the button already knows.
+ *
+ * A separate table rather than a nullable `comment_id` on `likes`, because they
+ * are two different things being liked and a key over both would have to say
+ * "exactly one of these is null" to stay honest about it.
+ *
+ * The key answers the count and the reader's own state together; the page asks
+ * them of every comment at once, grouped by `comment_id` — see lib/comments.ts.
+ */
+export const commentLikes = pgTable(
+  "comment_likes",
+  {
+    commentId: text("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (like) => [primaryKey({ columns: [like.commentId, like.userId] })],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   articles: many(articles),
+  likes: many(likes),
+  commentLikes: many(commentLikes),
+  comments: many(comments),
   // Two relations over one table, so each names the side it stands on: a row is
   // this user's `following` when they are the follower, and one of their
   // `followers` when they are the followed.
@@ -161,9 +264,45 @@ export const followsRelations = relations(follows, ({ one }) => ({
   }),
 }));
 
-export const articlesRelations = relations(articles, ({ one }) => ({
+export const articlesRelations = relations(articles, ({ one, many }) => ({
   author: one(users, {
     fields: [articles.authorId],
+    references: [users.id],
+  }),
+  likes: many(likes),
+  comments: many(comments),
+}));
+
+export const likesRelations = relations(likes, ({ one }) => ({
+  article: one(articles, {
+    fields: [likes.articleId],
+    references: [articles.id],
+  }),
+  user: one(users, {
+    fields: [likes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  article: one(articles, {
+    fields: [comments.articleId],
+    references: [articles.id],
+  }),
+  author: one(users, {
+    fields: [comments.authorId],
+    references: [users.id],
+  }),
+  likes: many(commentLikes),
+}));
+
+export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
+  comment: one(comments, {
+    fields: [commentLikes.commentId],
+    references: [comments.id],
+  }),
+  user: one(users, {
+    fields: [commentLikes.userId],
     references: [users.id],
   }),
 }));
