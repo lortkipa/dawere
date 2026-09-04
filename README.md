@@ -92,6 +92,7 @@ show, because a token minted at sign-in would otherwise keep showing a name chan
 | `/write/<id>` | Editing your own article. Anyone else's id is a 404. |
 | `/a/<slug>` | The article itself — the URL you hand to readers. |
 | `/<handle>` | Your own page, as readers get it: everything you have published. |
+| `/notifications` | What other people have done with what you wrote. |
 | `/settings` | Your name and address, the account, an export of it, and its deletion. |
 
 An article is a **draft** until you publish it, and a draft has no address at
@@ -296,6 +297,95 @@ feed's suggestions and a search's authors are the same rows asking the same ques
 they are not two designs. It is deliberately not a card: the cards on both pages are
 articles, and a hairline row keeps that difference visible.
 
+## Notifications
+
+Five things are worth telling somebody about. Four happen to what they wrote, and each is
+told to exactly one person: somebody likes the article, likes a comment on it, opens a
+thread under it, or answers something they said. The fifth was not done to them at all —
+**an author they follow published** — and it is the one told to more than one person.
+
+A follow is not among them: that is the follower's business, and their name is already on
+the page they followed. Nor is a view, which is a number rather than an event and has
+nobody's name on it to tell.
+
+One row — `notifications(user_id, actor_id, kind, article_id, comment_id)` — is who is
+being told, who gave them something to be told about, which of the five it was, and where.
+A check constraint across the first two refuses news of your own doing, the way
+`follows_not_self` refuses following yourself: liking your own comment is already
+impossible, commenting under your own article is not, and nobody needs telling they did.
+
+`article_id` is on every row, not only the ones about the piece itself — all five happen to
+an article, and it is the address the notification leads to. The comment, where there is
+one, is the anchor inside that page: `/a/<slug>#c-<id>`, so news about one thing said in a
+long thread lands on it rather than at the top of the article.
+
+**Nothing has to be tidied up**, because every row hangs off the thing it reports. A
+deleted comment takes the news of it, and its replies take theirs; a deleted article takes
+the whole conversation's and the news of its own publishing; a deleted account takes both
+what it was told and what it did. The one exception is a like taken back — what that row
+reported was in `likes`, which the notification does not point at — so unliking deletes it
+by hand, addressed by exactly what the button already knows. Which is also why a heart
+pressed twice is one piece of news and not two: an insert that conflicts hands back no row,
+and the notification is written only when the like was. An unfollow deletes nothing: the
+article was published, and they were following when it was.
+
+**A reply tells whoever was answered**, not the author of the piece. A reply answers the
+comment it sits under, and telling the author about every reply five deep would make a busy
+article unreadable to the one person who cannot walk away from it. So the author hears
+about the threads on their article, and the people in a thread hear about the answers to
+them.
+
+**Publishing is told once**, at the moment the slug is minted, because that is the moment
+there is something anybody could open. Retitling the piece or editing it afterwards is the
+same piece and not a second one, and a draft is told to nobody at all — it has no address,
+so there is nothing yet to go and read.
+
+It is the only news that goes to more than one person, and it is the same row once per
+follower rather than a shape of its own: one read of `follows` and one insert. Not an
+`insert … select` over it, which would be the single statement but would have to mint the
+ids in SQL — a second way of making an id, for a list that is one person's followers.
+
+It also overlaps with `/feed`, deliberately. The feed is one article per author, so a
+second piece published the same week displaces the first and the first is gone from it. The
+notification is a record of each publish rather than a picture of who has written lately,
+which is the difference between a place to read and a list of what happened.
+
+**The bell** sits in the top bar beside the avatar, and it is the only place dawere
+interrupts anybody: a number on a link, on whichever page they were already reading.
+Nothing pushes and nothing polls — the count is read with the page, so it is exactly as
+fresh as everything else on it. It leads to a page rather than dropping a panel out of the
+bar, for the reason `/search` is a page: news is a list with a history, and a dropdown
+would make it the one thing here that cannot be linked to, scrolled, or come back to. The
+bell says how much; the page says what.
+
+**`/notifications`** is that list, newest first, every row the same three things — who,
+what they did, and the thing they did it to. A comment arrives in quotation marks because
+it is speech and an article title without them because it is a name; under a comment sits
+the piece it was said on, because a comment out of its article is a sentence from nowhere.
+News of a publish has none of that third line — the title above it is the whole of it.
+Five kinds read as one list rather than as five designs sharing a page. Nothing is grouped:
+three people liking one article is three lines and not "3 people", which is worth writing
+for the first person who has enough news to need it.
+
+Unread and read are the same row with a tint and a dot between them, and what moves a row
+from one to the other is opening it: the click that goes to the article marks the news
+about it, from the browser, on the way out. Arriving at the page reads nothing. A list that
+cleared itself on sight could only ever be looked at once, and whatever was below the fold
+was never read at all.
+
+The rest is cleared by saying so — **ყველა წაკითხულად მონიშვნა**, beside the count of what
+it will clear, shown only while there is something unread. Most news is read off the list
+itself: somebody liked this, somebody followed that, and only some of it is worth opening.
+Without that button the badge would outlast the reading of it, and a number that will not
+go down stops being read at all. It paints nothing early — the rows keep their tint until
+the server says otherwise and then lose it together, which is what the press was for, and
+worth a round trip to be sure of in a way a like is not. There is still no checkbox per
+row: a column of them over a list of news is a second inbox to keep.
+
+Like the feed it is a view of a reader rather than something to hand out, so a signed-out
+visitor is sent to `/`. Unlike the feed it is not where signing in lands: news is something
+you go and look at.
+
 ## Search
 
 One field, in the bar every page carries, searching **both** things there are to find: the
@@ -329,6 +419,10 @@ The wordmark leads there from every route a signed-in person can reach, and the 
 names it **სიახლეები** above **ჩემი გვერდი** — the two halves of the platform, reading and
 publishing, in the one control that is on every page. `/settings` and an article both have
 that menu, so neither is a dead end.
+
+The bell beside the avatar is not repeated inside the menu, for the reason the write button
+is not: a count nobody can see until they open something is not a count, and the same door
+twice is one door too many.
 
 ## Settings
 

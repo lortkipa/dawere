@@ -1,0 +1,177 @@
+/* The one description of what somebody's news looks like. A list of events, so
+   hairline rows rather than cards — the cards on this platform are articles,
+   and the same rule keeps `AuthorList` a list of people. */
+
+.list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Read and unread are one row with one difference, and the difference is worth
+   animating rather than switching: pressing „ყველა წაკითხულად მონიშვნა“ takes
+   the tint off a screenful of rows at once, and they should be seen going out
+   rather than found already gone. Slow enough to notice, short enough to be
+   over before the reader has finished the first line. */
+.row {
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  transition: background-color 0.9s ease, border-color 0.9s ease;
+}
+
+.unread {
+  border-color: rgba(63, 97, 131, 0.3);
+  background: rgba(63, 97, 131, 0.07);
+}
+
+/* The whole row leads to one place, so the whole row is the link. */
+.link {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 13px 15px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 17px;
+  flex: 0 0 auto;
+}
+
+/* Shrinks below its content, so a long title or a long comment truncates
+   instead of pushing the time off the end of the row. */
+.text {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.said {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* The only part of the sentence that is a fact rather than a phrase. */
+.name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.link:hover .name {
+  color: var(--accent);
+}
+
+/* What was liked, said or answered. Two lines of it: enough to know which
+   comment this is without turning a list of news into a page of them. */
+.subject {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+/* Which article the conversation was under. One line, because it is context
+   rather than content — the row above it is what happened. */
+.where {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* When, and whether it is new: the two things about the row that are not about
+   what happened, at the end of it and out of the sentence's way. */
+.aside {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+  padding-top: 3px;
+}
+
+.time {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* Drawn on every row and lit on the unread ones, so reading one fades the dot
+   out with the tint instead of collapsing the row by a few pixels. */
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.unread .dot {
+  opacity: 1;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .dot {
+    transition: none;
+  }
+}
+
+@media (max-width: 460px) {
+  /* The avatar and the gaps either side of it cost a fifth of a narrow screen,
+     and what is left has to hold a sentence and a quotation. The picture is the
+     part that can give: it says who, and the name beside it already does. */
+  .link {
+    gap: 11px;
+    padding: 12px 13px;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+}
+
+/* The one press that acts on the whole list, so it is set beside the count of
+   what it will clear rather than over the rows themselves — quiet as the count
+   until it is pointed at, because it is an offer and not the reason anybody
+   came to this page. */
+.clearAll {
+  font-size: 13px;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+
+.clearAll:hover {
+  color: var(--accent);
+}
+
+/* Mid-write, and the rows below it still say they are unread — which is the
+   truth until this lands, so nothing is dimmed and only the pointer waits. */
+.clearAll:disabled {
+  cursor: progress;
+}

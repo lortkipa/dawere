@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { articles, comments } from "@/db/schema";
 import { currentAccount } from "@/lib/account";
+import { notify } from "@/lib/notifications";
 
 /**
  * Both actions re-read the session rather than trust the caller with who is
@@ -46,7 +47,7 @@ export async function addComment(
   }
 
   const article = await db.query.articles.findFirst({
-    columns: { slug: true, status: true },
+    columns: { authorId: true, slug: true, status: true },
     where: eq(articles.id, articleId),
   });
 
@@ -62,13 +63,30 @@ export async function addComment(
     return { ok: false, error: "კომენტარი, რომელსაც პასუხობ, ვეღარ მოიძებნა." };
   }
 
-  await db.insert(comments).values({
+  const [written] = await db
+    .insert(comments)
+    .values({
+      articleId,
+      authorId: account.id,
+      // Whatever is being answered, and nothing is folded onto anything else: a
+      // reply to a reply hangs off the reply, as deep as the conversation runs.
+      parentId: parent?.id ?? null,
+      body: text,
+    })
+    .returning({ id: comments.id });
+
+  // One person is told, and it is whoever was answered: a reply answers the
+  // comment it sits under and not the conversation at large, so the author of
+  // the piece hears about the threads on it and the people in a thread hear
+  // about the answers to them. Telling the author of every reply five deep
+  // would make a busy article unreadable to the one person who cannot leave
+  // it. Neither branch tells you about yourself — `notify` drops that.
+  await notify({
+    userId: parent ? parent.authorId : article.authorId,
+    actorId: account.id,
+    kind: parent ? "reply" : "comment",
     articleId,
-    authorId: account.id,
-    // Whatever is being answered, and nothing is folded onto anything else: a
-    // reply to a reply hangs off the reply, as deep as the conversation runs.
-    parentId: parent?.id ?? null,
-    body: text,
+    commentId: written.id,
   });
 
   revalidatePath(`/a/${article.slug}`);
@@ -121,7 +139,8 @@ export async function deleteComment(id: string): Promise<CommentResult> {
  */
 function findParent(parentId: string, articleId: string) {
   return db.query.comments.findFirst({
-    columns: { id: true },
+    // Who wrote it, because they are the one the reply is news to.
+    columns: { id: true, authorId: true },
     where: and(eq(comments.id, parentId), eq(comments.articleId, articleId)),
   });
 }

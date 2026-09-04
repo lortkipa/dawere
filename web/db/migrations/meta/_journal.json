@@ -43,6 +43,13 @@
       "when": 1788514773145,
       "tag": "0005_spooky_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788516138040,
+      "tag": "0006_smiling_inertia",
+      "breakpoints": true
     }
   ]
 }

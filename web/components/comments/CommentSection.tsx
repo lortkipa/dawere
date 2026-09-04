@@ -126,7 +126,10 @@ function Comment({
     <div
       className={nested ? `${styles.thread} ${styles.nested}` : styles.thread}
     >
-      <article className={styles.comment}>
+      {/* The address of one comment inside the page holding the conversation.
+          A notification about something said here leads to this, rather than
+          to the top of the article and a hunt down the thread for it. */}
+      <article id={`c-${comment.id}`} className={styles.comment}>
         <Avatar
           name={comment.author.name}
           image={comment.author.image}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AccountMenu } from "@/components/account/AccountMenu";
+import { NotificationsBell } from "@/components/nav/NotificationsBell";
 import { SearchField } from "@/components/nav/SearchField";
 import { ButtonLink } from "@/components/ui/Button";
 import { PencilIcon } from "@/components/icons/PencilIcon";
@@ -42,6 +43,13 @@ export function AppNav({
               <PencilIcon />
               <span className={styles.ctaLabel}>სტატიის დაწერა</span>
             </ButtonLink>
+
+            {/* Beside the avatar rather than in the menu under it, because a
+                count nobody can see until they open something is not a count.
+                It is the second thing on the bar that is only about this one
+                person, so it sits with the first. */}
+            <NotificationsBell userId={account.id} />
+
             <AccountMenu account={account} />
           </>
         ) : (

@@ -174,8 +174,13 @@
 }
 
 /* One comment, laid out against the gutter: the avatar in it, everything the
-   person said past it. */
+   person said past it.
+
+   Each carries an id, so a notification lands on the comment it is about. The
+   margin is what keeps the sticky bar off it when one does — the browser stops
+   exactly where it is told, which without this is under the header. */
 .comment {
+  scroll-margin-top: calc(var(--nav-height) + 20px);
   display: grid;
   grid-template-columns: var(--avatar) minmax(0, 1fr);
   grid-template-areas:

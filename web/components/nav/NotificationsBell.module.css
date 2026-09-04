@@ -1,0 +1,43 @@
+/* The avatar's trigger beside it, at the same size and with the same ring:
+   two personal controls at the end of the bar, so they are one shape. */
+.bell {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 50%;
+  color: var(--ink-muted);
+}
+
+.bell:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+/* Accent rather than the danger red every other badge-shaped thing on the site
+   would borrow: news waiting is not a warning, and red is what this platform
+   paints the things that destroy something. The ring is the bar's own colour,
+   so the badge reads as sitting on top of the bell rather than cut into it. */
+.badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+  background: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}

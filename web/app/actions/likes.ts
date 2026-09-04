@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { articles, commentLikes, comments, likes } from "@/db/schema";
 import { currentAccount } from "@/lib/account";
 import { commentLikeCount, likeCount } from "@/lib/likes";
+import { notify, withdraw } from "@/lib/notifications";
 
 /**
  * Liking is one row, and each of these is both halves of it: `next` is the
@@ -20,6 +21,9 @@ import { commentLikeCount, likeCount } from "@/lib/likes";
  * only person whose view of it just changed is the reader who clicked — their
  * button has already painted it. Re-rendering the article underneath them to
  * move a number they are looking at would be pure waste.
+ *
+ * Both tell whoever is being liked, and both take it back when the like is —
+ * a heart pressed twice by mistake is not news that happened.
  */
 
 export type LikeResult =
@@ -51,15 +55,30 @@ export async function setLiked(
   }
 
   if (next) {
-    await db
+    const [written] = await db
       .insert(likes)
       .values({ articleId, userId: account.id })
       // Already liked: the row is the state, so there is nothing to add.
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ articleId: likes.articleId });
+
+    // Nothing came back means the row was already there, and the author was
+    // told about it when it was written. Telling them again is news of
+    // nothing — which is the whole guard against a button clicked twice.
+    if (written) {
+      await notify({
+        userId: article.authorId,
+        actorId: account.id,
+        kind: "article_like",
+        articleId,
+      });
+    }
   } else {
     await db
       .delete(likes)
       .where(and(eq(likes.articleId, articleId), eq(likes.userId, account.id)));
+
+    await withdraw({ actorId: account.id, kind: "article_like", articleId });
   }
 
   // Counted after the write rather than adjusted by one, so a reader who was
@@ -85,7 +104,13 @@ export async function setCommentLiked(
   if (!account) return { ok: false, error: "ჯერ უნდა შეხვიდე." };
 
   const [row] = await db
-    .select({ writerId: comments.authorId, status: articles.status })
+    .select({
+      writerId: comments.authorId,
+      // Which piece the conversation is under: the notification leads to the
+      // comment on its own page, so it has to know which page that is.
+      articleId: comments.articleId,
+      status: articles.status,
+    })
     .from(comments)
     .innerJoin(articles, eq(comments.articleId, articles.id))
     .where(eq(comments.id, commentId));
@@ -100,11 +125,22 @@ export async function setCommentLiked(
   }
 
   if (next) {
-    await db
+    const [written] = await db
       .insert(commentLikes)
       .values({ commentId, userId: account.id })
       // Already liked: the row is the state, so there is nothing to add.
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ commentId: commentLikes.commentId });
+
+    if (written) {
+      await notify({
+        userId: row.writerId,
+        actorId: account.id,
+        kind: "comment_like",
+        articleId: row.articleId,
+        commentId,
+      });
+    }
   } else {
     await db
       .delete(commentLikes)
@@ -114,6 +150,13 @@ export async function setCommentLiked(
           eq(commentLikes.userId, account.id),
         ),
       );
+
+    await withdraw({
+      actorId: account.id,
+      kind: "comment_like",
+      articleId: row.articleId,
+      commentId,
+    });
   }
 
   return { ok: true, liked: next, likes: await commentLikeCount(commentId) };

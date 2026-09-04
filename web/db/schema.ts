@@ -239,6 +239,102 @@ export const commentLikes = pgTable(
   (like) => [primaryKey({ columns: [like.commentId, like.userId] })],
 );
 
+/**
+ * Five things worth telling somebody about. Four are what another person did to
+ * something of theirs — liked the article, liked a comment on it, opened a
+ * thread under it, answered something they said — and the fifth is the one that
+ * was not done to them at all: an author they follow published.
+ *
+ * A follow is still not among them: that is the follower's business, and their
+ * name is already on the page they followed. Nor is a view, which is a number
+ * rather than an event and has nobody's name on it to tell.
+ */
+export type NotificationKind =
+  | "article_like"
+  | "comment_like"
+  | "comment"
+  | "reply"
+  | "published";
+
+/**
+ * One row per piece of news, and one table for all five kinds, because they are
+ * one list to whoever reads them: an inbox is not five inboxes.
+ *
+ * `user_id` is who is being told and `actor_id` is who gave them something to
+ * be told about — the same two sides `follows` has, and the same constraint
+ * across them, because news of your own doing is not news. A publish is the one
+ * kind that is told to more than one person, and it is this same row once per
+ * follower rather than a shape of its own.
+ *
+ * `article_id` is on every row, not only the ones about an article: all five
+ * happen to one, and it is the address the notification leads to. The comment,
+ * when there is one, is the anchor inside that page.
+ *
+ * Nothing here is written twice and nothing is stale, because every row hangs
+ * off the thing it reports: a deleted comment takes the news of it with it, a
+ * deleted article takes the whole conversation's and the news of its own
+ * publishing, and a deleted account takes both what it was told and what it
+ * did. What has no cascade to hang off is the like taken back — no row is
+ * deleted there that this one references — so `setLiked` withdraws it by hand.
+ * `notifications_actor_idx` is how it finds it. An unfollow withdraws nothing,
+ * because the article was still published and they were still there for it.
+ */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    /** Who is being told. */
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** Who did the thing. */
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<NotificationKind>().notNull(),
+    articleId: text("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    /**
+     * The comment liked, written or answered. Null where the news is about the
+     * article itself: a like of it, or its publication.
+     */
+    commentId: text("comment_id").references((): AnyPgColumn => comments.id, {
+      onDelete: "cascade",
+    }),
+    /**
+     * When the reader got to this piece of news — by opening it, or by clearing
+     * the list it was in, which stamps everything still unread at once. Null
+     * until then, which is what the tint and the badge are counting. A
+     * timestamp rather than a flag because it costs the same and says when.
+     */
+    readAt: timestamp("read_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (notification) => [
+    // The page's only question: this reader's news, newest first. The badge in
+    // the bar asks the same rows how many are unread, off the same prefix.
+    index("notifications_user_created_idx").on(
+      notification.userId,
+      notification.createdAt,
+    ),
+    // The other direction — what one person did — which is how a like taken
+    // back finds the row it wrote.
+    index("notifications_actor_idx").on(
+      notification.actorId,
+      notification.kind,
+      notification.articleId,
+    ),
+    // `notify` refuses it too; this is the guarantee rather than the check.
+    check(
+      "notifications_not_self",
+      sql`${notification.userId} <> ${notification.actorId}`,
+    ),
+  ],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   articles: many(articles),
   likes: many(likes),
@@ -249,6 +345,11 @@ export const usersRelations = relations(users, ({ many }) => ({
   // `followers` when they are the followed.
   following: many(follows, { relationName: "follower" }),
   followers: many(follows, { relationName: "following" }),
+  // And two over the notifications table for the same reason: a row is this
+  // user's `news` when they are the one being told, and one of their `doings`
+  // when they are the one who gave somebody else something to read.
+  news: many(notifications, { relationName: "recipient" }),
+  doings: many(notifications, { relationName: "actor" }),
 }));
 
 export const followsRelations = relations(follows, ({ one }) => ({
@@ -304,6 +405,27 @@ export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
   user: one(users, {
     fields: [commentLikes.userId],
     references: [users.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  recipient: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+    relationName: "recipient",
+  }),
+  actor: one(users, {
+    fields: [notifications.actorId],
+    references: [users.id],
+    relationName: "actor",
+  }),
+  article: one(articles, {
+    fields: [notifications.articleId],
+    references: [articles.id],
+  }),
+  comment: one(comments, {
+    fields: [notifications.commentId],
+    references: [comments.id],
   }),
 }));
 

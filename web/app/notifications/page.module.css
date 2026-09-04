@@ -1,0 +1,47 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+
+/* The same column as the feed: two lists a reader scrolls, read at one width. */
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: calc(720px + 2 * clamp(16px, 4vw, 40px));
+  margin: 0 auto;
+  padding: clamp(32px, 6vw, 56px) clamp(16px, 4vw, 40px) clamp(64px, 9vw, 96px);
+}
+
+.head {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 clamp(26px, 4vw, 36px);
+  padding: 0 0 clamp(20px, 3vw, 26px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(28px, 5vw, 36px);
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+/* How much is waiting, and the one thing to be done about all of it. Ends of
+   the same line, because the button is the answer to the count beside it. */
+.status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}

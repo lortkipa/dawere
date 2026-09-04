@@ -13,6 +13,7 @@ import {
   wordCount,
 } from "@/lib/html";
 import { currentAccount } from "@/lib/account";
+import { notifyFollowers } from "@/lib/notifications";
 import { slugFromTitle } from "@/lib/slug";
 
 /**
@@ -89,6 +90,10 @@ export async function saveArticle(input: SaveInput): Promise<SaveResult> {
       .values({ authorId, ...content, ...(input.publish ? published : {}) })
       .returning(returning);
 
+    // Written straight into the world rather than saved as a draft first: the
+    // slug is minted here, so this is the moment there is something to tell.
+    if (input.publish) await notifyFollowers(authorId, created.id);
+
     revalidate(account.handle, created.slug);
     return { ok: true, ...created };
   }
@@ -109,6 +114,10 @@ export async function saveArticle(input: SaveInput): Promise<SaveResult> {
     .set({ ...content, ...(goingPublic ? published : {}) })
     .where(and(eq(articles.id, input.id), eq(articles.authorId, authorId)))
     .returning(returning);
+
+  // The same moment on the other path: a draft becoming public, which happens
+  // once. Every save after it is the same article, so nobody is told twice.
+  if (goingPublic) await notifyFollowers(authorId, saved.id);
 
   revalidate(account.handle, saved.slug);
   return { ok: true, ...saved };
