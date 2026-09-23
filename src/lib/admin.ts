@@ -1,8 +1,9 @@
 import 'server-only';
 
 import { randomBytes } from 'node:crypto';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { adminLog, type Access, type User } from '@/db/schema';
+import { adminLog, reports, type Access, type ReportTarget, type User } from '@/db/schema';
 
 type Person = { id: string; access: Access };
 
@@ -41,7 +42,10 @@ export type AdminAction =
   | 'comment.delete'
   | 'topic.create'
   | 'topic.update'
-  | 'topic.delete';
+  | 'topic.delete'
+  | 'report.resolve'
+  | 'report.dismiss'
+  | 'report.reopen';
 
 export const ACTION_LABELS: Record<AdminAction, string> = {
   'user.create': 'შექმნა ანგარიში',
@@ -64,6 +68,9 @@ export const ACTION_LABELS: Record<AdminAction, string> = {
   'topic.create': 'შექმნა თემა',
   'topic.update': 'შეცვალა თემა',
   'topic.delete': 'წაშალა თემა',
+  'report.resolve': 'მოაგვარა საჩივარი',
+  'report.dismiss': 'უარყო საჩივარი',
+  'report.reopen': 'ხელახლა გახსნა საჩივარი',
 };
 
 export function actionLabel(action: string): string {
@@ -89,6 +96,26 @@ export async function logAdmin(
     targetLabel: (target.label ?? '').slice(0, 200),
     details: details ?? null,
   });
+}
+
+/**
+ * Closes every open report against the given targets. Called whenever an
+ * admin acts on reported content (deletes, unpublishes, suspends), so the
+ * queue does not keep asking about something already dealt with.
+ */
+export async function closeReports(
+  actor: Pick<User, 'id'>,
+  type: ReportTarget,
+  ids: string[],
+  status: 'resolved' | 'dismissed',
+): Promise<number> {
+  if (ids.length === 0) return 0;
+  const closed = await db
+    .update(reports)
+    .set({ status, resolvedBy: actor.id, resolvedAt: new Date() })
+    .where(and(eq(reports.targetType, type), inArray(reports.targetId, ids), eq(reports.status, 'open')))
+    .returning({ id: reports.id });
+  return closed.length;
 }
 
 /** A readable one-time password: 16 characters, no look-alikes to misread aloud. */

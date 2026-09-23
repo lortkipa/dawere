@@ -226,6 +226,24 @@ create table if not exists comments (
 
 create index if not exists comments_post_idx on comments (post_id, created_at);
 
+-- Replies nest to any depth: parent_id points at the comment actually answered.
+-- A comment deleted while it still has replies keeps its row (body cleared,
+-- deleted_at set) so the conversation under it stays in place.
+alter table comments add column if not exists like_count integer not null default 0;
+alter table comments add column if not exists edited_at  timestamptz;
+alter table comments add column if not exists deleted_at timestamptz;
+
+create index if not exists comments_parent_idx on comments (parent_id);
+
+create table if not exists comment_likes (
+  comment_id uuid not null references comments(id) on delete cascade,
+  user_id    uuid not null references users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
+
+create index if not exists comment_likes_user_idx on comment_likes (user_id, created_at desc);
+
 create table if not exists follows (
   follower_id  uuid not null references users(id) on delete cascade,
   following_id uuid not null references users(id) on delete cascade,
@@ -321,20 +339,41 @@ drop trigger if exists likes_count on likes;
 create trigger likes_count after insert or delete on likes
   for each row execute function bump_like_count();
 
+-- Counts comments readers can see: a soft-deleted placeholder leaves the count
+-- when it is emptied, and is not counted a second time when its row goes.
 create or replace function bump_comment_count() returns trigger as $$
 begin
   if tg_op = 'INSERT' then
     update posts set comment_count = comment_count + 1 where id = new.post_id;
-  else
-    update posts set comment_count = greatest(0, comment_count - 1) where id = old.post_id;
+  elsif tg_op = 'DELETE' then
+    if old.deleted_at is null then
+      update posts set comment_count = greatest(0, comment_count - 1) where id = old.post_id;
+    end if;
+  elsif old.deleted_at is null and new.deleted_at is not null then
+    update posts set comment_count = greatest(0, comment_count - 1) where id = new.post_id;
   end if;
   return null;
 end;
 $$ language plpgsql;
 
 drop trigger if exists comments_count on comments;
-create trigger comments_count after insert or delete on comments
+create trigger comments_count after insert or delete or update of deleted_at on comments
   for each row execute function bump_comment_count();
+
+create or replace function bump_comment_like_count() returns trigger as $$
+begin
+  if tg_op = 'INSERT' then
+    update comments set like_count = like_count + 1 where id = new.comment_id;
+  else
+    update comments set like_count = greatest(0, like_count - 1) where id = old.comment_id;
+  end if;
+  return null;
+end;
+$$ language plpgsql;
+
+drop trigger if exists comment_likes_count on comment_likes;
+create trigger comment_likes_count after insert or delete on comment_likes
+  for each row execute function bump_comment_like_count();
 
 create or replace function bump_view_count() returns trigger as $$
 begin
@@ -524,6 +563,36 @@ create table if not exists admin_log (
 
 create index if not exists admin_log_created_idx on admin_log (created_at desc);
 create index if not exists admin_log_target_idx on admin_log (target_type, target_id, created_at desc);
+
+-- --------------------------------------------------------------------- reports
+
+-- A reader flagging a post, a comment or a profile for the admins. The target
+-- is polymorphic, so its label and an excerpt are copied at report time: the
+-- admin must see what was reported even after it is edited or deleted.
+create table if not exists reports (
+  id              uuid primary key default gen_random_uuid(),
+  reporter_id     uuid references users(id) on delete set null,
+  target_type     text not null check (target_type in ('post', 'comment', 'user')),
+  target_id       uuid not null,
+  -- whoever wrote the reported thing; the account itself for a profile
+  target_owner_id uuid references users(id) on delete set null,
+  target_label    text not null default '',
+  target_excerpt  text not null default '',
+  reason          text not null check (reason in (
+    'spam', 'harassment', 'hate', 'violence', 'sexual', 'misinformation', 'impersonation', 'copyright', 'other'
+  )),
+  details         text not null default '',
+  -- 'open' until an admin acts: 'resolved' (dealt with) or 'dismissed' (no breach)
+  status          text not null default 'open' check (status in ('open', 'resolved', 'dismissed')),
+  resolved_by     uuid references users(id) on delete set null,
+  resolved_at     timestamptz,
+  created_at      timestamptz not null default now()
+);
+
+-- One open report per reader per target: pressing it twice adds nothing.
+create unique index if not exists reports_one_open_idx on reports (reporter_id, target_type, target_id) where status = 'open';
+create index if not exists reports_status_idx on reports (status, created_at desc);
+create index if not exists reports_target_idx on reports (target_type, target_id);
 
 create index if not exists comments_created_idx on comments (created_at desc);
 create index if not exists comments_body_trgm_idx on comments using gin (body gin_trgm_ops);

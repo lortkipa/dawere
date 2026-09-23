@@ -10,6 +10,7 @@ import { authorFeed } from '@/lib/feed';
 import { PostCardList } from '@/components/post-card';
 import { Pagination, Tabs } from '@/components/feed-tabs';
 import { FollowButton } from '@/components/engage-buttons';
+import { ReportButton } from '@/components/report-dialog';
 import { Avatar, ButtonLink, EmptyState } from '@/components/ui';
 import { DEFAULT_SHARE_IMAGE } from '@/lib/site';
 import { formatCount, formatMonthYear, pageParam } from '@/lib/utils';
@@ -111,12 +112,15 @@ export default async function ProfilePage(props: PageProps<'/u/[username]'>) {
                 </span>
               </ButtonLink>
             ) : (
-              <FollowButton
-                authorId={profile.id}
-                initialFollowing={Boolean(s?.follows_viewer)}
-                signedIn={Boolean(viewer)}
-                size="md"
-              />
+              <>
+                <ReportButton targetType="user" targetId={profile.id} signedIn={Boolean(viewer)} variant="icon" />
+                <FollowButton
+                  authorId={profile.id}
+                  initialFollowing={Boolean(s?.follows_viewer)}
+                  signedIn={Boolean(viewer)}
+                  size="md"
+                />
+              </>
             )}
           </div>
         </div>

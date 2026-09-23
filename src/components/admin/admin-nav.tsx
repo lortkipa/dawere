@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   ArrowLeft,
   FileText,
+  Flag,
   History,
   LayoutDashboard,
   MessageSquare,
@@ -18,12 +19,29 @@ import { UserMenu } from '@/components/user-menu';
 import { cn } from '@/lib/utils';
 
 type AdminUser = { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean };
+/** Counts shown beside a section: things waiting for an admin. */
+type Badges = Partial<Record<string, number>>;
+
+function CountBadge({ count, className }: { count?: number; className?: string }) {
+  if (!count) return null;
+  return (
+    <span
+      className={cn(
+        'rounded-full bg-danger px-1.5 text-[11px] leading-[18px] font-semibold text-danger-contrast tabular-nums',
+        className,
+      )}
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
 
 const ITEMS = [
   { href: '/admin', label: 'მიმოხილვა', icon: LayoutDashboard, exact: true },
   { href: '/admin/users', label: 'მომხმარებლები', icon: Users },
   { href: '/admin/posts', label: 'სტატიები', icon: FileText },
   { href: '/admin/comments', label: 'კომენტარები', icon: MessageSquare },
+  { href: '/admin/reports', label: 'საჩივრები', icon: Flag },
   { href: '/admin/topics', label: 'თემები', icon: Tags },
   { href: '/admin/team', label: 'გუნდი', icon: ShieldCheck },
   { href: '/admin/log', label: 'ჟურნალი', icon: History },
@@ -35,7 +53,7 @@ function useActive() {
 }
 
 /** The admin area's own rail: same shape as the app sidebar, different destinations. */
-export function AdminSidebar({ user }: { user: AdminUser }) {
+export function AdminSidebar({ user, badges = {} }: { user: AdminUser; badges?: Badges }) {
   const isActive = useActive();
 
   return (
@@ -58,12 +76,13 @@ export function AdminSidebar({ user }: { user: AdminUser }) {
               title={label}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium transition-colors xl:justify-start xl:px-3',
+                'relative flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium transition-colors xl:justify-start xl:px-3',
                 active ? 'bg-hover text-ink' : 'text-muted hover:bg-hover hover:text-ink',
               )}
             >
               <Icon className="size-[18px] shrink-0" strokeWidth={active ? 2.25 : 1.75} />
               <span className="sr-only xl:not-sr-only">{label}</span>
+              <CountBadge count={badges[href]} className="absolute top-0.5 right-0.5 xl:static xl:ml-auto" />
             </Link>
           );
         })}
@@ -87,7 +106,7 @@ export function AdminSidebar({ user }: { user: AdminUser }) {
 }
 
 /** Phones: a top bar plus a scrolling strip of sections. */
-export function AdminMobileBar({ user }: { user: AdminUser }) {
+export function AdminMobileBar({ user, badges = {} }: { user: AdminUser; badges?: Badges }) {
   const isActive = useActive();
 
   return (
@@ -111,11 +130,12 @@ export function AdminMobileBar({ user }: { user: AdminUser }) {
               href={href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'shrink-0 rounded-lg px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors',
+                'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors',
                 active ? 'bg-hover text-ink' : 'text-muted hover:text-ink',
               )}
             >
               {label}
+              <CountBadge count={badges[href]} />
             </Link>
           );
         })}

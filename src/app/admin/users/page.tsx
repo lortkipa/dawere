@@ -65,7 +65,7 @@ export default async function AdminUsersPage(props: PageProps<'/admin/users'>) {
     select u.id, u.name, u.username, u.email, u.avatar_url, u.access, u.suspended_at, u.suspended_reason, u.created_at,
       (select count(*)::int from posts p where p.author_id = u.id and p.status = 'published') as published,
       (select count(*)::int from posts p where p.author_id = u.id and p.status = 'draft') as drafts,
-      (select count(*)::int from comments c where c.author_id = u.id) as comments,
+      (select count(*)::int from comments c where c.author_id = u.id and c.deleted_at is null) as comments,
       count(*) over ()::int as total
     from users u
     where ${sql.join(where, sql` and `)}

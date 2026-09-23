@@ -109,6 +109,16 @@ export const commentSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
 });
 
+export const reportSchema = z.object({
+  targetType: z.enum(['post', 'comment', 'user']),
+  targetId: z.string().uuid(),
+  reason: z.enum(
+    ['spam', 'harassment', 'hate', 'violence', 'sexual', 'misinformation', 'impersonation', 'copyright', 'other'],
+    { error: 'აირჩიე მიზეზი.' },
+  ),
+  details: z.string().trim().max(1000, 'დეტალები მაქსიმუმ 1000 სიმბოლოა.').default(''),
+});
+
 export const deleteAccountSchema = z.object({
   password: z.string().min(1, 'შეიყვანე პაროლი.'),
   confirm: z.literal('წაშლა', { error: 'დასადასტურებლად ჩაწერე „წაშლა“.' }),

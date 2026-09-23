@@ -1,10 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { bookmarks, comments, follows, likes, posts, topics, users } from '@/db/schema';
-import { getCurrentUser } from '@/lib/auth';
+import { bookmarks, commentLikes, comments, follows, likes, posts, topics, users } from '@/db/schema';
+import { closeReports, logAdmin } from '@/lib/admin';
+import { getCurrentUser, isStaff } from '@/lib/auth';
 import {
   SIGNAL,
   forgetTopics,
@@ -133,7 +134,7 @@ export async function toggleTopicAction(topicId: string): Promise<Toggle> {
 export async function addCommentAction(
   postId: string,
   formData: FormData,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; id?: string }> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'კომენტარისთვის საჭიროა შესვლა.' };
 
@@ -151,49 +152,157 @@ export async function addCommentAction(
 
   if (!(await rateLimit(`comment:${user.id}`, 8, 60))) return { ok: false, error: TOO_MANY };
 
-  // Threads are one level deep: a reply to a reply joins its root. The parent
-  // must also belong to this post, or a crafted id could graft threads across.
+  // Replies nest under the comment actually answered, at any depth. The parent
+  // must belong to this post, or a crafted id could graft threads across posts.
   let parentId: string | null = null;
   if (parsed.data.parentId) {
     const [parent] = await db
-      .select({ id: comments.id, parentId: comments.parentId })
+      .select({ id: comments.id, deletedAt: comments.deletedAt })
       .from(comments)
       .where(and(eq(comments.id, parsed.data.parentId), eq(comments.postId, postId)))
       .limit(1);
-    if (!parent) return { ok: false, error: 'კომენტარი, რომელსაც პასუხობ, წაშლილია.' };
-    parentId = parent.parentId ?? parent.id;
+    if (!parent || parent.deletedAt) return { ok: false, error: 'კომენტარი, რომელსაც პასუხობ, წაშლილია.' };
+    parentId = parent.id;
   }
 
-  await db.insert(comments).values({
-    postId,
-    authorId: user.id,
-    parentId,
-    body: parsed.data.body,
-  });
+  const [created] = await db
+    .insert(comments)
+    .values({ postId, authorId: user.id, parentId, body: parsed.data.body })
+    .returning({ id: comments.id });
 
   await recordPostSignal(user.id, postId, 'comment');
   revalidatePath(`/p/${post.slug}`);
+  return { ok: true, id: created.id };
+}
+
+/** A comment on a published post that has not been deleted, with its post's slug. */
+async function liveComment(commentId: string) {
+  if (!isUuid(commentId)) return null;
+  const [row] = await db
+    .select({
+      id: comments.id,
+      authorId: comments.authorId,
+      body: comments.body,
+      postId: comments.postId,
+      slug: posts.slug,
+      postAuthorId: posts.authorId,
+    })
+    .from(comments)
+    .innerJoin(posts, eq(posts.id, comments.postId))
+    .where(and(eq(comments.id, commentId), isNull(comments.deletedAt), eq(posts.status, 'published')))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function toggleCommentLikeAction(commentId: string): Promise<Toggle> {
+  const user = await getCurrentUser();
+  if (!user) return UNAUTHENTICATED;
+  const comment = await liveComment(commentId);
+  if (!comment) return { ok: false, active: false, error: 'ეს კომენტარი წაშლილია.' };
+
+  if (!(await rateLimit(`comment-like:${user.id}`, 60, 60))) return { ok: false, active: false, error: TOO_MANY };
+
+  // Same delete-then-insert as post likes: no read between, so double clicks stay in step.
+  const removed = await db
+    .delete(commentLikes)
+    .where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, user.id)))
+    .returning({ commentId: commentLikes.commentId });
+
+  const active = removed.length === 0;
+  if (active) await db.insert(commentLikes).values({ commentId, userId: user.id }).onConflictDoNothing();
+
+  const [fresh] = await db
+    .select({ count: comments.likeCount })
+    .from(comments)
+    .where(eq(comments.id, commentId))
+    .limit(1);
+
+  revalidatePath(`/p/${comment.slug}`);
+  return { ok: true, active, count: fresh?.count ?? 0 };
+}
+
+export async function editCommentAction(
+  commentId: string,
+  body: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'ამისთვის საჭიროა შესვლა.' };
+
+  const comment = await liveComment(commentId);
+  if (!comment) return { ok: false, error: 'ეს კომენტარი წაშლილია.' };
+  if (comment.authorId !== user.id) return { ok: false, error: 'სხვის კომენტარს ვერ შეცვლი.' };
+
+  const parsed = commentSchema.shape.body.safeParse(body);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'ეს კომენტარი არასწორია.' };
+  if (parsed.data === comment.body) return { ok: true };
+
+  if (!(await rateLimit(`comment-edit:${user.id}`, 20, 60))) return { ok: false, error: TOO_MANY };
+
+  await db.update(comments).set({ body: parsed.data, editedAt: new Date() }).where(eq(comments.id, commentId));
+  revalidatePath(`/p/${comment.slug}`);
   return { ok: true };
 }
 
+/**
+ * Removes a comment. One with replies becomes a "deleted" placeholder so the
+ * answers under it keep their context; one without goes entirely, and so does
+ * any placeholder above it that is left with nothing to hold up.
+ */
 export async function deleteCommentAction(commentId: string): Promise<{ ok: boolean; error?: string }> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'ამისთვის საჭიროა შესვლა.' };
   if (!isUuid(commentId)) return { ok: false, error: 'ეს კომენტარი უკვე წაშლილია.' };
 
-  // A comment can be removed by its author, or by the author of the post.
-  const [row] = await db.execute<{ author_id: string; post_author_id: string; slug: string }>(sql`
-    select c.author_id, p.author_id as post_author_id, p.slug
+  const [row] = await db.execute<{
+    author_id: string;
+    post_author_id: string;
+    slug: string;
+    body: string;
+    parent_id: string | null;
+    has_replies: boolean;
+  }>(sql`
+    select c.author_id, p.author_id as post_author_id, p.slug, c.body, c.parent_id,
+           exists (select 1 from comments r where r.parent_id = c.id) as has_replies
     from comments c join posts p on p.id = c.post_id
-    where c.id = ${commentId}::uuid
+    where c.id = ${commentId}::uuid and c.deleted_at is null
   `);
 
   if (!row) return { ok: false, error: 'ეს კომენტარი უკვე წაშლილია.' };
-  if (row.author_id !== user.id && row.post_author_id !== user.id) {
-    return { ok: false, error: 'ამ კომენტარის წაშლა არ შეგიძლია.' };
+
+  // Its author, the post's author, or an admin (whose removal is logged).
+  const asStaff = row.author_id !== user.id && row.post_author_id !== user.id;
+  if (asStaff && !isStaff(user)) return { ok: false, error: 'ამ კომენტარის წაშლა არ შეგიძლია.' };
+
+  if (row.has_replies) {
+    await db.update(comments).set({ body: '', deletedAt: new Date() }).where(eq(comments.id, commentId));
+    await db.delete(commentLikes).where(eq(commentLikes.commentId, commentId));
+  } else {
+    await db.delete(comments).where(eq(comments.id, commentId));
+    await pruneEmptyPlaceholders(row.parent_id);
   }
 
-  await db.delete(comments).where(eq(comments.id, commentId));
+  if (asStaff) {
+    await logAdmin(user, 'comment.delete', { type: 'comment', id: commentId, label: row.body.slice(0, 120) }, {
+      authorId: row.author_id,
+    });
+    await closeReports(user, 'comment', [commentId], 'resolved');
+  }
+
   revalidatePath(`/p/${row.slug}`);
   return { ok: true };
+}
+
+/** Walks up from `parentId`, deleting deleted placeholders that no longer have replies. */
+async function pruneEmptyPlaceholders(parentId: string | null) {
+  let current = parentId;
+  while (current) {
+    const [removed] = await db.execute<{ parent_id: string | null }>(sql`
+      delete from comments c
+      where c.id = ${current}::uuid
+        and c.deleted_at is not null
+        and not exists (select 1 from comments r where r.parent_id = c.id)
+      returning c.parent_id
+    `);
+    current = removed?.parent_id ?? null;
+  }
 }

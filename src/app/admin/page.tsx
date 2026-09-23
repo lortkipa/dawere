@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { sql } from 'drizzle-orm';
+import { Flag } from 'lucide-react';
 import { db } from '@/db';
 import { requireAdmin } from '@/lib/auth';
 import { actionLabel } from '@/lib/admin';
@@ -43,6 +44,8 @@ export default async function AdminOverviewPage() {
       comments: number;
       comments_7: number;
       topics: number;
+      reports: number;
+      reported: number;
     }>(sql`
       select
         (select count(*)::int from users) as users,
@@ -52,9 +55,11 @@ export default async function AdminOverviewPage() {
         (select count(*)::int from posts where status = 'published') as published,
         (select count(*)::int from posts where status = 'published' and published_at > now() - interval '7 days') as published_7,
         (select count(*)::int from posts where status = 'draft') as drafts,
-        (select count(*)::int from comments) as comments,
-        (select count(*)::int from comments where created_at > now() - interval '7 days') as comments_7,
-        (select count(*)::int from topics) as topics
+        (select count(*)::int from comments where deleted_at is null) as comments,
+        (select count(*)::int from comments where deleted_at is null and created_at > now() - interval '7 days') as comments_7,
+        (select count(*)::int from topics) as topics,
+        (select count(*)::int from reports where status = 'open') as reports,
+        (select count(distinct (target_type, target_id))::int from reports where status = 'open') as reported
     `),
     dailyCounts('users'),
     dailyCounts('post_views'),
@@ -80,6 +85,20 @@ export default async function AdminOverviewPage() {
   return (
     <AdminMain>
       <PageHeader title="მიმოხილვა" description="რა ხდება საიტზე." />
+
+      {t.reported > 0 ? (
+        <Link
+          href="/admin/reports"
+          className="mb-4 flex items-center gap-3 rounded-xl border border-warning-border bg-warning-soft px-4 py-3 transition-colors hover:border-warning-text/40"
+        >
+          <Flag className="size-4 shrink-0 text-warning-text" />
+          <p className="min-w-0 flex-1 text-sm text-warning-text">
+            <span className="font-semibold">{t.reported} განსახილველი საჩივარი</span>
+            {t.reports > t.reported ? ` (${t.reports} შეტყობინება)` : ''}
+          </p>
+          <span className="shrink-0 text-[13px] font-medium text-warning-text">განხილვა →</span>
+        </Link>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
         <StatTile

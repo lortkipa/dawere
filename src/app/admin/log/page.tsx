@@ -59,6 +59,7 @@ function describe(details: Record<string, unknown> | null): string | null {
   if (typeof details.sessionsEnded === 'number') parts.push(`დასრულდა ${details.sessionsEnded} სესია`);
   if (typeof details.featured === 'boolean') parts.push(details.featured ? 'მოინიშნა რჩეულად' : 'ამოიღო რჩეულებიდან');
   if (details.access === 'admin') parts.push('როლი: ადმინი');
+  if (typeof details.reports === 'number') parts.push(`საჩივარი: ${details.reports}`);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
 

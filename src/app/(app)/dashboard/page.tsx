@@ -92,7 +92,7 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
         (select count(*)::int from likes where post_id in (select id from mine)
            and created_at > now() - interval '30 days') as likes_30,
         (select count(*)::int from comments where post_id in (select id from mine)
-           and author_id <> ${user.id}::uuid and created_at > now() - interval '30 days') as comments_30,
+           and author_id <> ${user.id}::uuid and deleted_at is null and created_at > now() - interval '30 days') as comments_30,
         (select count(*)::int from follows where following_id = ${user.id}::uuid
            and created_at > now() - interval '30 days') as followers_30
       from posts p

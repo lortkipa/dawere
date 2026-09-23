@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { db, isUniqueViolation } from '@/db';
-import { comments, posts, topics, users, type Access, type PostRevision, type User } from '@/db/schema';
+import { comments, posts, reports, topics, users, type Access, type PostRevision, type User } from '@/db/schema';
 import {
   hashPassword,
   requireAdmin,
@@ -12,7 +12,7 @@ import {
   revokeAllSessions,
   verifyPassword,
 } from '@/lib/auth';
-import { canManage, generatePassword, logAdmin } from '@/lib/admin';
+import { canManage, closeReports, generatePassword, logAdmin } from '@/lib/admin';
 import { applyRevision } from '@/lib/post-store';
 import { TOO_MANY, rateLimit } from '@/lib/rate-limit';
 import { isBlankHtml, sanitizePostHtml } from '@/lib/sanitize';
@@ -235,6 +235,7 @@ export async function suspendUsersAction(
       ...(options.unpublish ? { unpublished } : {}),
     });
   }
+  await closeReports(actor, 'user', targets.map((t) => t.id), 'resolved');
 
   refreshSite();
   return { ok: true, count: targets.length, error: skippedNote(cleanIds(ids).length, targets.length) };
@@ -259,6 +260,13 @@ export async function deleteUsersAction(ids: string[], password: string): Promis
   if (refused) return refused;
 
   const targets = await manageableUsers(actor, ids);
+  if (targets.length > 0) {
+    // Their posts and comments go with them, so every report about them is answered.
+    await db
+      .update(reports)
+      .set({ status: 'resolved', resolvedBy: actor.id, resolvedAt: new Date() })
+      .where(and(inArray(reports.targetOwnerId, targets.map((t) => t.id)), eq(reports.status, 'open')));
+  }
   for (const target of targets) {
     await deleteImagesOwnedBy(target.id);
     // Posts, comments, likes, follows and sessions cascade from the users row.
@@ -455,6 +463,7 @@ export async function unpublishPostsAction(ids: string[]): Promise<AdminResult> 
     await unpublish(post);
     await logAdmin(actor, 'post.unpublish', { type: 'post', id: post.id, label: postLabel(post) });
   }
+  await closeReports(actor, 'post', live.map((p) => p.id), 'resolved');
 
   refreshSite();
   return { ok: true, count: live.length };
@@ -485,6 +494,7 @@ export async function deletePostsAction(ids: string[]): Promise<AdminResult> {
   for (const post of removed) {
     await logAdmin(actor, 'post.delete', { type: 'post', id: post.id, label: postLabel(post) }, { authorId: post.authorId });
   }
+  await closeReports(actor, 'post', removed.map((p) => p.id), 'resolved');
 
   refreshSite();
   return { ok: true, count: removed.length };
@@ -497,11 +507,21 @@ export async function deleteCommentsAction(ids: string[]): Promise<AdminResult> 
   const clean = cleanIds(ids);
   if (clean.length === 0) return { ok: true, count: 0 };
 
-  // Replies cascade from their parent.
+  // Replies at every depth cascade from their parent; their reports close with them.
+  const doomed = await db.execute<{ id: string }>(sql`
+    with recursive thread as (
+      select id from comments where id in ${sql`(${sql.join(clean.map((id) => sql`${id}::uuid`), sql`, `)})`}
+      union
+      select c.id from comments c join thread t on c.parent_id = t.id
+    )
+    select id from thread
+  `);
+
   const removed = await db
     .delete(comments)
     .where(inArray(comments.id, clean))
     .returning({ id: comments.id, body: comments.body, postId: comments.postId, authorId: comments.authorId });
+  await closeReports(actor, 'comment', doomed.map((row) => row.id), 'resolved');
 
   for (const comment of removed) {
     await logAdmin(actor, 'comment.delete', { type: 'comment', id: comment.id, label: comment.body.slice(0, 120) }, {
@@ -594,4 +614,75 @@ export async function deleteTopicAction(topicId: string): Promise<AdminResult> {
   await logAdmin(actor, 'topic.delete', { type: 'topic', id: topicId, label: row.name });
   refreshSite();
   return { ok: true };
+}
+
+/* =================================================================== reports */
+
+type ReportTargetRef = { type: 'post' | 'comment' | 'user'; id: string };
+
+function cleanTargets(targets: unknown): ReportTargetRef[] {
+  if (!Array.isArray(targets)) return [];
+  const seen = new Set<string>();
+  const out: ReportTargetRef[] = [];
+  for (const t of targets as ReportTargetRef[]) {
+    if (!t || !['post', 'comment', 'user'].includes(t.type) || !isUuid(t.id)) continue;
+    const key = `${t.type}:${t.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ type: t.type, id: t.id });
+  }
+  return out.slice(0, 100);
+}
+
+/**
+ * Closes (resolved: dealt with; dismissed: no breach) or reopens every report
+ * on each target. Acts on targets rather than report ids: the queue shows one
+ * row per reported thing, however many readers flagged it.
+ */
+export async function setReportStatusAction(
+  targets: ReportTargetRef[],
+  status: 'resolved' | 'dismissed' | 'open',
+): Promise<AdminResult> {
+  const actor = await requireAdmin();
+  if (!['resolved', 'dismissed', 'open'].includes(status)) return NOT_ALLOWED;
+  const clean = cleanTargets(targets);
+
+  let done = 0;
+  for (const target of clean) {
+    let changed: { label: string }[];
+    if (status === 'open') {
+      // The newest closed report from each reader comes back; one open report
+      // per reader per target is all the unique index allows.
+      changed = await db.execute<{ label: string }>(sql`
+        update reports r set status = 'open', resolved_by = null, resolved_at = null
+        where r.id in (
+          select distinct on (coalesce(reporter_id::text, id::text)) id
+          from reports
+          where target_type = ${target.type} and target_id = ${target.id}::uuid and status <> 'open'
+          order by coalesce(reporter_id::text, id::text), created_at desc
+        )
+        and not exists (
+          select 1 from reports o
+          where o.status = 'open' and o.reporter_id = r.reporter_id
+            and o.target_type = r.target_type and o.target_id = r.target_id
+        )
+        returning case when r.target_type = 'comment' then left(r.target_excerpt, 120) else r.target_label end as label
+      `);
+    } else {
+      changed = await db
+        .update(reports)
+        .set({ status, resolvedBy: actor.id, resolvedAt: new Date() })
+        .where(and(eq(reports.targetType, target.type), eq(reports.targetId, target.id), eq(reports.status, 'open')))
+        .returning({
+          label: sql<string>`case when ${reports.targetType} = 'comment' then left(${reports.targetExcerpt}, 120) else ${reports.targetLabel} end`,
+        });
+    }
+    if (changed.length === 0) continue;
+    done++;
+    const action = status === 'open' ? 'report.reopen' : status === 'resolved' ? 'report.resolve' : 'report.dismiss';
+    await logAdmin(actor, action, { type: target.type, id: target.id, label: changed[0].label }, { reports: changed.length });
+  }
+
+  revalidatePath('/admin', 'layout');
+  return { ok: true, count: done };
 }

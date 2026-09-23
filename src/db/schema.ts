@@ -181,9 +181,30 @@ export const comments = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     parentId: uuid('parent_id'),
     body: text('body').notNull(),
+    likeCount: integer('like_count').notNull().default(0),
+    editedAt: timestamp('edited_at', { withTimezone: true }),
+    /** Set when a comment with replies is deleted: the row stays as a placeholder. */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('comments_post_idx').on(t.postId, t.createdAt)],
+  (t) => [index('comments_post_idx').on(t.postId, t.createdAt), index('comments_parent_idx').on(t.parentId)],
+);
+
+export const commentLikes = pgTable(
+  'comment_likes',
+  {
+    commentId: uuid('comment_id')
+      .notNull()
+      .references(() => comments.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.commentId, t.userId] }),
+    index('comment_likes_user_idx').on(t.userId, t.createdAt),
+  ],
 );
 
 export const follows = pgTable(
@@ -275,6 +296,33 @@ export const adminLog = pgTable(
   (t) => [index('admin_log_created_idx').on(t.createdAt)],
 );
 
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    reporterId: uuid('reporter_id').references(() => users.id, { onDelete: 'set null' }),
+    targetType: text('target_type', { enum: ['post', 'comment', 'user'] }).notNull(),
+    targetId: uuid('target_id').notNull(),
+    targetOwnerId: uuid('target_owner_id').references(() => users.id, { onDelete: 'set null' }),
+    targetLabel: text('target_label').notNull().default(''),
+    targetExcerpt: text('target_excerpt').notNull().default(''),
+    reason: text('reason', {
+      enum: ['spam', 'harassment', 'hate', 'violence', 'sexual', 'misinformation', 'impersonation', 'copyright', 'other'],
+    }).notNull(),
+    details: text('details').notNull().default(''),
+    status: text('status', { enum: ['open', 'resolved', 'dismissed'] })
+      .notNull()
+      .default('open'),
+    resolvedBy: uuid('resolved_by').references(() => users.id, { onDelete: 'set null' }),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('reports_status_idx').on(t.status, t.createdAt),
+    index('reports_target_idx').on(t.targetType, t.targetId),
+  ],
+);
+
 export type PostRevision = {
   title: string;
   subtitle: string;
@@ -288,3 +336,7 @@ export type Access = User['access'];
 export type Post = typeof posts.$inferSelect;
 export type Topic = typeof topics.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
+export type Report = typeof reports.$inferSelect;
+export type ReportTarget = Report['targetType'];
+export type ReportReason = Report['reason'];
+export type ReportStatus = Report['status'];

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { eq, sql } from 'drizzle-orm';
-import { ArrowLeft, ExternalLink, FileText, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileText, Flag, MessageSquare } from 'lucide-react';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { updateUserAction } from '@/app/actions/admin';
@@ -37,16 +37,20 @@ export default async function AdminUserPage(props: PageProps<'/admin/users/[id]'
       followers: number;
       following: number;
       sessions: number;
+      reports_open: number;
+      reports_total: number;
     }>(sql`
       select
         (select count(*)::int from posts where author_id = ${id}::uuid and status = 'published') as published,
         (select count(*)::int from posts where author_id = ${id}::uuid and status = 'draft') as drafts,
         (select coalesce(sum(view_count), 0)::int from posts where author_id = ${id}::uuid) as views,
-        (select count(*)::int from comments where author_id = ${id}::uuid) as comments,
+        (select count(*)::int from comments where author_id = ${id}::uuid and deleted_at is null) as comments,
         (select count(*)::int from likes where user_id = ${id}::uuid) as likes_given,
         (select count(*)::int from follows where following_id = ${id}::uuid) as followers,
         (select count(*)::int from follows where follower_id = ${id}::uuid) as following,
-        (select count(*)::int from sessions where user_id = ${id}::uuid and expires_at > now()) as sessions
+        (select count(*)::int from sessions where user_id = ${id}::uuid and expires_at > now()) as sessions,
+        (select count(*)::int from reports where target_owner_id = ${id}::uuid and status = 'open') as reports_open,
+        (select count(*)::int from reports where target_owner_id = ${id}::uuid) as reports_total
     `),
     db.execute<{ id: string; title: string; status: string; updated_at: string; view_count: number }>(sql`
       select id, title, status, updated_at, view_count from posts
@@ -104,6 +108,22 @@ export default async function AdminUserPage(props: PageProps<'/admin/users/[id]'
           </ButtonLink>
         </div>
       </header>
+
+      {stats.reports_total > 0 ? (
+        <Link
+          href={`/admin/reports?owner=${user.id}${stats.reports_open > 0 ? '' : '&status=all'}`}
+          className={
+            stats.reports_open > 0
+              ? 'mb-6 flex items-center gap-2 rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text'
+              : 'mb-6 flex items-center gap-2 rounded-xl border border-line bg-sunken px-4 py-3 text-sm text-muted hover:text-ink'
+          }
+        >
+          <Flag className="size-4 shrink-0" />
+          {stats.reports_open > 0
+            ? `${stats.reports_open} განსახილველი საჩივარი ამ ანგარიშზე ან მის შინაარსზე`
+            : `${stats.reports_total} დახურული საჩივარი ამ ანგარიშზე ან მის შინაარსზე`}
+        </Link>
+      ) : null}
 
       {user.suspendedAt ? (
         <div className="mb-6 rounded-xl border border-danger/25 bg-danger-soft px-4 py-3 text-sm text-danger">

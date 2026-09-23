@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Trash2, User } from 'lucide-react';
+import { ExternalLink, Heart, Trash2, User } from 'lucide-react';
 import { deleteCommentsAction } from '@/app/actions/admin';
 import {
   BulkBar,
@@ -21,7 +21,9 @@ export type CommentRow = {
   id: string;
   body: string;
   isReply: boolean;
+  /** Replies at every depth: deleting the comment takes them all. */
   replies: number;
+  likes: number;
   author: { id: string; name: string; username: string; avatarUrl: string | null };
   post: { id: string; title: string; slug: string; published: boolean };
   date: string;
@@ -75,10 +77,16 @@ export function CommentsTable({ rows }: { rows: CommentRow[] }) {
               </td>
               <td className={`${TD_CLASS} max-w-md align-top`}>
                 <p className="line-clamp-3 whitespace-pre-line text-ink">{row.body}</p>
-                {row.isReply || row.replies > 0 ? (
+                {row.isReply || row.replies > 0 || row.likes > 0 ? (
                   <div className="mt-1 flex gap-1">
                     {row.isReply ? <Badge>პასუხი</Badge> : null}
                     {row.replies > 0 ? <Badge>{row.replies} პასუხი</Badge> : null}
+                    {row.likes > 0 ? (
+                      <Badge>
+                        <Heart />
+                        {row.likes}
+                      </Badge>
+                    ) : null}
                   </div>
                 ) : null}
               </td>
@@ -106,7 +114,7 @@ export function CommentsTable({ rows }: { rows: CommentRow[] }) {
                 <RowMenu
                   items={[
                     ...(row.post.published
-                      ? [{ label: 'სტატიაში ნახვა', icon: <ExternalLink />, href: `/p/${row.post.slug}#comments` }]
+                      ? [{ label: 'სტატიაში ნახვა', icon: <ExternalLink />, href: `/p/${row.post.slug}#comment-${row.id}` }]
                       : []),
                     { label: 'ავტორი', icon: <User />, href: `/admin/users/${row.author.id}` },
                     null,

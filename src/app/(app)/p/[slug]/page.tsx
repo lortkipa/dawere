@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Eye, Flag, PenLine } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { Eye, PenLine } from 'lucide-react';
+import { getCurrentUser, isStaff } from '@/lib/auth';
 import { getComments, getPostBySlug } from '@/lib/posts';
 import { relatedPosts } from '@/lib/feed';
-import { DEFAULT_SHARE_IMAGE, SITE_URL, SUPPORT_EMAIL, supportMailto } from '@/lib/site';
+import { DEFAULT_SHARE_IMAGE, SITE_URL } from '@/lib/site';
 import { withHeadingIds } from '@/lib/toc';
 import { cn, excerpt, formatCount, formatDate } from '@/lib/utils';
 import { Avatar, ButtonLink } from '@/components/ui';
@@ -13,6 +13,7 @@ import { BookmarkButton, CommentCountLink, FollowButton, LikeButton } from '@/co
 import { FlashToast, ReadingProgress, ShareButton, TableOfContents } from '@/components/article-chrome';
 import { ViewTracker } from '@/components/view-tracker';
 import { Comments } from '@/components/comments';
+import { ReportButton } from '@/components/report-dialog';
 import { CompactPostCard } from '@/components/post-card';
 
 /** Below this many sections an outline adds clutter, not navigation. */
@@ -60,7 +61,7 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
   if (post.status !== 'published' && !isAuthor) notFound();
 
   const [comments, related] = await Promise.all([
-    getComments(post.id),
+    getComments(user?.id ?? null, post.id),
     relatedPosts(user?.id ?? null, post.id, 3),
   ]);
 
@@ -286,23 +287,20 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
             {post.author.bio ? (
               <p className="mt-4 text-[15px] leading-relaxed text-muted">{post.author.bio}</p>
             ) : null}
-            {post.status === 'published' && !isAuthor && SUPPORT_EMAIL ? (
-              <a
-                href={`${supportMailto('დარღვევის შეტყობინება')}&body=${encodeURIComponent(`${SITE_URL}/p/${post.slug}\n\n`)}`}
-                className="mt-6 inline-flex items-center gap-1.5 text-[12px] text-subtle transition-colors hover:text-ink"
-              >
-                <Flag className="size-3.5" aria-hidden />
-                დარღვევის შეტყობინება
-              </a>
+            {post.status === 'published' && !isAuthor ? (
+              <div className="mt-6">
+                <ReportButton targetType="post" targetId={post.id} signedIn={signedIn} />
+              </div>
             ) : null}
           </section>
 
           <div className="mt-12 border-t border-line pt-10">
             <Comments
               postId={post.id}
+              postAuthorId={post.author.id}
               total={post.commentCount}
               comments={comments}
-              canModerate={isAuthor}
+              canModerate={isAuthor || isStaff(user)}
               canComment={post.status === 'published'}
               viewer={
                 user

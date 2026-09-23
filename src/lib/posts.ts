@@ -170,27 +170,47 @@ export const getPostBySlug = cache(async (viewerId: string | null, slug: string)
   };
 });
 
+export type CommentAuthor = { id: string; name: string; username: string; avatarUrl: string | null };
+
 export type CommentNode = {
   id: string;
   body: string;
   createdAt: Date | null;
-  author: { id: string; name: string; username: string; avatarUrl: string | null };
+  editedAt: Date | null;
+  /** A deleted comment kept as a placeholder because it has replies. */
+  deleted: boolean;
+  likeCount: number;
+  liked: boolean;
+  author: CommentAuthor;
+  /** Replies at every depth below this one. */
+  replyCount: number;
   replies: CommentNode[];
 };
 
-/** Comments for one post, nested one level deep. */
-export async function getComments(postId: string): Promise<CommentNode[]> {
+/**
+ * Every comment on a post as a tree of any depth: top-level comments newest
+ * first, replies oldest first so a conversation reads down the page.
+ */
+export async function getComments(viewerId: string | null, postId: string): Promise<CommentNode[]> {
   const rows = await db.execute<{
     id: string;
     body: string;
     created_at: Date | string;
+    edited_at: Date | string | null;
+    deleted_at: Date | string | null;
     parent_id: string | null;
+    like_count: number;
+    liked: boolean;
     author_id: string;
     author_name: string;
     author_username: string;
     author_avatar: string | null;
   }>(sql`
-    select c.id, c.body, c.created_at, c.parent_id,
+    select c.id, c.body, c.created_at, c.edited_at, c.deleted_at, c.parent_id, c.like_count,
+           exists (
+             select 1 from comment_likes cl
+             where cl.comment_id = c.id and cl.user_id = ${viewerId}::uuid
+           ) as liked,
            u.id as author_id, u.name as author_name, u.username as author_username,
            u.avatar_url as author_avatar
     from comments c
@@ -203,16 +223,22 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
   const roots: CommentNode[] = [];
 
   for (const row of rows) {
+    const deleted = row.deleted_at !== null;
     nodes.set(row.id, {
       id: row.id,
-      body: row.body,
+      body: deleted ? '' : row.body,
       createdAt: toDate(row.created_at),
+      editedAt: row.edited_at ? toDate(row.edited_at) : null,
+      deleted,
+      likeCount: deleted ? 0 : row.like_count,
+      liked: !deleted && Boolean(row.liked),
       author: {
         id: row.author_id,
         name: row.author_name,
         username: row.author_username,
         avatarUrl: row.author_avatar,
       },
+      replyCount: 0,
       replies: [],
     });
   }
@@ -220,10 +246,18 @@ export async function getComments(postId: string): Promise<CommentNode[]> {
   for (const row of rows) {
     const node = nodes.get(row.id)!;
     const parent = row.parent_id ? nodes.get(row.parent_id) : null;
-    // A reply whose parent was deleted is promoted to a root rather than lost.
     if (parent) parent.replies.push(node);
     else roots.push(node);
   }
 
-  return roots.reverse();
+  // Counts replies and drops placeholders with nothing left under them.
+  function settle(list: CommentNode[]): CommentNode[] {
+    return list.filter((node) => {
+      node.replies = settle(node.replies);
+      node.replyCount = node.replies.reduce((sum, reply) => sum + 1 + reply.replyCount, 0);
+      return !node.deleted || node.replies.length > 0;
+    });
+  }
+
+  return settle(roots).reverse();
 }

@@ -23,6 +23,7 @@ type Row = {
   body: string;
   parent_id: string | null;
   replies: number;
+  like_count: number;
   created_at: string;
   author_id: string;
   author_name: string;
@@ -64,7 +65,8 @@ export default async function AdminCommentsPage(props: PageProps<'/admin/comment
   const authorId = isUuid(params.author) ? params.author : '';
   const page = pageParam(params.page);
 
-  const where: SQL[] = [sql`true`];
+  // Placeholders left by deleted comments with replies have nothing to moderate.
+  const where: SQL[] = [sql`c.deleted_at is null`];
   if (q) {
     const pattern = likePattern(q.replace(/^@/, ''));
     where.push(sql`(c.body ilike ${pattern} or u.name ilike ${pattern} or u.username ilike ${pattern})`);
@@ -77,7 +79,15 @@ export default async function AdminCommentsPage(props: PageProps<'/admin/comment
   const [rows, scopedPost, scopedAuthor] = await Promise.all([
     db.execute<Row>(sql`
       select c.id, c.body, c.parent_id, c.created_at,
-        (select count(*)::int from comments r where r.parent_id = c.id) as replies,
+        (
+          with recursive thread as (
+            select r.id from comments r where r.parent_id = c.id
+            union all
+            select r.id from comments r join thread t on r.parent_id = t.id
+          )
+          select count(*)::int from thread
+        ) as replies,
+        c.like_count,
         u.id as author_id, u.name as author_name, u.username as author_username, u.avatar_url as author_avatar,
         p.id as post_id, p.title as post_title, p.slug as post_slug, p.status as post_status,
         count(*) over ()::int as total
@@ -99,6 +109,7 @@ export default async function AdminCommentsPage(props: PageProps<'/admin/comment
     body: row.body,
     isReply: Boolean(row.parent_id),
     replies: row.replies,
+    likes: row.like_count,
     author: { id: row.author_id, name: row.author_name, username: row.author_username, avatarUrl: row.author_avatar },
     post: { id: row.post_id, title: row.post_title, slug: row.post_slug, published: row.post_status === 'published' },
     date: formatDate(row.created_at),
