@@ -1,0 +1,561 @@
+'use client';
+
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  ExternalLink,
+  EyeOff,
+  ImagePlus,
+  Loader2,
+  MoreHorizontal,
+  RotateCcw,
+  Trash2,
+  Undo2,
+  X,
+} from 'lucide-react';
+import { RichTextEditor } from './rich-text-editor';
+import { TagInput } from './tag-input';
+import {
+  deletePostAction,
+  discardChangesAction,
+  publishPostAction,
+  savePostAction,
+  unpublishPostAction,
+  type SaveResult,
+} from '@/app/actions/posts';
+import { Badge, Button, FormError } from '@/components/ui';
+import { ConfirmDialog } from '@/components/confirm-dialog';
+import { toast } from '@/components/toaster';
+import { Logo } from '@/components/logo';
+import { uploadImage } from '@/lib/upload-client';
+import { cn, minutesForLength } from '@/lib/utils';
+
+const AUTOSAVE_DELAY = 1200;
+
+type Draft = {
+  title: string;
+  subtitle: string;
+  contentHtml: string;
+  coverImageUrl: string | null;
+  topics: string[];
+};
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+
+/** A textarea that grows with its content, including on first render. */
+function useAutoHeight(value: string) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return ref;
+}
+
+export function PostEditor({
+  postId,
+  slug,
+  status,
+  initial,
+  initiallyPending,
+  topicSuggestions,
+}: {
+  postId: string;
+  slug: string;
+  status: 'draft' | 'published';
+  initial: Draft;
+  /** A published post with edits that have not been pushed live yet. */
+  initiallyPending: boolean;
+  topicSuggestions: string[];
+}) {
+  const router = useRouter();
+  const [draft, setDraft] = useState<Draft>(initial);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [error, setError] = useState<string | undefined>();
+  const [pendingChanges, setPendingChanges] = useState(initiallyPending);
+  // Anything typed this session, saved or not: enough to make "update" meaningful.
+  const [edited, setEdited] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirm, setConfirm] = useState<'delete' | 'discard' | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [textLength, setTextLength] = useState(0);
+  const [pending, startTransition] = useTransition();
+  const coverRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const titleRef = useAutoHeight(draft.title);
+  const subtitleRef = useAutoHeight(draft.subtitle);
+
+  const published = status === 'published';
+
+  // `latest` lets the save and unload handlers read current values without
+  // re-registering on every keystroke.
+  const latest = useRef(draft);
+  const dirty = useRef(false);
+  const inFlight = useRef<Promise<void> | null>(null);
+
+  useEffect(() => {
+    latest.current = draft;
+  }, [draft]);
+
+  /**
+   * Saves are serialised: a save started while another is running waits for
+   * it, so an older snapshot can never land after a newer one. A failed save
+   * leaves the draft dirty, so the next attempt still carries the changes.
+   */
+  const save = useCallback(async () => {
+    while (inFlight.current) await inFlight.current;
+    if (!dirty.current) return;
+    dirty.current = false;
+    setSaveState('saving');
+
+    const run = (async () => {
+      let result: SaveResult;
+      try {
+        result = await savePostAction(postId, latest.current);
+      } catch {
+        result = { ok: false, error: 'კავშირი ვერ დამყარდა. ცვლილებები ჯერ არ შენახულა.' };
+      }
+      if (result.ok) {
+        setSaveState('saved');
+        setError(undefined);
+        if (published) setPendingChanges(true);
+      } else {
+        dirty.current = true;
+        setSaveState('error');
+        setError(result.error);
+      }
+    })();
+
+    inFlight.current = run;
+    try {
+      await run;
+    } finally {
+      inFlight.current = null;
+    }
+  }, [postId, published]);
+
+  function update(patch: Partial<Draft>) {
+    dirty.current = true;
+    setEdited(true);
+    setSaveState('idle');
+    setDraft((current) => ({ ...current, ...patch }));
+  }
+
+  useEffect(() => {
+    if (!dirty.current) return;
+    const timer = setTimeout(() => void save(), AUTOSAVE_DELAY);
+    return () => clearTimeout(timer);
+  }, [draft, save]);
+
+  // A last-chance save when the tab goes away, a warning if that cannot finish,
+  // and Ctrl/Cmd+S for people who save by reflex.
+  useEffect(() => {
+    function onHide() {
+      if (document.visibilityState === 'hidden' && dirty.current) void save();
+    }
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      if (dirty.current || inFlight.current) event.preventDefault();
+    }
+    function onKey(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        if (dirty.current) void save();
+        else setSaveState('saved');
+      }
+    }
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [save]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onClick(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  function fail(message: string | undefined) {
+    setError(message);
+    toast(message ?? 'ვერ მოხერხდა.', 'error');
+  }
+
+  function onPublish() {
+    startTransition(async () => {
+      await save();
+      if (dirty.current) return; // the save failed; its error is already showing
+      const result = await publishPostAction(postId);
+      // A successful publish redirects, so reaching here means it refused.
+      if (result && !result.ok) fail(result.error);
+    });
+  }
+
+  function onUnpublish() {
+    setMenuOpen(false);
+    startTransition(async () => {
+      await save();
+      const result = await unpublishPostAction(postId);
+      if (result.ok) {
+        toast('სტატია მონახაზებში გადავიდა');
+        router.refresh();
+      } else {
+        fail(result.error);
+      }
+    });
+  }
+
+  function onDiscard() {
+    startTransition(async () => {
+      // Anything still queued would re-create the revision we are discarding.
+      dirty.current = false;
+      while (inFlight.current) await inFlight.current;
+      const result = await discardChangesAction(postId);
+      if (result.ok) {
+        // Reload rather than refresh: the editor's content is uncontrolled and
+        // must be rebuilt from the published text.
+        window.location.reload();
+      } else {
+        setConfirm(null);
+        fail(result.error);
+      }
+    });
+  }
+
+  function onDelete() {
+    startTransition(async () => {
+      dirty.current = false;
+      while (inFlight.current) await inFlight.current;
+      const result = await deletePostAction(postId);
+      if (result && !result.ok) {
+        setConfirm(null);
+        fail(result.error);
+      }
+    });
+  }
+
+  async function onCoverSelected(file: File) {
+    setUploadingCover(true);
+    try {
+      const result = await uploadImage(file);
+      if (result.url) update({ coverImageUrl: result.url });
+      else fail(result.error);
+    } finally {
+      setUploadingCover(false);
+    }
+  }
+
+  const minutes = minutesForLength(textLength);
+
+  return (
+    <div className="flex min-h-dvh flex-col">
+      {/* ---------------------------------------------------------- top bar */}
+      <header className="sticky top-0 z-40 border-b border-line/80 bg-surface/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
+          <Link
+            href="/dashboard"
+            aria-label="პანელზე დაბრუნება"
+            className="-ml-2 flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
+          >
+            <ArrowLeft className="size-[18px]" />
+          </Link>
+          <Link href="/" className="hidden sm:block" aria-label="Dawere — მთავარი">
+            <Logo className="text-[19px]" />
+          </Link>
+
+          <div className="flex min-w-0 items-center gap-2 text-[13px] sm:ml-2">
+            <Badge tone={published ? 'accent' : 'neutral'}>{published ? 'გამოქვეყნებული' : 'მონახაზი'}</Badge>
+            <SaveIndicator state={saveState} onRetry={() => void save()} />
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            {published ? (
+              <Link
+                href={`/p/${slug}`}
+                className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
+              >
+                <ExternalLink className="size-4" />
+                ნახვა
+              </Link>
+            ) : null}
+
+            <div ref={menuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="სხვა მოქმედებები"
+                className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
+              >
+                <MoreHorizontal className="size-[18px]" />
+              </button>
+              {menuOpen ? (
+                <div
+                  role="menu"
+                  className="animate-pop-in absolute top-11 right-0 z-50 w-60 overflow-hidden rounded-2xl border border-line bg-raised py-1 shadow-lift"
+                >
+                  {published ? (
+                    <MenuItem icon={ExternalLink} href={`/p/${slug}`} className="sm:hidden">
+                      სტატიის ნახვა
+                    </MenuItem>
+                  ) : null}
+                  {pendingChanges ? (
+                    <MenuItem
+                      icon={Undo2}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setConfirm('discard');
+                      }}
+                    >
+                      ცვლილებების გაუქმება
+                    </MenuItem>
+                  ) : null}
+                  {published ? (
+                    <MenuItem icon={EyeOff} onClick={onUnpublish}>
+                      მონახაზებში გადატანა
+                    </MenuItem>
+                  ) : null}
+                  <MenuItem
+                    icon={Trash2}
+                    danger
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setConfirm('delete');
+                    }}
+                  >
+                    სტატიის წაშლა
+                  </MenuItem>
+                </div>
+              ) : null}
+            </div>
+
+            <Button size="sm" onClick={onPublish} disabled={pending || (published && !pendingChanges && !edited)}>
+              {pending ? <Loader2 className="animate-spin" /> : null}
+              {published ? 'განახლება' : 'გამოქვეყნება'}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-8 pb-24 sm:px-6 sm:pt-12">
+        {published && pendingChanges ? (
+          <div className="mb-8 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
+            <AlertCircle className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1">
+              ცვლილებებს ჯერ მხოლოდ შენ ხედავ. მკითხველი ძველ ვერსიას კითხულობს, სანამ „განახლებას“ არ დააჭერ.
+            </span>
+          </div>
+        ) : null}
+
+        {error ? (
+          <div className="mb-6">
+            <FormError>{error}</FormError>
+          </div>
+        ) : null}
+
+        {/* ------------------------------------------------------------ cover */}
+        {draft.coverImageUrl ? (
+          <div className="group relative mb-8 overflow-hidden rounded-2xl border border-line">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={draft.coverImageUrl} alt="" className="max-h-96 w-full object-cover" />
+            <div className="absolute top-3 right-3 flex gap-2 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => coverRef.current?.click()}
+                className="flex h-9 items-center gap-1.5 rounded-full bg-black/60 px-3.5 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
+              >
+                {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+                შეცვლა
+              </button>
+              <button
+                type="button"
+                onClick={() => update({ coverImageUrl: null })}
+                className="flex size-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur hover:bg-black/80"
+                aria-label="ყდის სურათის წაშლა"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => coverRef.current?.click()}
+            disabled={uploadingCover}
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-dashed border-line-strong px-4 py-2 text-sm text-muted transition-colors hover:border-ink/30 hover:bg-hover hover:text-ink"
+          >
+            {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+            ყდის სურათი
+          </button>
+        )}
+        <input
+          ref={coverRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void onCoverSelected(file);
+            event.target.value = '';
+          }}
+        />
+
+        {/* ----------------------------------------------------------- fields */}
+        <textarea
+          ref={titleRef}
+          value={draft.title}
+          onChange={(e) => update({ title: e.target.value.replace(/\n/g, '') })}
+          placeholder="სათაური"
+          rows={1}
+          maxLength={160}
+          aria-label="სათაური"
+          className="w-full resize-none overflow-hidden bg-transparent font-serif text-[2.1rem] leading-[1.15] font-bold tracking-tight text-ink placeholder:text-subtle/70 focus:outline-none sm:text-[2.75rem]"
+        />
+
+        <textarea
+          ref={subtitleRef}
+          value={draft.subtitle}
+          onChange={(e) => update({ subtitle: e.target.value.replace(/\n/g, '') })}
+          placeholder="ქვესათაური — ერთი წინადადება, რომელიც კითხვის სურვილს აღძრავს"
+          rows={1}
+          maxLength={240}
+          aria-label="ქვესათაური"
+          className="mt-3 w-full resize-none overflow-hidden bg-transparent text-lg leading-relaxed text-muted placeholder:text-subtle/70 focus:outline-none sm:text-xl"
+        />
+
+        <div className="mt-6">
+          <TagInput
+            value={draft.topics}
+            onChange={(topics) => update({ topics })}
+            suggestions={topicSuggestions}
+          />
+        </div>
+
+        <div className="mt-8">
+          <RichTextEditor
+            initialContent={initial.contentHtml}
+            onChange={(contentHtml, length) => {
+              setTextLength(length);
+              update({ contentHtml });
+            }}
+            onReady={setTextLength}
+            onUploadImage={uploadImage}
+            onError={fail}
+          />
+        </div>
+
+        <p className="mt-10 border-t border-line pt-4 text-[13px] text-subtle">
+          {textLength.toLocaleString('en-US').replace(/,/g, ' ')} სიმბოლო · დაახლოებით {minutes} წთ კითხვა
+          <span className="hidden sm:inline"> · Ctrl+S ინახავს დაუყოვნებლივ</span>
+        </p>
+      </main>
+
+      <ConfirmDialog
+        open={confirm === 'delete'}
+        title="წავშალოთ სტატია?"
+        description="სტატია, მისი კომენტარები და სტატისტიკა სამუდამოდ წაიშლება. ამის დაბრუნება შეუძლებელია."
+        confirmLabel="წაშლა"
+        pending={pending}
+        onConfirm={onDelete}
+        onClose={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        open={confirm === 'discard'}
+        title="გავაუქმოთ ცვლილებები?"
+        description="რედაქტორი დაუბრუნდება გამოქვეყნებულ ვერსიას. ბოლო განახლების შემდეგ შეტანილი ცვლილებები დაიკარგება."
+        confirmLabel="გაუქმება"
+        pending={pending}
+        onConfirm={onDiscard}
+        onClose={() => setConfirm(null)}
+      />
+    </div>
+  );
+}
+
+function MenuItem({
+  icon: Icon,
+  children,
+  onClick,
+  href,
+  danger,
+  className,
+}: {
+  icon: typeof Trash2;
+  children: React.ReactNode;
+  onClick?: () => void;
+  href?: string;
+  danger?: boolean;
+  className?: string;
+}) {
+  const classes = cn(
+    'flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors hover:bg-hover',
+    danger ? 'text-danger' : 'text-muted hover:text-ink',
+    className,
+  );
+  if (href) {
+    return (
+      <Link href={href} role="menuitem" className={classes}>
+        <Icon className="size-4" />
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" role="menuitem" onClick={onClick} className={classes}>
+      <Icon className="size-4" />
+      {children}
+    </button>
+  );
+}
+
+function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
+  if (state === 'saving') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-subtle">
+        <Loader2 className="size-3.5 animate-spin" />
+        <span className="hidden sm:inline">ინახება…</span>
+      </span>
+    );
+  }
+  if (state === 'saved') {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-subtle">
+        <Check className="size-3.5" />
+        <span className="hidden sm:inline">შენახულია</span>
+      </span>
+    );
+  }
+  if (state === 'error') {
+    return (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex items-center gap-1.5 font-medium text-danger hover:underline"
+      >
+        <AlertCircle className="size-3.5" />
+        ხელახლა ცდა
+      </button>
+    );
+  }
+  return null;
+}

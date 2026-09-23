@@ -1,0 +1,12 @@
+node_modules
+.next
+uploads
+.git
+.env*
+!.env.example
+npm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+compose.yaml
+Dockerfile
+.dockerignore

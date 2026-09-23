@@ -1,0 +1,43 @@
+# Dawere on one host: the app and its Postgres. Put POSTGRES_PASSWORD and
+# SITE_URL in a .env file next to this one (see deploy/nas.env.example).
+name: dawere
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dawere
+      POSTGRES_USER: dawere
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dawere -d dawere"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # No ports: Postgres is reachable only from the app container.
+
+  app:
+    build:
+      context: .
+      args:
+        SITE_URL: ${SITE_URL:?set SITE_URL in .env}
+    image: dawere:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://dawere:${POSTGRES_PASSWORD}@db:5432/dawere
+      SITE_URL: ${SITE_URL}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
+    ports:
+      - "${APP_PORT:-8000}:3000"
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  pgdata:
+  uploads:
