@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { bookmarks, commentLikes, comments, follows, likes, posts, topics, users } from '@/db/schema';
+import { bookmarks, commentLikes, comments, follows, likes, notifications, posts, topics, users } from '@/db/schema';
 import { closeReports, logAdmin } from '@/lib/admin';
 import { getCurrentUser, isStaff } from '@/lib/auth';
 import {
@@ -14,6 +14,7 @@ import {
   recordPostSignal,
   recordTopicSignal,
 } from '@/lib/interests';
+import { notify, notifyComment, notifyMentions, withdraw } from '@/lib/notifications';
 import { TOO_MANY, rateLimit } from '@/lib/rate-limit';
 import { commentSchema } from '@/lib/validation';
 import { isUuid } from '@/lib/utils';
@@ -27,7 +28,7 @@ const UNAVAILABLE: Toggle = { ok: false, active: false, error: 'ეს სტა
 async function publishedPost(postId: string) {
   if (!isUuid(postId)) return null;
   const [post] = await db
-    .select({ id: posts.id, slug: posts.slug })
+    .select({ id: posts.id, slug: posts.slug, authorId: posts.authorId })
     .from(posts)
     .where(and(eq(posts.id, postId), eq(posts.status, 'published')))
     .limit(1);
@@ -52,6 +53,9 @@ export async function toggleLikeAction(postId: string): Promise<Toggle> {
     await db.insert(likes).values({ postId, userId: user.id }).onConflictDoNothing();
     // Liking is one of the strongest interest signals we get.
     await recordPostSignal(user.id, postId, 'like');
+    await notify(post.authorId, user.id, 'post_like', { postId });
+  } else {
+    await withdraw(post.authorId, user.id, 'post_like', { postId });
   }
 
   const [fresh] = await db.select({ count: posts.likeCount }).from(posts).where(eq(posts.id, postId)).limit(1);
@@ -99,6 +103,9 @@ export async function toggleFollowAction(authorId: string): Promise<Toggle> {
   if (active) {
     await db.insert(follows).values({ followerId: user.id, followingId: authorId }).onConflictDoNothing();
     await recordFollowSignal(user.id, authorId);
+    await notify(authorId, user.id, 'follow');
+  } else {
+    await withdraw(authorId, user.id, 'follow');
   }
 
   revalidatePath(`/u/${author.username}`);
@@ -155,14 +162,16 @@ export async function addCommentAction(
   // Replies nest under the comment actually answered, at any depth. The parent
   // must belong to this post, or a crafted id could graft threads across posts.
   let parentId: string | null = null;
+  let parentAuthorId: string | null = null;
   if (parsed.data.parentId) {
     const [parent] = await db
-      .select({ id: comments.id, deletedAt: comments.deletedAt })
+      .select({ id: comments.id, authorId: comments.authorId, deletedAt: comments.deletedAt })
       .from(comments)
       .where(and(eq(comments.id, parsed.data.parentId), eq(comments.postId, postId)))
       .limit(1);
     if (!parent || parent.deletedAt) return { ok: false, error: 'კომენტარი, რომელსაც პასუხობ, წაშლილია.' };
     parentId = parent.id;
+    parentAuthorId = parent.authorId;
   }
 
   const [created] = await db
@@ -171,6 +180,14 @@ export async function addCommentAction(
     .returning({ id: comments.id });
 
   await recordPostSignal(user.id, postId, 'comment');
+  await notifyComment({
+    actorId: user.id,
+    postId,
+    postAuthorId: post.authorId,
+    commentId: created.id,
+    parentAuthorId,
+    body: parsed.data.body,
+  });
   revalidatePath(`/p/${post.slug}`);
   return { ok: true, id: created.id };
 }
@@ -209,7 +226,13 @@ export async function toggleCommentLikeAction(commentId: string): Promise<Toggle
     .returning({ commentId: commentLikes.commentId });
 
   const active = removed.length === 0;
-  if (active) await db.insert(commentLikes).values({ commentId, userId: user.id }).onConflictDoNothing();
+  const target = { postId: comment.postId, commentId };
+  if (active) {
+    await db.insert(commentLikes).values({ commentId, userId: user.id }).onConflictDoNothing();
+    await notify(comment.authorId, user.id, 'comment_like', target);
+  } else {
+    await withdraw(comment.authorId, user.id, 'comment_like', target);
+  }
 
   const [fresh] = await db
     .select({ count: comments.likeCount })
@@ -239,6 +262,7 @@ export async function editCommentAction(
   if (!(await rateLimit(`comment-edit:${user.id}`, 20, 60))) return { ok: false, error: TOO_MANY };
 
   await db.update(comments).set({ body: parsed.data, editedAt: new Date() }).where(eq(comments.id, commentId));
+  await notifyMentions(user.id, parsed.data, { postId: comment.postId, commentId });
   revalidatePath(`/p/${comment.slug}`);
   return { ok: true };
 }
@@ -276,6 +300,8 @@ export async function deleteCommentAction(commentId: string): Promise<{ ok: bool
   if (row.has_replies) {
     await db.update(comments).set({ body: '', deletedAt: new Date() }).where(eq(comments.id, commentId));
     await db.delete(commentLikes).where(eq(commentLikes.commentId, commentId));
+    // The placeholder row stays, so the cascade that clears these on a real delete does not fire.
+    await db.delete(notifications).where(eq(notifications.commentId, commentId));
   } else {
     await db.delete(comments).where(eq(comments.id, commentId));
     await pruneEmptyPlaceholders(row.parent_id);

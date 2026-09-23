@@ -21,6 +21,9 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/notification-types';
+
+export { NOTIFICATION_TYPES, type NotificationType };
 
 export const users = pgTable(
   'users',
@@ -46,6 +49,8 @@ export const users = pgTable(
       .default('user'),
     suspendedAt: timestamp('suspended_at', { withTimezone: true }),
     suspendedReason: text('suspended_reason').notNull().default(''),
+    /** Notification types switched off in settings. */
+    mutedNotifications: text('muted_notifications').array().$type<NotificationType[]>().notNull().default([]),
     onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -321,6 +326,25 @@ export const reports = pgTable(
     index('reports_status_idx').on(t.status, t.createdAt),
     index('reports_target_idx').on(t.targetType, t.targetId),
   ],
+);
+
+export const notifications = pgTable(
+  'notifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    recipientId: uuid('recipient_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    actorId: uuid('actor_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type', { enum: NOTIFICATION_TYPES }).notNull(),
+    postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+    commentId: uuid('comment_id').references(() => comments.id, { onDelete: 'cascade' }),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('notifications_recipient_idx').on(t.recipientId, t.createdAt)],
 );
 
 export type PostRevision = {

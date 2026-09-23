@@ -7,6 +7,7 @@ import {
   AvatarForm,
   DeleteAccountForm,
   InterestsForm,
+  NotificationSettingsForm,
   PasswordForm,
   ProfileForm,
   SessionsCard,
@@ -18,6 +19,7 @@ export const metadata: Metadata = { title: 'პარამეტრები', 
 const SECTIONS = [
   { id: 'profile', label: 'პროფილი' },
   { id: 'interests', label: 'ინტერესები' },
+  { id: 'notifications', label: 'შეტყობინებები' },
   { id: 'account', label: 'ანგარიში' },
 ];
 
@@ -75,6 +77,8 @@ export default async function SettingsPage() {
             interests={interests.map(({ slug, name }) => ({ slug, name }))}
             suggestions={featured.map(({ slug, name }) => ({ slug, name }))}
           />
+
+          <NotificationSettingsForm muted={user.mutedNotifications} />
 
           <section id="account" className="scroll-mt-24 space-y-4">
             <div className="rounded-xl border border-line bg-sunken px-5 py-3.5 text-sm text-muted">

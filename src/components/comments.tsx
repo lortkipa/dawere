@@ -24,6 +24,7 @@ import { Avatar, Badge, Button, ButtonLink, FormError, Textarea } from '@/compon
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ReportDialog } from '@/components/report-dialog';
 import { toast } from '@/components/toaster';
+import { splitMentions } from '@/lib/mentions';
 import type { CommentNode } from '@/lib/posts';
 import { cn, formatCount, timeAgo } from '@/lib/utils';
 
@@ -414,7 +415,7 @@ function Comment({
                 // wrap-anywhere: a pasted URL or an unbroken 300-character "word" must
                 // wrap here, not widen the article and give the page a scrollbar.
                 <p className="wrap-anywhere mt-0.5 text-[15px] leading-relaxed whitespace-pre-wrap text-ink/90">
-                  {comment.body}
+                  <CommentText text={comment.body} />
                 </p>
               )}
             </>
@@ -649,5 +650,18 @@ export function Comments({
         )}
       </section>
     </Thread.Provider>
+  );
+}
+
+/** A comment's text with each @username turned into a link to that profile. */
+function CommentText({ text }: { text: string }) {
+  return splitMentions(text).map((part, index) =>
+    part.mention ? (
+      <Link key={index} href={`/u/${part.mention}`} className="font-medium text-accent hover:underline">
+        {part.text}
+      </Link>
+    ) : (
+      part.text
+    ),
   );
 }

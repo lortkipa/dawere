@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { HeaderNav } from '@/components/nav-links';
+import { NotificationBell } from '@/components/notification-bell';
 import { SearchTrigger } from '@/components/search-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
@@ -36,7 +37,7 @@ export function SiteHeader() {
 export function MobileTopBar({
   user,
 }: {
-  user: { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean };
+  user: { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean; unread: number };
 }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-xl md:hidden">
@@ -45,6 +46,7 @@ export function MobileTopBar({
           <Logo />
         </Link>
         <SearchTrigger />
+        <NotificationBell initial={user.unread} />
         <ThemeToggle />
         <div className="ml-1.5">
           <UserMenu {...user} />

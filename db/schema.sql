@@ -624,3 +624,50 @@ insert into topics (slug, name, description, is_featured) values
   ('career',      'კარიერა',             'ზრდა, გასაუბრებები და პროფესიაში ორიენტირება.', true),
   ('finance',     'ფინანსები',           'ბაზრები, ფული და თავისუფლების არითმეტიკა.', true)
 on conflict do nothing;
+
+-- --------------------------------------------------------------- notifications
+
+-- Something that happened to a reader's work or account. The actor, post and
+-- comment are references, not copies: names and titles stay current, and a
+-- deleted like, comment or account takes its notification with it.
+--   post_like      actor liked recipient's post
+--   comment_like   actor liked recipient's comment
+--   post_comment   actor commented on recipient's post
+--   comment_reply  actor replied to recipient's comment
+--   mention        actor mentioned @recipient in a comment
+--   follow         actor followed recipient
+--   new_post       actor, whom recipient follows, published a post
+create table if not exists notifications (
+  id           uuid primary key default gen_random_uuid(),
+  recipient_id uuid not null references users(id) on delete cascade,
+  actor_id     uuid not null references users(id) on delete cascade,
+  type         text not null check (type in (
+    'post_like', 'comment_like', 'post_comment', 'comment_reply', 'mention', 'follow', 'new_post'
+  )),
+  post_id      uuid references posts(id) on delete cascade,
+  comment_id   uuid references comments(id) on delete cascade,
+  read_at      timestamptz,
+  created_at   timestamptz not null default now(),
+  check (recipient_id <> actor_id)
+);
+
+create index if not exists notifications_recipient_idx on notifications (recipient_id, created_at desc);
+create index if not exists notifications_unread_idx on notifications (recipient_id) where read_at is null;
+
+-- Toggling a like or a follow off and on again must not stack up copies; the
+-- app deletes the row when the like or follow is withdrawn.
+create unique index if not exists notifications_post_like_idx
+  on notifications (recipient_id, actor_id, post_id) where type = 'post_like';
+create unique index if not exists notifications_comment_like_idx
+  on notifications (recipient_id, actor_id, comment_id) where type = 'comment_like';
+create unique index if not exists notifications_follow_idx
+  on notifications (recipient_id, actor_id) where type = 'follow';
+create unique index if not exists notifications_new_post_idx
+  on notifications (recipient_id, post_id) where type = 'new_post';
+-- One comment tells each reader about it once: a reply that also @mentions the
+-- person answered, on their own post, is a single "replied" notification.
+create unique index if not exists notifications_comment_once_idx
+  on notifications (recipient_id, comment_id) where type in ('post_comment', 'comment_reply', 'mention');
+
+-- Types the reader switched off in settings; nothing of these kinds is created.
+alter table users add column if not exists muted_notifications text[] not null default '{}';

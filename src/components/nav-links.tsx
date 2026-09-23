@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Bookmark, Compass, Home, PenLine, ShieldCheck, User } from 'lucide-react';
+import { BarChart3, Bell, Bookmark, Compass, Home, PenLine, ShieldCheck, User } from 'lucide-react';
 import { Avatar, buttonClass } from '@/components/ui';
 import { Logo, LogoMark } from '@/components/logo';
+import { UnreadBadge } from '@/components/notification-bell';
 import { SearchTrigger } from '@/components/search-dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { cn } from '@/lib/utils';
 
-type NavUser = { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean };
+type NavUser = { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean; unread: number };
 
 const isExplore = (p: string) => p.startsWith('/search') || p.startsWith('/topic');
 
@@ -49,6 +50,13 @@ export function AppSidebar({ user }: { user: NavUser }) {
   const items = [
     { href: '/', label: 'მთავარი', icon: Home, active: pathname === '/' },
     { href: '/search', label: 'აღმოაჩინე', icon: Compass, active: isExplore(pathname) },
+    {
+      href: '/notifications',
+      label: 'შეტყობინებები',
+      icon: Bell,
+      active: pathname.startsWith('/notifications'),
+      badge: true,
+    },
     { href: '/bookmarks', label: 'შენახულები', icon: Bookmark, active: pathname.startsWith('/bookmarks') },
     { href: '/dashboard', label: 'პანელი', icon: BarChart3, active: pathname.startsWith('/dashboard') },
     { href: profileHref, label: 'პროფილი', icon: User, active: pathname === profileHref },
@@ -66,19 +74,25 @@ export function AppSidebar({ user }: { user: NavUser }) {
       <SearchTrigger className="mx-auto mb-2 size-10 xl:hidden" />
 
       <nav aria-label="მთავარი ნავიგაცია" className="flex flex-col gap-0.5">
-        {items.map(({ href, label, icon: Icon, active }) => (
+        {items.map(({ href, label, icon: Icon, active, badge }) => (
           <Link
             key={href}
             href={href}
             title={label}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'group flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium transition-colors xl:justify-start xl:px-3',
+              'group relative flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium transition-colors xl:justify-start xl:px-3',
               active ? 'bg-hover text-ink' : 'text-muted hover:bg-hover hover:text-ink',
             )}
           >
             <Icon className="size-[18px] shrink-0" strokeWidth={active ? 2.25 : 1.75} />
             <span className="sr-only xl:not-sr-only">{label}</span>
+            {badge ? (
+              <UnreadBadge
+                initial={user.unread}
+                className="absolute top-0.5 right-0.5 ring-2 ring-surface xl:static xl:ml-auto xl:ring-0"
+              />
+            ) : null}
           </Link>
         ))}
       </nav>

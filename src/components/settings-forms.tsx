@@ -12,6 +12,9 @@ import {
   updateInterestsAction,
   updateProfileAction,
 } from '@/app/actions/profile';
+import { updateNotificationSettingsAction } from '@/app/actions/notifications';
+import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/notification-types';
+import { NOTIFICATION_COPY } from '@/lib/notification-copy';
 import { Avatar, Button, Card, Field, FormError, Input, Textarea } from '@/components/ui';
 import { toast } from '@/components/toaster';
 import type { FormState } from '@/lib/validation';
@@ -301,6 +304,88 @@ export function InterestsForm({
         ) : (
           <p className="text-sm text-muted">თემები ჯერ არ არის.</p>
         )}
+
+        <div className="mt-6 flex items-center gap-3">
+          <SaveButton disabled={!dirty} />
+          {dirty ? (
+            <span className="text-[13px] text-subtle">შენახვა არ დაგავიწყდეს</span>
+          ) : (
+            <Saved state={state} />
+          )}
+        </div>
+      </form>
+    </SectionCard>
+  );
+}
+
+/** One switch per kind of notification; switched-off kinds are never created. */
+export function NotificationSettingsForm({ muted }: { muted: NotificationType[] }) {
+  const [state, formAction] = useActionState(updateNotificationSettingsAction, EMPTY);
+  const [enabled, setEnabled] = useState(() => new Set(NOTIFICATION_TYPES.filter((t) => !muted.includes(t))));
+
+  const serverKey = [...muted].sort().join(',');
+  const [syncedKey, setSyncedKey] = useState(serverKey);
+  if (syncedKey !== serverKey) {
+    setSyncedKey(serverKey);
+    setEnabled(new Set(NOTIFICATION_TYPES.filter((t) => !muted.includes(t))));
+  }
+
+  const dirty = NOTIFICATION_TYPES.some((t) => enabled.has(t) === muted.includes(t));
+
+  function toggle(type: NotificationType) {
+    setEnabled((current) => {
+      const next = new Set(current);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      return next;
+    });
+  }
+
+  return (
+    <SectionCard
+      id="notifications"
+      title="შეტყობინებები"
+      description="აირჩიე, რაზე გინდა შეტყობინების მიღება. გამორთული ტიპის შეტყობინებები აღარ შეიქმნება."
+    >
+      <form action={formAction}>
+        {[...enabled].map((type) => (
+          <input key={type} type="hidden" name="enabled" value={type} />
+        ))}
+
+        <ul className="-my-1 divide-y divide-line">
+          {NOTIFICATION_TYPES.map((type) => {
+            const on = enabled.has(type);
+            const copy = NOTIFICATION_COPY[type];
+            return (
+              <li key={type} className="flex items-center justify-between gap-4 py-3">
+                <div className="min-w-0">
+                  <p id={`notify-${type}`} className="text-sm font-medium text-ink">
+                    {copy.setting}
+                  </p>
+                  <p className="text-[13px] text-muted">{copy.hint}</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  aria-labelledby={`notify-${type}`}
+                  onClick={() => toggle(type)}
+                  className={cn(
+                    'relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
+                    on ? 'bg-accent' : 'bg-line-strong',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'inline-block size-5 rounded-full bg-white shadow-soft transition-transform',
+                      on ? 'translate-x-[18px]' : 'translate-x-0.5',
+                    )}
+                  />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
 
         <div className="mt-6 flex items-center gap-3">
           <SaveButton disabled={!dirty} />

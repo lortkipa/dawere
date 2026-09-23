@@ -1,5 +1,7 @@
 import { getCurrentUser, isStaff } from '@/lib/auth';
+import { unreadCount } from '@/lib/notifications';
 import { AppSidebar, MobileNav } from '@/components/nav-links';
+import { NotificationPoller } from '@/components/notification-bell';
 import { SearchDialog } from '@/components/search-dialog';
 import { SiteFooter } from '@/components/site-footer';
 import { MobileTopBar, SiteHeader } from '@/components/site-header';
@@ -18,7 +20,14 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
     );
   }
 
-  const navUser = { name: user.name, username: user.username, avatarUrl: user.avatarUrl, isAdmin: isStaff(user) };
+  const unread = await unreadCount(user.id);
+  const navUser = {
+    name: user.name,
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    isAdmin: isStaff(user),
+    unread,
+  };
 
   return (
     <div className="flex flex-1">
@@ -32,6 +41,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
       </div>
       <MobileNav user={navUser} />
       <SearchDialog />
+      <NotificationPoller initial={unread} since={new Date().toISOString()} />
     </div>
   );
 }

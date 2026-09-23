@@ -6,6 +6,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { posts, type PostRevision } from '@/db/schema';
 import { requireUser } from '@/lib/auth';
+import { notifyFollowersOfPost } from '@/lib/notifications';
 import { applyRevision } from '@/lib/post-store';
 import { isBlankHtml, sanitizePostHtml } from '@/lib/sanitize';
 import { postSchema } from '@/lib/validation';
@@ -101,6 +102,9 @@ export async function publishPostAction(postId: string): Promise<SaveResult> {
     .update(posts)
     .set({ status: 'published', slug, publishedAt: post.publishedAt ?? new Date() })
     .where(eq(posts.id, postId));
+
+  // Only the first publish is news; unpublishing and republishing is not.
+  if (!post.publishedAt) await notifyFollowersOfPost(post.authorId, postId);
 
   revalidatePath('/');
   revalidatePath(`/p/${slug}`);
