@@ -21,8 +21,8 @@ export default function ErrorPage({
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-5 py-24 text-center">
-      <p className="font-serif text-6xl font-bold text-line-strong">500</p>
-      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-ink">რაღაც არასწორად წავიდა</h1>
+      <p className="text-sm font-semibold text-subtle tabular-nums">500</p>
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">რაღაც არასწორად წავიდა</h1>
       <p className="mt-2 text-[15px] text-muted">
         გვერდი ვერ ჩაიტვირთა. სცადე თავიდან — თუ პრობლემა განმეორდა, რამდენიმე წუთში დაბრუნდი.
       </p>

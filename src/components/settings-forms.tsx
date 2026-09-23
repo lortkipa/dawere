@@ -61,10 +61,10 @@ function SectionCard({
   tone?: 'danger';
 }) {
   return (
-    <Card id={id} className={cn('scroll-mt-24 p-6 sm:p-7', tone === 'danger' && 'border-danger/30')}>
-      <h2 className={cn('text-base font-semibold', tone === 'danger' && 'text-danger')}>{title}</h2>
-      {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
-      <div className="mt-6">{children}</div>
+    <Card id={id} className={cn('scroll-mt-24 p-5 sm:p-6', tone === 'danger' && 'border-danger/30')}>
+      <h2 className={cn('text-[15px] font-semibold tracking-tight', tone === 'danger' && 'text-danger')}>{title}</h2>
+      {description ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{description}</p> : null}
+      <div className="mt-5">{children}</div>
     </Card>
   );
 }
@@ -89,7 +89,7 @@ export function AvatarForm({ name, avatarUrl }: { name: string; avatarUrl: strin
         <div className="flex flex-wrap items-center gap-2">
           <label
             className={cn(
-              'inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-raised px-4.5 text-sm font-medium text-ink transition-colors hover:bg-hover',
+              'inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-line-strong bg-raised px-3.5 text-sm font-medium text-ink shadow-soft transition-colors hover:bg-hover',
               'focus-within:ring-2 focus-within:ring-accent',
               uploading && 'pointer-events-none opacity-60',
             )}
@@ -286,10 +286,10 @@ export function InterestsForm({
                   onClick={() => toggle(topic.slug)}
                   aria-pressed={on}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full border py-1.5 pr-3.5 pl-3 text-sm font-medium transition-colors [&>svg]:size-3.5',
+                    'inline-flex items-center gap-1.5 rounded-lg border py-1.5 pr-3 pl-2.5 text-[13px] font-medium transition-colors [&>svg]:size-3.5',
                     on
-                      ? 'border-accent/30 bg-accent-soft text-accent hover:border-accent/60'
-                      : 'border-line bg-sunken text-muted hover:border-line-strong hover:text-ink',
+                      ? 'border-accent/40 bg-accent-soft text-accent hover:border-accent'
+                      : 'border-line bg-raised text-muted hover:border-line-strong hover:text-ink',
                   )}
                 >
                   {on ? <Check strokeWidth={3} /> : <Plus strokeWidth={2.5} />}

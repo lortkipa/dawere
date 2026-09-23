@@ -52,7 +52,7 @@ export function Toaster() {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-20 z-[60] flex flex-col items-center gap-2 px-4 sm:bottom-6"
+      className="pointer-events-none fixed inset-x-0 bottom-20 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6"
     >
       {items.map((item) => {
         const Icon = ICONS[item.tone];
@@ -60,19 +60,19 @@ export function Toaster() {
           <div
             key={item.id}
             role={item.tone === 'error' ? 'alert' : 'status'}
-            className="animate-toast-in pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl bg-primary py-2.5 pr-2 pl-4 text-sm text-primary-contrast shadow-lift"
+            className="animate-toast-in pointer-events-auto flex max-w-md items-center gap-2.5 rounded-xl border border-line bg-raised py-2.5 pr-2 pl-3.5 text-sm text-ink shadow-lift"
           >
             <Icon
               className={cn(
                 'size-4 shrink-0',
-                item.tone === 'error' ? 'text-red-400 dark:text-red-600' : 'opacity-80',
+                item.tone === 'error' ? 'text-danger' : item.tone === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-subtle',
               )}
             />
             <span className="min-w-0 flex-1">{item.message}</span>
             <button
               type="button"
               onClick={() => dismiss(item.id)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full opacity-60 transition-opacity hover:opacity-100"
+              className="flex size-7 shrink-0 items-center justify-center rounded-md text-subtle transition-colors hover:bg-hover hover:text-ink"
               aria-label="დახურვა"
             >
               <X className="size-3.5" />

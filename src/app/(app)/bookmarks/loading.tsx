@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui';
 
 export default function Loading() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-10" aria-busy="true">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12" aria-busy="true">
       <span className="sr-only" role="status">
         იტვირთება…
       </span>

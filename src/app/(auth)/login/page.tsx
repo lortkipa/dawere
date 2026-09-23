@@ -13,8 +13,8 @@ export default async function LoginPage(props: PageProps<'/login'>) {
 
   return (
     <>
-      <h1 className="font-serif text-[2rem] leading-tight font-bold tracking-tight">კეთილი იყოს შენი დაბრუნება</h1>
-      <p className="mt-2 mb-8 text-[15px] text-muted">შედი და განაგრძე კითხვა იქიდან, სადაც გაჩერდი.</p>
+      <h1 className="text-2xl leading-tight font-semibold tracking-tight">კეთილი იყოს შენი დაბრუნება</h1>
+      <p className="mt-1.5 mb-7 text-[15px] text-muted">შედი და განაგრძე კითხვა იქიდან, სადაც გაჩერდი.</p>
 
       <AuthForm
         mode="signin"
@@ -23,9 +23,9 @@ export default async function LoginPage(props: PageProps<'/login'>) {
         forgotHref={SUPPORT_EMAIL ? supportMailto('პაროლის აღდგენა') : undefined}
       />
 
-      <p className="mt-8 text-sm text-muted">
+      <p className="mt-7 border-t border-line pt-6 text-center text-sm text-muted">
         ანგარიში არ გაქვს?{' '}
-        <Link href="/signup" className="font-medium text-accent hover:underline">
+        <Link href="/signup" className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink">
           შექმენი უფასოდ
         </Link>
       </p>

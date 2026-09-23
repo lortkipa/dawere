@@ -1,21 +1,19 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Clock } from 'lucide-react';
 import { Avatar } from '@/components/ui';
-import { PostCover } from '@/components/topic-art';
 import { BookmarkButton, CommentCountLink, LikeButton } from '@/components/engage-buttons';
 import type { PostCard as PostCardData } from '@/lib/posts';
 import { cn, timeAgo } from '@/lib/utils';
 
 function Byline({ post, className }: { post: PostCardData; className?: string }) {
   return (
-    <div className={cn('flex min-w-0 items-center gap-2 text-[13px] text-muted', className)}>
+    <div className={cn('flex min-w-0 items-center gap-2 text-[13px]', className)}>
       <Link
         href={`/u/${post.author.username}`}
-        className="flex min-w-0 items-center gap-2 transition-colors hover:text-ink"
+        className="flex min-w-0 items-center gap-2 font-medium text-ink transition-colors hover:text-muted"
       >
-        <Avatar name={post.author.name} src={post.author.avatarUrl} size="xs" />
-        <span className="truncate font-medium">{post.author.name}</span>
+        <Avatar name={post.author.name} src={post.author.avatarUrl} size="xs" className="size-5 text-[9px]" />
+        <span className="truncate">{post.author.name}</span>
       </Link>
       <span className="text-subtle" aria-hidden>
         ·
@@ -27,38 +25,15 @@ function Byline({ post, className }: { post: PostCardData; className?: string })
   );
 }
 
-function TopicLabel({ topic }: { topic: PostCardData['topics'][number] | undefined }) {
-  if (!topic) return null;
+/** A post's own cover image. Posts without one simply have none — no filler art. */
+function Cover({ src, className }: { src: string; className?: string }) {
   return (
-    <Link
-      href={`/topic/${topic.slug}`}
-      className="relative z-10 rounded-full bg-sunken px-2.5 py-1 text-[12px] font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
-    >
-      {topic.name}
-    </Link>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" loading="lazy" className={cn('border border-line object-cover', className)} />
   );
 }
 
-function ReadTime({ minutes }: { minutes: number }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-[13px] text-subtle">
-      <Clock className="size-3.5" aria-hidden />
-      {minutes} წთ
-    </span>
-  );
-}
-
-function Actions({ post, signedIn }: { post: PostCardData; signedIn: boolean }) {
-  return (
-    <div className="-mr-2 flex items-center gap-0.5">
-      <LikeButton postId={post.id} initialLiked={post.liked} initialCount={post.likeCount} signedIn={signedIn} />
-      <CommentCountLink href={`/p/${post.slug}#comments`} count={post.commentCount} />
-      <BookmarkButton postId={post.id} initialSaved={post.bookmarked} signedIn={signedIn} />
-    </div>
-  );
-}
-
-/** The feed's row: byline, headline, preview, and a cover on the right. */
+/** The feed's row: byline, headline, preview, meta; a thumbnail when there is a cover. */
 export function PostCard({
   post,
   signedIn,
@@ -73,109 +48,78 @@ export function PostCard({
   excerpt?: ReactNode;
   className?: string;
 }) {
+  const topic = post.topics[0];
   return (
-    <article className={cn('group border-b border-line py-7 first:pt-1 last:border-b-0', className)}>
+    <article className={cn('group border-b border-line py-6 first:pt-2 last:border-b-0', className)}>
       <Byline post={post} />
 
-      <div className="mt-3 flex gap-5 sm:gap-8">
+      <div className="mt-2.5 flex gap-4 sm:gap-6">
         <Link href={href} className="min-w-0 flex-1">
-          <h2 className="font-serif text-[1.2rem] leading-snug font-bold text-ink transition-colors group-hover:text-accent sm:text-[1.4rem]">
+          <h2 className="text-[1.0625rem] leading-snug font-semibold tracking-tight text-ink decoration-line-strong underline-offset-4 group-hover:underline sm:text-[1.1875rem]">
             {post.title || 'უსათაურო'}
           </h2>
-          <p
-            className={cn(
-              'mt-2 text-[15px] leading-relaxed text-muted',
-              excerpt ? 'line-clamp-3' : 'line-clamp-2',
-            )}
-          >
+          <p className={cn('mt-1.5 text-[15px] leading-relaxed text-muted', excerpt ? 'line-clamp-3' : 'line-clamp-2')}>
             {excerpt ?? post.preview}
           </p>
         </Link>
 
-        <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
-          <PostCover
-            src={post.coverImageUrl}
-            topicSlug={post.topics[0]?.slug}
-            glyph="sm"
-            className="size-20 rounded-xl border border-line/60 transition-transform duration-300 group-hover:scale-[1.02] sm:h-28 sm:w-40"
-          />
-        </Link>
+        {post.coverImageUrl ? (
+          <Link href={href} className="shrink-0" tabIndex={-1} aria-hidden>
+            <Cover src={post.coverImageUrl} className="size-18 rounded-lg sm:h-24 sm:w-36" />
+          </Link>
+        ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <TopicLabel topic={post.topics[0]} />
-        <ReadTime minutes={post.readingMinutes} />
-        <div className="ml-auto">
-          <Actions post={post} signedIn={signedIn} />
+      <div className="mt-3 flex items-center gap-2 text-[13px] text-subtle">
+        {topic ? (
+          <>
+            <Link
+              href={`/topic/${topic.slug}`}
+              className="relative z-10 truncate rounded-md bg-sunken px-2 py-0.5 font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
+            >
+              {topic.name}
+            </Link>
+            <span aria-hidden>·</span>
+          </>
+        ) : null}
+        <span className="shrink-0">{post.readingMinutes} წთ</span>
+        <div className="-mr-2 ml-auto flex shrink-0 items-center">
+          <LikeButton postId={post.id} initialLiked={post.liked} initialCount={post.likeCount} signedIn={signedIn} />
+          <CommentCountLink href={`/p/${post.slug}#comments`} count={post.commentCount} />
+          <BookmarkButton postId={post.id} initialSaved={post.bookmarked} signedIn={signedIn} />
         </div>
       </div>
     </article>
   );
 }
 
-/** The lead story: a wide cover, then a larger headline. */
-export function FeaturedPostCard({ post, signedIn }: { post: PostCardData; signedIn: boolean }) {
-  const href = `/p/${post.slug}`;
-  return (
-    <article className="group mb-4 border-b border-line pb-8">
-      <Link href={href} className="block overflow-hidden rounded-2xl border border-line/60" tabIndex={-1} aria-hidden>
-        <PostCover
-          src={post.coverImageUrl}
-          topicSlug={post.topics[0]?.slug}
-          glyph="lg"
-          className="aspect-[2/1] w-full transition-transform duration-500 group-hover:scale-[1.015]"
-        />
-      </Link>
-
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <TopicLabel topic={post.topics[0]} />
-        <ReadTime minutes={post.readingMinutes} />
-      </div>
-
-      <Link href={href} className="mt-3 block">
-        <h2 className="font-serif text-[1.65rem] leading-tight font-bold text-ink transition-colors group-hover:text-accent sm:text-[2rem]">
-          {post.title || 'უსათაურო'}
-        </h2>
-        <p className="mt-3 line-clamp-3 text-base leading-relaxed text-muted sm:text-[17px]">{post.preview}</p>
-      </Link>
-
-      <div className="mt-5 flex items-center justify-between gap-4">
-        <Byline post={post} />
-        <Actions post={post} signedIn={signedIn} />
-      </div>
-    </article>
-  );
-}
-
-/** A tile for grids: landing page, related posts. No engagement buttons. */
+/** A tile for grids (related posts). No engagement buttons. */
 export function CompactPostCard({ post, className }: { post: PostCardData; className?: string }) {
   const href = `/p/${post.slug}`;
   return (
     <article className={cn('group flex flex-col', className)}>
-      <Link href={href} className="block overflow-hidden rounded-2xl border border-line/60" tabIndex={-1} aria-hidden>
-        <PostCover
-          src={post.coverImageUrl}
-          topicSlug={post.topics[0]?.slug}
-          className="aspect-[16/10] w-full transition-transform duration-500 group-hover:scale-[1.03]"
-        />
-      </Link>
-      <div className="mt-4 flex items-center gap-2 text-[12px] font-medium text-subtle">
-        {post.topics[0] ? <span className="text-accent">{post.topics[0].name}</span> : null}
+      {post.coverImageUrl ? (
+        <Link href={href} className="mb-4 block" tabIndex={-1} aria-hidden>
+          <Cover src={post.coverImageUrl} className="aspect-[16/9] w-full rounded-lg" />
+        </Link>
+      ) : null}
+      <div className="flex items-center gap-2 text-[12px] text-subtle">
+        {post.topics[0] ? <span className="font-medium text-muted">{post.topics[0].name}</span> : null}
         {post.topics[0] ? <span aria-hidden>·</span> : null}
         <span>{post.readingMinutes} წთ</span>
       </div>
       <Link href={href} className="mt-1.5 block">
-        <h3 className="line-clamp-2 font-serif text-lg leading-snug font-bold text-ink transition-colors group-hover:text-accent">
+        <h3 className="line-clamp-2 text-base leading-snug font-semibold tracking-tight text-ink decoration-line-strong underline-offset-4 group-hover:underline">
           {post.title || 'უსათაურო'}
         </h3>
         <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted">{post.preview}</p>
       </Link>
       <Link
         href={`/u/${post.author.username}`}
-        className="mt-4 flex w-fit items-center gap-2 text-[13px] text-muted transition-colors hover:text-ink"
+        className="mt-auto flex w-fit items-center gap-2 pt-4 text-[13px] font-medium text-ink transition-colors hover:text-muted"
       >
-        <Avatar name={post.author.name} src={post.author.avatarUrl} size="xs" />
-        <span className="font-medium">{post.author.name}</span>
+        <Avatar name={post.author.name} src={post.author.avatarUrl} size="xs" className="size-5 text-[9px]" />
+        {post.author.name}
       </Link>
     </article>
   );
@@ -185,20 +129,15 @@ export function PostCardList({
   posts,
   signedIn,
   emptyState,
-  featureFirst = false,
 }: {
   posts: PostCardData[];
   signedIn: boolean;
   emptyState?: ReactNode;
-  /** Gives the first post the wide lead treatment. */
-  featureFirst?: boolean;
 }) {
   if (posts.length === 0) return <>{emptyState}</>;
-  const [first, ...rest] = posts;
   return (
     <div>
-      {featureFirst ? <FeaturedPostCard post={first} signedIn={signedIn} /> : null}
-      {(featureFirst ? rest : posts).map((post) => (
+      {posts.map((post) => (
         <PostCard key={post.id} post={post} signedIn={signedIn} />
       ))}
     </div>

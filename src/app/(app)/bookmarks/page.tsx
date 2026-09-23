@@ -18,8 +18,8 @@ export default async function BookmarksPage(props: PageProps<'/bookmarks'>) {
   const feed = await bookmarkedFeed(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-10 sm:px-6">
-      <PageHeader title="შენახულები" />
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <PageHeader title="შენახულები" className="mb-4 border-b border-line pb-6" />
 
       <PostCardList
         posts={feed.posts}
@@ -39,7 +39,7 @@ export default async function BookmarksPage(props: PageProps<'/bookmarks'>) {
       />
 
       {feed.posts.length > 0 ? (
-        <div className="mt-8">
+        <div className="mt-6">
           <Pagination basePath="/bookmarks" page={page} hasMore={feed.hasMore} />
         </div>
       ) : null}

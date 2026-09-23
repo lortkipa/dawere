@@ -2,6 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 import { Moon, Sun } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * The theme lives on <html> (set by the inline script in the root layout before
@@ -21,7 +22,7 @@ function getSnapshot() {
   return document.documentElement.classList.contains('dark');
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const dark = useSyncExternalStore(subscribe, getSnapshot, () => null);
 
   const toggle = useCallback(() => {
@@ -39,15 +40,19 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-ink"
+      className={cn(
+        'flex size-9 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-ink',
+        className,
+      )}
       aria-label={dark ? 'ღია თემაზე გადართვა' : 'მუქ თემაზე გადართვა'}
+      title={dark ? 'ღია თემა' : 'მუქი თემა'}
     >
       {dark === null ? (
-        <span className="size-4" aria-hidden />
+        <span className="size-[18px]" aria-hidden />
       ) : dark ? (
-        <Sun className="size-4" />
+        <Sun className="size-[18px]" />
       ) : (
-        <Moon className="size-4" />
+        <Moon className="size-[18px]" />
       )}
     </button>
   );

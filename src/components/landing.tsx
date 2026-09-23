@@ -4,7 +4,7 @@ import {
   ArrowRight,
   BarChart3,
   Bold,
-  CloudCheck,
+  Check,
   Code,
   Heading2,
   ImageIcon,
@@ -17,20 +17,15 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ButtonLink } from '@/components/ui';
-import { topicEmoji } from '@/lib/topic-art';
 import { cn } from '@/lib/utils';
 
 type Topic = { id: string; slug: string; name: string };
 
 const delay = (ms: number) => ({ '--rise-delay': `${ms}ms` }) as CSSProperties;
 
-/* --------------------------------------------------------------------- cover */
+/* --------------------------------------------------------------------- hero */
 
-const TOOLBAR = [Bold, Italic, Heading2, List, Quote, Code, ImageIcon];
-const PREVIEW_TOPICS = [
-  ['travel', 'მოგზაურობა'],
-  ['writing', 'წერა'],
-] as const;
+const TOOLBAR = [Heading2, Bold, Italic, List, Quote, Code, ImageIcon];
 
 /**
  * The editor mid-sentence: what a new account actually gets. Deliberately no
@@ -39,138 +34,97 @@ const PREVIEW_TOPICS = [
  */
 function EditorPreview() {
   return (
-    <div className="relative h-[26rem] w-[26rem]" aria-hidden>
-      <div
-        className="animate-rise absolute top-2 right-0 w-[24rem] rotate-[1.5deg] overflow-hidden rounded-2xl border border-line bg-raised shadow-lift"
-        style={delay(120)}
-      >
-        <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
-          <span className="rounded-full bg-sunken px-2.5 py-0.5 text-[11px] font-medium text-muted">მონახაზი</span>
-          <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-medium text-primary-contrast">
+    <div className="relative mx-auto max-w-3xl" aria-hidden>
+      <div className="overflow-hidden rounded-xl border border-line bg-raised shadow-lift">
+        <div className="flex items-center gap-3 border-b border-line px-4 py-2.5">
+          <div className="flex gap-1.5">
+            <span className="size-2.5 rounded-full bg-line-strong" />
+            <span className="size-2.5 rounded-full bg-line-strong" />
+            <span className="size-2.5 rounded-full bg-line-strong" />
+          </div>
+          <span className="rounded-md bg-sunken px-2 py-0.5 text-[11px] font-medium text-muted">მონახაზი</span>
+          <span className="hidden items-center gap-1 text-[11px] text-subtle sm:inline-flex">
+            <Check className="size-3" />
+            შენახულია
+          </span>
+          <span className="ml-auto rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-contrast">
             გამოქვეყნება
           </span>
         </div>
 
-        <div className="flex items-center gap-0.5 border-b border-line bg-sunken/60 px-3 py-1.5 text-muted">
-          {TOOLBAR.map((Icon) => (
+        <div className="flex items-center gap-0.5 border-b border-line px-3 py-1.5 text-muted">
+          {TOOLBAR.map((Icon, index) => (
             <span
-              key={Icon.displayName}
-              className={cn(
-                'flex size-7 items-center justify-center rounded-md',
-                Icon === Heading2 && 'bg-raised text-ink shadow-sm',
-              )}
+              key={index}
+              className={cn('flex size-7 items-center justify-center rounded-md', index === 0 && 'bg-hover text-ink')}
             >
               <Icon className="size-3.5" />
             </span>
           ))}
         </div>
 
-        <div className="px-6 pt-5 pb-6">
-          <p className="font-serif text-[1.35rem] leading-snug font-bold text-ink">ზაფხული, რომელიც მთაში გავატარე</p>
-          <p className="mt-1.5 text-[13px] text-subtle">რა მასწავლა ორმა კვირამ ინტერნეტის გარეშე</p>
-          <p className="mt-4 font-serif text-[14px] leading-relaxed text-muted">
+        <div className="px-6 pt-7 pb-9 text-left sm:px-12 sm:pt-10 sm:pb-12">
+          <p className="text-[1.5rem] leading-snug font-bold tracking-tight text-ink sm:text-[1.9rem]">
+            ზაფხული, რომელიც მთაში გავატარე
+          </p>
+          <p className="mt-2 text-[15px] text-subtle sm:text-base">რა მასწავლა ორმა კვირამ ინტერნეტის გარეშე</p>
+          <p className="mt-6 font-serif text-[15px] leading-relaxed text-muted sm:text-[17px]">
             უშგულში ღამით ისეთი სიჩუმეა, რომ საკუთარი ფიქრები ხმამაღლა გესმის. პირველივე დღეს ტელეფონი ჩანთის
             ფსკერზე ჩავდე და
             <span className="animate-caret ml-0.5 inline-block h-[1.1em] w-[2px] translate-y-[3px] bg-accent" />
           </p>
-          <div className="mt-5 flex flex-wrap gap-1.5">
-            {PREVIEW_TOPICS.map(([slug, name]) => (
-              <span
-                key={slug}
-                className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent"
-              >
-                <span>{topicEmoji(slug)}</span>
-                {name}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
-
-      <div
-        className="animate-rise absolute -bottom-3 -left-2 flex -rotate-3 items-center gap-2 rounded-xl border border-line bg-raised px-3.5 py-2.5 text-[13px] font-medium text-ink shadow-lift"
-        style={delay(260)}
-      >
-        <CloudCheck className="size-4 text-accent" />
-        ავტომატურად შეინახა
-      </div>
+      {/* The window sinks into the page instead of ending on a hard edge. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-surface to-transparent" />
     </div>
   );
 }
 
-function Cover() {
+function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-line">
-      <div
-        className="dot-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_center,black,transparent_72%)]"
-        aria-hidden
-      />
-      <div className="pointer-events-none absolute -top-40 right-0 size-[34rem] rounded-full bg-accent-soft opacity-70 blur-3xl" aria-hidden />
+    <section className="relative overflow-hidden">
+      <div className="hero-grid pointer-events-none absolute inset-0" aria-hidden />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,1fr)_26rem] lg:py-32">
-        <div className="text-center lg:text-left">
-          <h1
-            className="animate-rise font-serif text-[2.6rem] leading-[1.08] font-bold text-ink sm:text-6xl lg:text-[4.1rem]"
-            style={delay(40)}
-          >
-            ადგილი, სადაც
-            <br />
-            <span className="text-accent">ტექსტი</span> მთავარია.
-          </h1>
+      <div className="relative mx-auto max-w-6xl px-4 pt-16 pb-6 text-center sm:px-6 sm:pt-24 lg:pt-28">
+        <p
+          className="animate-rise mx-auto inline-flex items-center gap-2 rounded-full border border-line bg-raised px-3 py-1 text-[13px] text-muted shadow-soft"
+          style={delay(0)}
+        >
+          <span className="size-1.5 rounded-full bg-accent" />
+          ქართულად წერისა და კითხვის სივრცე
+        </p>
 
-          <p
-            className="animate-rise mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-muted lg:mx-0"
-            style={delay(80)}
-          >
-            გამოაქვეყნე შენი ნაწერი და აღმოაჩინე ავტორები, რომლებსაც ბოლომდე წაიკითხავ.
-          </p>
+        <h1
+          className="animate-rise mx-auto mt-6 max-w-3xl text-[2.4rem] leading-[1.1] font-bold tracking-tight text-ink sm:text-6xl lg:text-[4.25rem]"
+          style={delay(40)}
+        >
+          ადგილი, სადაც ტექსტი მთავარია.
+        </h1>
 
-          <div
-            className="animate-rise mt-10 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-            style={delay(120)}
-          >
-            <ButtonLink href="/signup" size="lg">
-              დაიწყე უფასოდ
-              <ArrowRight />
-            </ButtonLink>
-            <ButtonLink href="/search" size="lg" variant="outline">
-              დათვალიერება
-            </ButtonLink>
-          </div>
+        <p
+          className="animate-rise mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-muted sm:text-lg"
+          style={delay(80)}
+        >
+          გამოაქვეყნე შენი ნაწერი და აღმოაჩინე ავტორები, რომლებსაც ბოლომდე წაიკითხავ.
+        </p>
+
+        <div
+          className="animate-rise mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
+          style={delay(120)}
+        >
+          <ButtonLink href="/signup" size="lg">
+            დაიწყე უფასოდ
+            <ArrowRight />
+          </ButtonLink>
+          <ButtonLink href="/search" size="lg" variant="outline">
+            დათვალიერება
+          </ButtonLink>
         </div>
 
-        <div className="hidden justify-self-end lg:block">
+        <div className="animate-rise mt-16 sm:mt-20" style={delay(180)}>
           <EditorPreview />
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------ topic carousel */
-
-function TopicDrift({ topics }: { topics: Topic[] }) {
-  if (topics.length === 0) return null;
-  // The list is rendered twice so the -50% drift loops without a visible seam.
-  const strip = [...topics, ...topics];
-
-  return (
-    <section className="overflow-hidden border-b border-line bg-sunken py-6" aria-label="თემები">
-      <div className="animate-drift flex w-max gap-3 hover:[animation-play-state:paused]">
-        {strip.map((topic, index) => (
-          <Link
-            key={`${topic.id}-${index}`}
-            href={`/topic/${topic.slug}`}
-            aria-hidden={index >= topics.length}
-            tabIndex={index >= topics.length ? -1 : undefined}
-            className="flex shrink-0 items-center gap-2.5 rounded-full border border-line bg-raised px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent/40 hover:text-accent"
-          >
-            <span className="text-base leading-none" aria-hidden>
-              {topicEmoji(topic.slug)}
-            </span>
-            {topic.name}
-          </Link>
-        ))}
       </div>
     </section>
   );
@@ -203,22 +157,58 @@ const FEATURES = [
 
 function Features() {
   return (
-    <section className="border-y border-line bg-sunken">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24">
-        <h2 className="mx-auto max-w-2xl text-center font-serif text-3xl font-bold text-ink sm:text-4xl">
+    <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+      <div className="max-w-2xl">
+        <h2 className="text-3xl leading-tight font-bold tracking-tight text-ink sm:text-4xl">
           ყველაფერი, რაც წერასა და კითხვას სჭირდება
         </h2>
-        <div className="mt-14 grid gap-5 sm:grid-cols-2">
-          {FEATURES.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="rounded-3xl border border-line bg-raised p-7 shadow-soft">
-              <span className="flex size-11 items-center justify-center rounded-2xl bg-accent-soft text-accent">
-                <Icon className="size-5" />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold text-ink">{title}</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-muted">{text}</p>
-            </div>
-          ))}
+        <p className="mt-4 text-[17px] leading-relaxed text-muted">და არაფერი ზედმეტი.</p>
+      </div>
+
+      <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+        {FEATURES.map(({ icon: Icon, title, text }) => (
+          <div key={title} className="bg-surface p-6 sm:p-7">
+            <span className="flex size-9 items-center justify-center rounded-lg border border-line bg-sunken text-ink">
+              <Icon className="size-[18px]" />
+            </span>
+            <h3 className="mt-5 text-[15px] leading-snug font-semibold text-ink">{title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------- topics */
+
+function Topics({ topics }: { topics: Topic[] }) {
+  if (topics.length === 0) return null;
+  return (
+    <section className="border-y border-line bg-sunken">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">რაზე წერენ</h2>
+          <Link
+            href="/search"
+            className="inline-flex items-center gap-1 text-sm font-medium text-muted transition-colors hover:text-ink"
+          >
+            ყველა თემა
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
+        <ul className="mt-8 flex flex-wrap gap-2">
+          {topics.map((topic) => (
+            <li key={topic.id}>
+              <Link
+                href={`/topic/${topic.slug}`}
+                className="inline-flex h-9 items-center rounded-full border border-line bg-raised px-4 text-sm font-medium text-ink shadow-soft transition-colors hover:border-line-strong hover:bg-hover"
+              >
+                {topic.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
@@ -255,20 +245,23 @@ const FAQ = [
 
 function Faq() {
   return (
-    <section className="mx-auto max-w-3xl px-5 pb-24 sm:px-6">
-      <h2 className="mb-10 text-center font-serif text-3xl font-bold text-ink sm:text-4xl">ხშირი კითხვები</h2>
+    <section className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">ხშირი კითხვები</h2>
+        <p className="mt-4 text-[15px] leading-relaxed text-muted">მოკლე პასუხები იმაზე, რასაც ყველაზე ხშირად გვეკითხებიან.</p>
+      </div>
 
       <div className="border-t border-line">
         {FAQ.map((item) => (
           <details key={item.q} className="group border-b border-line">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-5 py-5 text-[17px] font-medium text-ink transition-colors hover:text-accent [&::-webkit-details-marker]:hidden">
+            <summary className="flex list-none items-center justify-between gap-5 py-5 text-base font-medium text-ink [&::-webkit-details-marker]:hidden">
               {item.q}
               <Plus
-                className="size-5 shrink-0 text-subtle transition-transform duration-200 group-open:rotate-45"
+                className="size-4 shrink-0 text-subtle transition-transform duration-200 group-open:rotate-45"
                 aria-hidden
               />
             </summary>
-            <p className="pb-5 text-[15px] leading-relaxed text-muted">{item.a}</p>
+            <p className="-mt-1 pb-5 text-[15px] leading-relaxed text-muted">{item.a}</p>
           </details>
         ))}
       </div>
@@ -280,33 +273,22 @@ function Faq() {
 
 function Closing() {
   return (
-    <section className="mx-auto max-w-6xl px-5 pb-24 sm:px-6">
-      <div className="relative overflow-hidden rounded-[2rem] bg-primary px-7 py-16 text-center sm:px-12 sm:py-20">
-        <div className="dot-grid pointer-events-none absolute inset-0 opacity-15" aria-hidden />
-        <div className="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-accent/30 blur-3xl" aria-hidden />
-        <div className="pointer-events-none absolute -right-24 -bottom-24 size-72 rounded-full bg-accent/20 blur-3xl" aria-hidden />
-
-        <div className="relative">
-          <h2 className="mx-auto max-w-xl font-serif text-3xl leading-tight font-bold text-primary-contrast sm:text-[2.6rem]">
-            შენი პირველი ტექსტი ერთ ღილაკზეა.
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-[15px] text-primary-contrast/70">
-            ანგარიშის შექმნას ერთი წუთი სჭირდება. დანარჩენი შენზეა.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <ButtonLink href="/signup" size="lg" variant="accent">
-              ანგარიშის შექმნა
-              <ArrowRight />
-            </ButtonLink>
-            <ButtonLink
-              href="/login"
-              size="lg"
-              variant="ghost"
-              className="text-primary-contrast/80 hover:bg-white/10 hover:text-primary-contrast dark:hover:bg-black/10"
-            >
-              შესვლა
-            </ButtonLink>
-          </div>
+    <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
+      <div className="rounded-2xl border border-line bg-sunken px-6 py-14 text-center sm:px-12 sm:py-20">
+        <h2 className="mx-auto max-w-xl text-3xl leading-tight font-bold tracking-tight text-ink sm:text-[2.5rem]">
+          შენი პირველი ტექსტი ერთ ღილაკზეა.
+        </h2>
+        <p className="mx-auto mt-4 max-w-md text-[15px] text-muted">
+          ანგარიშის შექმნას ერთი წუთი სჭირდება. დანარჩენი შენზეა.
+        </p>
+        <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+          <ButtonLink href="/signup" size="lg">
+            ანგარიშის შექმნა
+            <ArrowRight />
+          </ButtonLink>
+          <ButtonLink href="/login" size="lg" variant="ghost">
+            უკვე მაქვს ანგარიში
+          </ButtonLink>
         </div>
       </div>
     </section>
@@ -326,13 +308,13 @@ export function Landing({
   return (
     <main className="flex-1">
       {farewell ? (
-        <p role="status" className="border-b border-line bg-accent-soft px-5 py-3 text-center text-sm text-accent">
+        <p role="status" className="border-b border-line bg-accent-soft px-4 py-3 text-center text-sm text-accent">
           ანგარიში წაიშალა. მადლობა, რომ ჩვენთან იყავი.
         </p>
       ) : null}
-      <Cover />
-      <TopicDrift topics={topics} />
+      <Hero />
       <Features />
+      <Topics topics={topics} />
       <Faq />
       <Closing />
     </main>

@@ -5,19 +5,17 @@ export function FeedSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div aria-hidden>
       {Array.from({ length: rows }).map((_, index) => (
-        <div key={index} className="border-b border-line py-7">
+        <div key={index} className="border-b border-line py-6 last:border-b-0">
           <div className="flex items-center gap-2">
-            <Skeleton className="size-6 rounded-full" />
-            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="size-5 rounded-full" />
+            <Skeleton className="h-3 w-28" />
           </div>
-          <div className="mt-4 flex gap-6">
-            <div className="flex-1 space-y-2.5">
-              <Skeleton className="h-6 w-4/5" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/5" />
-            </div>
-            <Skeleton className="size-20 rounded-xl sm:h-28 sm:w-40" />
+          <div className="mt-3.5 space-y-2">
+            <Skeleton className="h-5 w-4/5" />
+            <Skeleton className="h-3.5 w-full" />
+            <Skeleton className="h-3.5 w-3/5" />
           </div>
+          <Skeleton className="mt-4 h-3 w-24" />
         </div>
       ))}
     </div>

@@ -2,25 +2,30 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, Bookmark, LogOut, PenLine, Settings, User } from 'lucide-react';
-import { Avatar } from '@/components/ui';
+import { BarChart3, ChevronsUpDown, LogOut, Settings, User } from 'lucide-react';
+import { Avatar, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { signOutAction } from '@/app/actions/auth';
 
-const LINKS = [
-  { href: '/dashboard', label: 'სტატისტიკა და სტატიები', icon: BarChart3 },
-  { href: '/bookmarks', label: 'შენახულები', icon: Bookmark },
-  { href: '/settings', label: 'პარამეტრები', icon: Settings },
-];
-
+/**
+ * The account menu. In the sidebar it sits at the bottom and opens upward (the
+ * sidebar already lists the main destinations); in the phone top bar it is just
+ * the avatar and opens downward.
+ */
 export function UserMenu({
   name,
   username,
   avatarUrl,
+  placement = 'bottom',
+  variant = 'avatar',
+  className,
 }: {
   name: string;
   username: string;
   avatarUrl: string | null;
+  placement?: 'top' | 'bottom';
+  variant?: 'avatar' | 'row';
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -41,81 +46,62 @@ export function UserMenu({
     };
   }, [open]);
 
+  const links = [
+    { href: `/u/${username}`, label: 'პროფილი', icon: User },
+    ...(variant === 'avatar' ? [{ href: '/dashboard', label: 'პანელი', icon: BarChart3 }] : []),
+    { href: '/settings', label: 'პარამეტრები', icon: Settings },
+  ];
+
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn('relative', className)}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'flex items-center rounded-full ring-offset-2 ring-offset-surface transition-shadow hover:ring-2 hover:ring-line-strong focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none',
-          open && 'ring-2 ring-line-strong',
+          'flex items-center rounded-lg transition-colors focus-visible:outline-2',
+          variant === 'row' ? 'gap-2.5 p-1 hover:bg-hover xl:w-full xl:px-2 xl:py-1.5' : 'rounded-full',
+          open && variant === 'row' && 'bg-hover',
         )}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="ანგარიშის მენიუ"
       >
         <Avatar name={name} src={avatarUrl} size="sm" />
+        {variant === 'row' ? (
+          <>
+            <span className="hidden min-w-0 flex-1 text-left xl:block">
+              <span className="block truncate text-[13px] font-medium text-ink">{name}</span>
+              <span className="block truncate text-[12px] text-subtle">@{username}</span>
+            </span>
+            <ChevronsUpDown className="hidden size-4 shrink-0 text-subtle xl:block" />
+          </>
+        ) : null}
       </button>
 
       {open ? (
         <div
           role="menu"
-          className="animate-pop-in absolute right-0 top-11 z-50 w-64 overflow-hidden rounded-2xl border border-line bg-raised shadow-lift"
+          className={cn(
+            MENU_CLASS,
+            'absolute w-60',
+            placement === 'top' ? 'bottom-full left-0 mb-2' : 'top-full right-0 mt-2',
+          )}
         >
-          <Link
-            href={`/u/${username}`}
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-3 border-b border-line px-4 py-3.5 transition-colors hover:bg-hover"
-          >
-            <Avatar name={name} src={avatarUrl} size="md" />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-ink">{name}</span>
-              <span className="block truncate text-[13px] text-subtle">@{username}</span>
-            </span>
-          </Link>
-
-          <div className="py-1">
-            <Link
-              href="/write"
-              prefetch={false}
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-muted transition-colors hover:bg-hover hover:text-ink md:hidden"
-            >
-              <PenLine className="size-4" />
-              დაწერე
-            </Link>
-            <Link
-              href={`/u/${username}`}
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2 text-sm text-muted transition-colors hover:bg-hover hover:text-ink"
-            >
-              <User className="size-4" />
-              პროფილი
-            </Link>
-            {LINKS.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2 text-sm text-muted transition-colors hover:bg-hover hover:text-ink"
-              >
-                <Icon className="size-4" />
-                {label}
-              </Link>
-            ))}
+          <div className="px-2.5 pt-2 pb-2.5">
+            <p className="truncate text-sm font-medium text-ink">{name}</p>
+            <p className="truncate text-[12px] text-subtle">@{username}</p>
           </div>
-
-          <form action={signOutAction} className="border-t border-line py-1">
-            <button
-              type="submit"
-              role="menuitem"
-              className="flex w-full items-center gap-3 px-4 py-2 text-sm text-muted transition-colors hover:bg-hover hover:text-ink"
-            >
-              <LogOut className="size-4" />
+          <div className="-mx-1 mb-1 border-t border-line" />
+          {links.map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={MENU_ITEM_CLASS}>
+              <Icon />
+              {label}
+            </Link>
+          ))}
+          <div className="-mx-1 my-1 border-t border-line" />
+          <form action={signOutAction}>
+            <button type="submit" role="menuitem" className={MENU_ITEM_CLASS}>
+              <LogOut />
               გასვლა
             </button>
           </form>
@@ -124,4 +110,3 @@ export function UserMenu({
     </div>
   );
 }
-

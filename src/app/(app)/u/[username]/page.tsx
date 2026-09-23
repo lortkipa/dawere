@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
@@ -13,7 +12,7 @@ import { Pagination, Tabs } from '@/components/feed-tabs';
 import { FollowButton } from '@/components/engage-buttons';
 import { Avatar, ButtonLink, EmptyState } from '@/components/ui';
 import { DEFAULT_SHARE_IMAGE } from '@/lib/site';
-import { formatCount, formatMonthYear, pageParam, seedHue } from '@/lib/utils';
+import { formatCount, formatMonthYear, pageParam } from '@/lib/utils';
 
 const PAGE_SIZE = 10;
 
@@ -92,23 +91,18 @@ export default async function ProfilePage(props: PageProps<'/u/[username]'>) {
 
   const s = stats[0];
 
-  return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-12 sm:px-6 sm:pt-6">
-      <header>
-        <div
-          className="topic-art h-32 rounded-3xl border border-line/60 sm:h-44"
-          style={{ '--hue': seedHue(profile.name) } as CSSProperties}
-          aria-hidden
-        />
+  const counts = [
+    ['სტატია', s?.posts ?? 0],
+    ['გამომწერი', s?.followers ?? 0],
+    ['გამოწერილი', s?.following ?? 0],
+  ] as const;
 
-        <div className="-mt-12 flex items-end justify-between gap-4 px-2 sm:-mt-14 sm:px-6">
-          <Avatar
-            name={profile.name}
-            src={profile.avatarUrl}
-            size="xl"
-            className="size-24 text-3xl ring-4 ring-surface sm:size-28"
-          />
-          <div className="flex items-center gap-2 pb-1">
+  return (
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <header className="border-b border-line pb-8">
+        <div className="flex items-start justify-between gap-4">
+          <Avatar name={profile.name} src={profile.avatarUrl} size="xl" className="size-20 text-2xl sm:size-24 sm:text-3xl" />
+          <div className="flex items-center gap-2">
             {isSelf ? (
               <ButtonLink href="/settings" variant="outline" size="sm">
                 <Settings />
@@ -127,95 +121,94 @@ export default async function ProfilePage(props: PageProps<'/u/[username]'>) {
           </div>
         </div>
 
-        <div className="mt-4 px-2 sm:px-6">
-          <h1 className="font-serif text-[1.9rem] leading-tight font-bold tracking-tight text-ink">{profile.name}</h1>
-          <p className="text-[15px] text-subtle">@{profile.username}</p>
+        <h1 className="mt-5 text-[1.75rem] leading-tight font-bold tracking-tight text-ink">{profile.name}</h1>
+        <p className="text-[15px] text-subtle">@{profile.username}</p>
 
-          {profile.bio ? (
-            <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-ink/85">{profile.bio}</p>
-          ) : null}
+        {profile.bio ? <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink/85">{profile.bio}</p> : null}
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-subtle">
-            {profile.location ? (
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-4" />
-                {profile.location}
-              </span>
-            ) : null}
-            {profile.website ? (
-              <a
-                href={profile.website}
-                target="_blank"
-                rel="noopener noreferrer nofollow"
-                className="inline-flex max-w-full items-center gap-1.5 text-accent hover:underline"
-              >
-                <LinkIcon className="size-4 shrink-0" />
-                <span className="truncate">{profile.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
-              </a>
-            ) : null}
+        <dl className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+          {counts.map(([label, value]) => (
+            <div key={label} className="flex items-baseline gap-1.5">
+              <dd className="font-semibold text-ink tabular-nums">{formatCount(value)}</dd>
+              <dt className="text-muted">{label}</dt>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-subtle">
+          {profile.location ? (
             <span className="inline-flex items-center gap-1.5">
-              <CalendarDays className="size-4" />
-              შემოგვიერთდა {formatMonthYear(profile.createdAt)}
+              <MapPin className="size-3.5" />
+              {profile.location}
             </span>
-          </div>
-
-          <dl className="mt-6 grid max-w-md grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-raised shadow-soft">
-            {[
-              ['სტატია', s?.posts ?? 0],
-              ['გამომწერი', s?.followers ?? 0],
-              ['გამოწერილი', s?.following ?? 0],
-            ].map(([label, value]) => (
-              <div key={label as string} className="flex flex-col-reverse px-2 py-3 text-center">
-                <dt className="text-[12px] whitespace-nowrap text-subtle">{label}</dt>
-                <dd className="text-lg font-bold text-ink tabular-nums">{formatCount(value as number)}</dd>
-              </div>
-            ))}
-          </dl>
+          ) : null}
+          {profile.website ? (
+            <a
+              href={profile.website}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="inline-flex max-w-full items-center gap-1.5 text-accent hover:underline"
+            >
+              <LinkIcon className="size-3.5 shrink-0" />
+              <span className="truncate">{profile.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+            </a>
+          ) : null}
+          <span className="inline-flex items-center gap-1.5">
+            <CalendarDays className="size-3.5" />
+            შემოგვიერთდა {formatMonthYear(profile.createdAt)}
+          </span>
         </div>
       </header>
 
-      <div className="mt-10 px-0 sm:px-6">
-        {isSelf && (s?.drafts ?? 0) > 0 ? (
-          <Tabs
-            className="mb-7"
-            active={tab}
-            tabs={[
-              {
-                key: 'posts',
-                label: `გამოქვეყნებული (${s?.posts ?? 0})`,
-                href: `/u/${profile.username}`,
-              },
-              {
-                key: 'drafts',
-                label: `მონახაზები (${s?.drafts ?? 0})`,
-                href: `/u/${profile.username}?tab=drafts`,
-              },
-            ]}
-          />
-        ) : null}
+      {isSelf && (s?.drafts ?? 0) > 0 ? (
+        <Tabs
+          className="mt-2"
+          active={tab}
+          tabs={[
+            {
+              key: 'posts',
+              label: `გამოქვეყნებული (${s?.posts ?? 0})`,
+              href: `/u/${profile.username}`,
+            },
+            {
+              key: 'drafts',
+              label: `მონახაზები (${s?.drafts ?? 0})`,
+              href: `/u/${profile.username}?tab=drafts`,
+            },
+          ]}
+        />
+      ) : null}
 
+      <div className="mt-4">
         <PostCardList
           posts={feed.posts}
           signedIn={Boolean(viewer)}
           emptyState={
             <EmptyState
+              className="mt-4"
               icon={<PenLine />}
               title={isSelf ? 'ჯერ არაფერი გამოგიქვეყნებია' : 'ჯერ არაფერია გამოქვეყნებული'}
-              action={isSelf ? <ButtonLink href="/write">დაწერე პირველი</ButtonLink> : undefined}
+              action={
+                isSelf ? (
+                  <ButtonLink href="/write" prefetch={false}>
+                    დაწერე პირველი
+                  </ButtonLink>
+                ) : undefined
+              }
             />
           }
         />
-
-        {feed.posts.length > 0 ? (
-          <div className="mt-8">
-            <Pagination
-              basePath={`/u/${profile.username}${tab === 'drafts' ? '?tab=drafts' : ''}`}
-              page={page}
-              hasMore={feed.hasMore}
-            />
-          </div>
-        ) : null}
       </div>
+
+      {feed.posts.length > 0 ? (
+        <div className="mt-6">
+          <Pagination
+            basePath={`/u/${profile.username}${tab === 'drafts' ? '?tab=drafts' : ''}`}
+            page={page}
+            hasMore={feed.hasMore}
+          />
+        </div>
+      ) : null}
     </main>
   );
 }

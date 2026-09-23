@@ -14,8 +14,9 @@ export default function NotFound() {
         <Logo />
       </Link>
 
-      <p className="font-serif text-6xl font-semibold text-subtle">404</p>
-      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-ink">გვერდი ვერ მოიძებნა</h1>
+      <p className="text-sm font-semibold text-subtle tabular-nums">404</p>
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-ink">გვერდი ვერ მოიძებნა</h1>
+      <p className="mt-2 text-[15px] text-muted">ბმული შეიძლება ძველი იყოს, ან გვერდი წაიშალა.</p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <ButtonLink href="/">მთავარზე</ButtonLink>

@@ -27,7 +27,7 @@ import {
   unpublishPostAction,
   type SaveResult,
 } from '@/app/actions/posts';
-import { Badge, Button, FormError } from '@/components/ui';
+import { Badge, Button, FormError, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { toast } from '@/components/toaster';
 import { Logo } from '@/components/logo';
@@ -269,20 +269,20 @@ export function PostEditor({
   return (
     <div className="flex min-h-dvh flex-col">
       {/* ---------------------------------------------------------- top bar */}
-      <header className="sticky top-0 z-40 border-b border-line/80 bg-surface/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-xl">
+        <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5">
           <Link
             href="/dashboard"
             aria-label="პანელზე დაბრუნება"
-            className="-ml-2 flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
+            className="flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-ink"
           >
             <ArrowLeft className="size-[18px]" />
           </Link>
           <Link href="/" className="hidden sm:block" aria-label="Dawere — მთავარი">
-            <Logo className="text-[19px]" />
+            <Logo className="text-[18px]" />
           </Link>
 
-          <div className="flex min-w-0 items-center gap-2 text-[13px] sm:ml-2">
+          <div className="flex min-w-0 items-center gap-2.5 text-[13px] sm:ml-1 sm:border-l sm:border-line sm:pl-4">
             <Badge tone={published ? 'accent' : 'neutral'}>{published ? 'გამოქვეყნებული' : 'მონახაზი'}</Badge>
             <SaveIndicator state={saveState} onRetry={() => void save()} />
           </div>
@@ -291,7 +291,7 @@ export function PostEditor({
             {published ? (
               <Link
                 href={`/p/${slug}`}
-                className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
+                className="hidden h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
               >
                 <ExternalLink className="size-4" />
                 ნახვა
@@ -305,14 +305,14 @@ export function PostEditor({
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label="სხვა მოქმედებები"
-                className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
+                className="flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-ink"
               >
                 <MoreHorizontal className="size-[18px]" />
               </button>
               {menuOpen ? (
                 <div
                   role="menu"
-                  className="animate-pop-in absolute top-11 right-0 z-50 w-60 overflow-hidden rounded-2xl border border-line bg-raised py-1 shadow-lift"
+                  className={cn(MENU_CLASS, 'absolute top-full right-0 mt-1.5 w-60')}
                 >
                   {published ? (
                     <MenuItem icon={ExternalLink} href={`/p/${slug}`} className="sm:hidden">
@@ -349,7 +349,7 @@ export function PostEditor({
               ) : null}
             </div>
 
-            <Button size="sm" onClick={onPublish} disabled={pending || (published && !pendingChanges && !edited)}>
+            <Button onClick={onPublish} disabled={pending || (published && !pendingChanges && !edited)}>
               {pending ? <Loader2 className="animate-spin" /> : null}
               {published ? 'განახლება' : 'გამოქვეყნება'}
             </Button>
@@ -357,9 +357,9 @@ export function PostEditor({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-8 pb-24 sm:px-6 sm:pt-12">
+      <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 pt-8 pb-24 sm:px-6 sm:pt-14">
         {published && pendingChanges ? (
-          <div className="mb-8 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
+          <div className="mb-8 flex flex-wrap items-center gap-3 rounded-lg border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text">
             <AlertCircle className="size-4 shrink-0" />
             <span className="min-w-0 flex-1">
               ცვლილებებს ჯერ მხოლოდ შენ ხედავ. მკითხველი ძველ ვერსიას კითხულობს, სანამ „განახლებას“ არ დააჭერ.
@@ -375,14 +375,14 @@ export function PostEditor({
 
         {/* ------------------------------------------------------------ cover */}
         {draft.coverImageUrl ? (
-          <div className="group relative mb-8 overflow-hidden rounded-2xl border border-line">
+          <div className="group relative mb-8 overflow-hidden rounded-xl border border-line">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={draft.coverImageUrl} alt="" className="max-h-96 w-full object-cover" />
             <div className="absolute top-3 right-3 flex gap-2 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
               <button
                 type="button"
                 onClick={() => coverRef.current?.click()}
-                className="flex h-9 items-center gap-1.5 rounded-full bg-black/60 px-3.5 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
+                className="flex h-8 items-center gap-1.5 rounded-lg bg-black/65 px-3 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
               >
                 {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
                 შეცვლა
@@ -390,7 +390,7 @@ export function PostEditor({
               <button
                 type="button"
                 onClick={() => update({ coverImageUrl: null })}
-                className="flex size-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur hover:bg-black/80"
+                className="flex size-8 items-center justify-center rounded-lg bg-black/65 text-white backdrop-blur hover:bg-black/80"
                 aria-label="ყდის სურათის წაშლა"
               >
                 <X className="size-4" />
@@ -402,7 +402,7 @@ export function PostEditor({
             type="button"
             onClick={() => coverRef.current?.click()}
             disabled={uploadingCover}
-            className="mb-8 inline-flex items-center gap-2 rounded-full border border-dashed border-line-strong px-4 py-2 text-sm text-muted transition-colors hover:border-ink/30 hover:bg-hover hover:text-ink"
+            className="mb-6 inline-flex h-8 items-center gap-2 rounded-lg px-2.5 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
           >
             {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
             ყდის სურათი
@@ -429,7 +429,7 @@ export function PostEditor({
           rows={1}
           maxLength={160}
           aria-label="სათაური"
-          className="w-full resize-none overflow-hidden bg-transparent font-serif text-[2.1rem] leading-[1.15] font-bold tracking-tight text-ink placeholder:text-subtle/70 focus:outline-none sm:text-[2.75rem]"
+          className="w-full resize-none overflow-hidden bg-transparent text-[2rem] leading-[1.15] font-bold tracking-tight text-ink placeholder:text-subtle/60 focus:outline-none sm:text-[2.6rem]"
         />
 
         <textarea
@@ -440,10 +440,10 @@ export function PostEditor({
           rows={1}
           maxLength={240}
           aria-label="ქვესათაური"
-          className="mt-3 w-full resize-none overflow-hidden bg-transparent text-lg leading-relaxed text-muted placeholder:text-subtle/70 focus:outline-none sm:text-xl"
+          className="mt-3 w-full resize-none overflow-hidden bg-transparent text-lg leading-relaxed text-muted placeholder:text-subtle/60 focus:outline-none sm:text-xl"
         />
 
-        <div className="mt-6">
+        <div className="mt-5">
           <TagInput
             value={draft.topics}
             onChange={(topics) => update({ topics })}
@@ -464,7 +464,7 @@ export function PostEditor({
           />
         </div>
 
-        <p className="mt-10 border-t border-line pt-4 text-[13px] text-subtle">
+        <p className="mt-10 border-t border-line pt-4 text-[12px] text-subtle">
           {textLength.toLocaleString('en-US').replace(/,/g, ' ')} სიმბოლო · დაახლოებით {minutes} წთ კითხვა
           <span className="hidden sm:inline"> · Ctrl+S ინახავს დაუყოვნებლივ</span>
         </p>
@@ -507,22 +507,18 @@ function MenuItem({
   danger?: boolean;
   className?: string;
 }) {
-  const classes = cn(
-    'flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition-colors hover:bg-hover',
-    danger ? 'text-danger' : 'text-muted hover:text-ink',
-    className,
-  );
+  const classes = cn(MENU_ITEM_CLASS, danger && 'text-danger hover:bg-danger-soft hover:text-danger', className);
   if (href) {
     return (
       <Link href={href} role="menuitem" className={classes}>
-        <Icon className="size-4" />
+        <Icon />
         {children}
       </Link>
     );
   }
   return (
     <button type="button" role="menuitem" onClick={onClick} className={classes}>
-      <Icon className="size-4" />
+      <Icon />
       {children}
     </button>
   );

@@ -40,7 +40,7 @@ export function ReadingProgress({ targetId }: { targetId: string }) {
   }, [targetId]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px]" aria-hidden>
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
       <div ref={bar} className="h-full origin-left scale-x-0 bg-accent" />
     </div>
   );
@@ -75,7 +75,7 @@ export function TableOfContents({ headings }: { headings: Heading[] }) {
 
   return (
     <nav aria-label="შინაარსი" className="text-[13px]">
-      <p className="mb-3 font-semibold tracking-wide text-subtle uppercase">შინაარსი</p>
+      <p className="mb-3 font-semibold text-ink">შინაარსი</p>
       <ul className="space-y-1 border-l border-line">
         {headings.map((heading) => (
           <li key={heading.id}>
@@ -83,11 +83,11 @@ export function TableOfContents({ headings }: { headings: Heading[] }) {
               href={`#${heading.id}`}
               aria-current={active === heading.id ? 'location' : undefined}
               className={cn(
-                '-ml-px block border-l-2 py-1 leading-snug transition-colors',
+                '-ml-px block border-l py-1 leading-snug transition-colors',
                 heading.level === 3 ? 'pl-6' : 'pl-3.5',
                 active === heading.id
-                  ? 'border-accent font-medium text-ink'
-                  : 'border-transparent text-muted hover:text-ink',
+                  ? 'border-ink font-medium text-ink'
+                  : 'border-transparent text-subtle hover:text-ink',
               )}
             >
               {heading.text}
@@ -129,10 +129,10 @@ export function ShareButton({ title }: { title: string }) {
     <button
       type="button"
       onClick={share}
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink"
+      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
       aria-label="სტატიის გაზიარება"
     >
-      {copied ? <Check className="size-[18px] text-accent" /> : <Share2 className="size-[18px]" />}
+      {copied ? <Check className="size-[17px] text-accent" /> : <Share2 className="size-[17px]" />}
       <span className="hidden sm:inline">{copied ? 'დაკოპირდა' : 'გაზიარება'}</span>
     </button>
   );

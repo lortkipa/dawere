@@ -44,7 +44,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
             ეს კვირა: {formatCount(lastWeek)} · წინა: {formatCount(weekBefore)}
           </p>
         </div>
-        <span className="font-serif text-2xl font-bold text-ink tabular-nums">{formatCount(total)}</span>
+        <span className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatCount(total)}</span>
       </figcaption>
 
       <div className="relative pl-8">
@@ -82,7 +82,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
               >
                 <span
                   className={cn(
-                    'w-full rounded-t-[4px] bg-chart-1 transition-opacity',
+                    'w-full rounded-t-[3px] bg-chart-1 transition-opacity',
                     hovered !== null && hovered !== index ? 'opacity-40' : 'opacity-100',
                   )}
                   style={{ height: `${height}%` }}
@@ -94,7 +94,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
 
         {active ? (
           <div
-            className="pointer-events-none absolute -top-3 z-10 rounded-xl border border-line bg-raised px-3 py-2 text-[13px] whitespace-nowrap shadow-lift"
+            className="pointer-events-none absolute -top-3 z-10 rounded-lg border border-line bg-raised px-2.5 py-1.5 text-[13px] whitespace-nowrap shadow-lift"
             style={{ left: `calc(2rem + (100% - 2rem) * ${tooltipLeft / 100})`, transform: `translate(${tooltipShift}, -100%)` }}
           >
             <span className="font-semibold text-ink tabular-nums">{formatCount(active.views)} ნახვა</span>
@@ -113,7 +113,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
         <summary className="cursor-pointer text-[13px] text-subtle transition-colors hover:text-muted">
           ცხრილის სახით
         </summary>
-        <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-line">
+        <div className="mt-3 max-h-48 overflow-y-auto rounded-lg border border-line">
           <table className="w-full text-left text-[13px]">
             <thead className="sticky top-0 bg-sunken">
               <tr>

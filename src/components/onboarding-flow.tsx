@@ -17,46 +17,26 @@ const MINIMUM_TOPICS = 3;
 
 function Stepper({ step, total }: { step: number; total: number }) {
   return (
-    <div className="flex items-center gap-2.5" aria-hidden>
-      {Array.from({ length: total }).map((_, index) => (
-        <span
-          key={index}
-          className={cn(
-            'h-1.5 rounded-full transition-all duration-300',
-            index < step ? 'w-10 bg-accent' : 'w-5 bg-line-strong',
-          )}
-        />
-      ))}
+    <div aria-hidden>
+      <p className="text-[13px] font-medium text-subtle tabular-nums">
+        ნაბიჯი {step} / {total}
+      </p>
+      <div className="mt-2.5 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}>
+        {Array.from({ length: total }).map((_, index) => (
+          <span
+            key={index}
+            className={cn('h-1 rounded-full transition-colors duration-300', index < step ? 'bg-ink' : 'bg-line')}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
-/** A soft arc behind the step emoji, so the header has some drawn weight. */
-function StepBadge({ emoji }: { emoji: string }) {
-  return (
-    <span className="relative inline-flex size-16 items-center justify-center">
-      <svg viewBox="0 0 64 64" className="absolute inset-0 size-16" aria-hidden role="presentation">
-        <circle cx="32" cy="32" r="31" className="fill-accent-soft" />
-        <path
-          d="M32 3a29 29 0 0 1 29 29"
-          className="stroke-accent"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </svg>
-      <span className="relative text-3xl leading-none">{emoji}</span>
-    </span>
-  );
-}
-
-function StepHeader({ emoji, title, note }: { emoji: string; title: string; note?: string }) {
+function StepHeader({ title, note }: { title: string; note?: string }) {
   return (
     <div className="mb-8">
-      <StepBadge emoji={emoji} />
-      <h1 className="mt-5 text-[26px] leading-tight font-semibold tracking-tight text-ink sm:text-3xl">
-        {title}
-      </h1>
+      <h1 className="text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.75rem]">{title}</h1>
       {note ? <p className="mt-2 text-[15px] text-muted">{note}</p> : null}
     </div>
   );
@@ -100,9 +80,9 @@ function OptionCard({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex items-center gap-3 rounded-2xl border p-4 text-left transition-colors',
+        'flex items-center gap-3 rounded-xl border p-4 text-left transition-colors',
         active
-          ? 'border-accent bg-accent-soft'
+          ? 'border-accent bg-accent-soft ring-1 ring-accent'
           : 'border-line bg-raised hover:border-line-strong hover:bg-hover',
       )}
     >
@@ -141,9 +121,9 @@ function TopicPill({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-[15px] font-medium transition-colors',
+        'inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-[15px] font-medium transition-colors',
         active
-          ? 'border-accent bg-accent-soft text-accent'
+          ? 'border-accent bg-accent-soft text-accent ring-1 ring-accent'
           : 'border-line bg-raised text-ink hover:border-line-strong hover:bg-hover',
       )}
     >
@@ -181,9 +161,9 @@ function RoleCard({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'relative flex h-full flex-col items-start rounded-2xl border p-5 text-left transition-colors',
+        'relative flex h-full flex-col items-start rounded-xl border p-5 text-left transition-colors',
         active
-          ? 'border-accent bg-accent-soft'
+          ? 'border-accent bg-accent-soft ring-1 ring-accent'
           : 'border-line bg-raised hover:border-line-strong hover:bg-hover',
       )}
     >
@@ -192,7 +172,7 @@ function RoleCard({
           <Check className="size-3" strokeWidth={3} />
         </span>
       ) : null}
-      <span className="text-3xl leading-none" aria-hidden>
+      <span className="text-2xl leading-none" aria-hidden>
         {emoji}
       </span>
       <span className="mt-4 text-[15px] font-semibold text-ink">{label}</span>
@@ -243,7 +223,6 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
       {step === 1 ? (
         <section>
           <StepHeader
-            emoji="🧭"
             title={`გამარჯობა, ${firstName}. რა გაინტერესებს?`}
             note={`აირჩიე მინიმუმ ${MINIMUM_TOPICS} თემა.`}
           />
@@ -260,7 +239,7 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
             ))}
           </div>
 
-          <div className="mt-10 flex items-center justify-between gap-4 border-t border-line pt-6">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
             <span className="text-[13px] text-subtle">
               {enough ? `არჩეულია ${selected.size}` : `აირჩიე კიდევ ${MINIMUM_TOPICS - selected.size}`}
             </span>
@@ -275,7 +254,7 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
       {/* ----------------------------------------------- 2 · how they came */}
       {step === 2 ? (
         <section>
-          <StepHeader emoji="👋" title="საიდან შეგვნიშნე?" note="ერთი პასუხი დაგვეხმარება." />
+          <StepHeader title="საიდან შეგვნიშნე?" note="ერთი პასუხი დაგვეხმარება." />
 
           <div className="grid gap-3 sm:grid-cols-2">
             {DISCOVERY_OPTIONS.map((option) => (
@@ -309,7 +288,7 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
             </div>
           ) : null}
 
-          <div className="mt-10 flex items-center justify-between gap-4 border-t border-line pt-6">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
             <Button type="button" size="lg" variant="ghost" onClick={() => setStep(1)}>
               <ArrowLeft />
               უკან
@@ -336,7 +315,7 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
       {/* ---------------------------------------------------- 3 · who they are */}
       {step === 3 ? (
         <section>
-          <StepHeader emoji="🪶" title="მკითხველი ხარ თუ ავტორი?" note="ორივეს არჩევაც შეიძლება." />
+          <StepHeader title="მკითხველი ხარ თუ ავტორი?" note="ორივეს არჩევაც შეიძლება." />
 
           <div className="grid gap-3 sm:grid-cols-3">
             {ROLE_OPTIONS.map((option) => (
@@ -351,7 +330,7 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
             ))}
           </div>
 
-          <div className="mt-10 flex items-center justify-between gap-4 border-t border-line pt-6">
+          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
             <Button type="button" size="lg" variant="ghost" onClick={() => setStep(2)}>
               <ArrowLeft />
               უკან

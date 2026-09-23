@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'ka',
     start_url: '/',
     display: 'standalone',
-    background_color: '#fbfaf7',
-    theme_color: '#fbfaf7',
+    background_color: '#ffffff',
+    theme_color: '#ffffff',
     // PNGs alongside the SVG: Android wants raster 192 and 512 to offer install.
     icons: [
       { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },

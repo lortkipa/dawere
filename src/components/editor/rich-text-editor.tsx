@@ -66,8 +66,8 @@ function ToolButton({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors disabled:opacity-40',
-        active ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-hover hover:text-ink',
+        'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors disabled:opacity-35',
+        active ? 'bg-hover text-ink' : 'text-muted hover:bg-hover hover:text-ink',
       )}
     >
       {children}
@@ -76,7 +76,7 @@ function ToolButton({
 }
 
 function Separator() {
-  return <span className="mx-1 h-5 w-px shrink-0 bg-[var(--border)]" aria-hidden />;
+  return <span className="mx-1 h-4 w-px shrink-0 bg-line" aria-hidden />;
 }
 
 /* --------------------------------------------------------------- link popover */
@@ -99,7 +99,7 @@ function LinkPopover({ editor, onClose }: { editor: Editor; onClose: () => void 
   }
 
   return (
-    <div className="animate-pop-in absolute top-full left-3 z-30 mt-2 flex w-80 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-xl border border-line bg-raised p-1.5 shadow-lg">
+    <div className="animate-pop-in absolute top-full left-3 z-30 mt-2 flex w-80 max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded-xl border border-line bg-raised p-1.5 shadow-lift">
       <input
         ref={inputRef}
         value={value}
@@ -117,7 +117,7 @@ function LinkPopover({ editor, onClose }: { editor: Editor; onClose: () => void 
       <button
         type="button"
         onClick={apply}
-        className="h-8 shrink-0 rounded-lg bg-primary px-3 text-[13px] font-medium text-primary-contrast"
+        className="h-8 shrink-0 rounded-md bg-primary px-3 text-[13px] font-medium text-primary-contrast hover:bg-primary-hover"
       >
         დადასტურება
       </button>
@@ -222,7 +222,7 @@ export function RichTextEditor({
   if (!editor) {
     return (
       <div aria-hidden>
-        <div className="shimmer mb-6 h-11 rounded-2xl" />
+        <div className="shimmer mb-8 h-11 rounded-xl" />
         <div className="space-y-3">
           <div className="shimmer h-4 w-full rounded" />
           <div className="shimmer h-4 w-11/12 rounded" />
@@ -237,8 +237,8 @@ export function RichTextEditor({
   return (
     <div>
       {/* One row that scrolls sideways on phones; wraps from sm up. */}
-      <div className="sticky top-14 z-20 -mx-5 mb-8 border-y border-line bg-surface/90 py-1.5 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border sm:bg-raised/90 sm:px-2 sm:shadow-soft">
-        <div className="no-scrollbar relative flex items-center gap-0.5 overflow-x-auto px-5 sm:flex-wrap sm:overflow-visible sm:px-0">
+      <div className="sticky top-14 z-20 -mx-4 mb-8 border-y border-line bg-surface/90 py-1 backdrop-blur-xl sm:mx-0 sm:rounded-xl sm:border sm:bg-raised/90 sm:px-1.5 sm:shadow-soft">
+        <div className="no-scrollbar relative flex items-center gap-0.5 overflow-x-auto px-4 sm:flex-wrap sm:overflow-visible sm:px-0">
           <ToolButton
             label="დაბრუნება"
             onClick={() => editor.chain().focus().undo().run()}

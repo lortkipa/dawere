@@ -24,7 +24,7 @@ export function HighlightText({ text }: { text: string }) {
         part.value ? (
           <Fragment key={index}>
             {part.marked ? (
-              <mark className="rounded bg-accent-soft px-0.5 font-medium text-accent">{part.value}</mark>
+              <mark className="rounded-sm bg-accent-soft px-0.5 font-medium text-ink">{part.value}</mark>
             ) : (
               part.value
             )}

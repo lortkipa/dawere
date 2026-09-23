@@ -44,13 +44,13 @@ export function ConfirmDialog({
         // A click on the backdrop lands on the dialog element itself.
         if (event.target === ref.current && !pending) onClose();
       }}
-      className="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-3xl border border-line bg-raised p-0 text-ink shadow-lift backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      className="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-line bg-raised p-0 text-ink shadow-lift"
     >
       <div className="p-6">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description ? <div className="mt-2 text-[15px] leading-relaxed text-muted">{description}</div> : null}
-        <div className="mt-7 flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={pending}>
+        <h2 className="text-base font-semibold">{title}</h2>
+        {description ? <div className="mt-1.5 text-sm leading-relaxed text-muted">{description}</div> : null}
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={onClose} disabled={pending}>
             გაუქმება
           </Button>
           <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} disabled={pending} autoFocus>

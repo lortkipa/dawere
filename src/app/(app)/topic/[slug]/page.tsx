@@ -10,11 +10,9 @@ import { topics } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
 import { featuredTopics, topicFeed } from '@/lib/feed';
 import { SIGNAL, isFollowingTopic, recordTopicSignal } from '@/lib/interests';
-import { topicEmoji } from '@/lib/topic-art';
 import { PostCardList } from '@/components/post-card';
 import { Pagination } from '@/components/feed-tabs';
 import { TopicFollowButton } from '@/components/engage-buttons';
-import { TopicArt } from '@/components/topic-art';
 import { ButtonLink, EmptyState, SectionHeading } from '@/components/ui';
 import { formatCount, pageParam } from '@/lib/utils';
 
@@ -59,25 +57,20 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
   const related = others.filter((t) => t.id !== topic.id).slice(0, 10);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-12 sm:px-6 sm:pt-6">
-      <header className="relative mb-10 overflow-hidden rounded-3xl border border-line/60">
-        <TopicArt slug={topic.slug} className="absolute inset-0" glyph={false} />
-        <div className="relative flex flex-col items-start gap-5 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-9">
-          <div className="min-w-0">
-            <span className="flex size-16 items-center justify-center rounded-2xl bg-raised/80 text-4xl shadow-soft backdrop-blur" aria-hidden>
-              {topicEmoji(topic.slug)}
-            </span>
-            <h1 className="mt-5 font-serif text-[2rem] leading-tight font-bold tracking-tight text-ink sm:text-[2.5rem]">
-              {topic.name}
-            </h1>
-            {topic.description ? (
-              <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-ink/75">{topic.description}</p>
-            ) : null}
-            {topic.postCount > 0 ? (
-              <p className="mt-3 text-[13px] font-medium text-ink/60">{formatCount(topic.postCount)} სტატია</p>
-            ) : null}
-          </div>
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <header className="mb-4 border-b border-line pb-8">
+        <Link href="/search" className="text-[13px] font-medium text-subtle transition-colors hover:text-ink">
+          თემები
+        </Link>
+        <h1 className="mt-2 text-3xl leading-tight font-bold tracking-tight text-ink sm:text-4xl">{topic.name}</h1>
+        {topic.description ? (
+          <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-muted">{topic.description}</p>
+        ) : null}
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
           <TopicFollowButton topicId={topic.id} initialFollowing={following} signedIn={Boolean(user)} />
+          {topic.postCount > 0 ? (
+            <span className="text-[13px] text-subtle">{formatCount(topic.postCount)} სტატია</span>
+          ) : null}
         </div>
       </header>
 
@@ -86,6 +79,7 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
         signedIn={Boolean(user)}
         emptyState={
           <EmptyState
+            className="mt-6"
             icon={<Hash />}
             title={`„${topic.name}“ პირველ ტექსტს ელოდება`}
             action={
@@ -98,7 +92,7 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
       />
 
       {feed.posts.length > 0 ? (
-        <div className="mt-8">
+        <div className="mt-6">
           <Pagination basePath={`/topic/${slug}`} page={page} hasMore={feed.hasMore} />
         </div>
       ) : null}
@@ -106,14 +100,13 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
       {related.length > 0 ? (
         <section className="mt-16 border-t border-line pt-10">
           <SectionHeading>სხვა თემები</SectionHeading>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {related.map((t) => (
               <Link
                 key={t.id}
                 href={`/topic/${t.slug}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-3.5 py-1.5 text-[13px] font-medium text-muted transition-colors hover:border-line-strong hover:text-ink"
+                className="inline-flex items-center rounded-md bg-sunken px-2.5 py-1 text-[13px] font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
               >
-                <span aria-hidden>{topicEmoji(t.slug)}</span>
                 {t.name}
               </Link>
             ))}

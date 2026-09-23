@@ -22,14 +22,15 @@ export default async function OnboardingPage() {
     .orderBy(desc(topics.postCount), topics.name);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 py-12 sm:py-16">
-      <Link href="/" className="inline-flex">
-        <Logo />
-      </Link>
-
-      <div className="mt-12">
+    <div className="flex min-h-dvh flex-1 flex-col">
+      <header className="flex h-16 items-center border-b border-line px-4 sm:px-6">
+        <Link href="/" className="inline-flex" aria-label="Dawere — მთავარი">
+          <Logo />
+        </Link>
+      </header>
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
         <OnboardingFlow topics={featured} firstName={user.name.split(' ')[0]} />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
 import { SUPPORT_EMAIL } from '@/lib/site';
+import { cn } from '@/lib/utils';
 
 const LINKS = [
   { href: '/search', label: 'აღმოაჩინე' },
@@ -9,32 +10,47 @@ const LINKS = [
   { href: '/privacy', label: 'კონფიდენციალურობა' },
 ];
 
-export function SiteFooter() {
+/** `compact` is the in-app variant: one quiet line under the content column. */
+export function SiteFooter({ compact = false }: { compact?: boolean }) {
+  const year = new Date().getFullYear();
+
+  const nav = (
+    <nav aria-label="ქვედა ნავიგაცია" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-muted">
+      {LINKS.map((link) => (
+        <Link key={link.href} href={link.href} prefetch={link.prefetch} className="transition-colors hover:text-ink">
+          {link.label}
+        </Link>
+      ))}
+      {SUPPORT_EMAIL ? (
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="transition-colors hover:text-ink">
+          კონტაქტი
+        </a>
+      ) : null}
+    </nav>
+  );
+
+  if (compact) {
+    return (
+      <footer className="mt-auto border-t border-line">
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          {nav}
+          <span className="text-[13px] text-subtle">© {year} Dawere</span>
+        </div>
+      </footer>
+    );
+  }
+
   return (
-    <footer className="mt-auto border-t border-line bg-sunken/50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <footer className={cn('mt-auto border-t border-line')}>
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <Logo />
+          <Logo className="text-[18px]" />
           <p className="mt-2 text-[13px] text-subtle">ტექსტები, რომლებიც ღირს წაკითხვად.</p>
         </div>
-        <nav aria-label="ქვედა ნავიგაცია" className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px] text-muted">
-          {LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              prefetch={link.prefetch}
-              className="transition-colors hover:text-ink"
-            >
-              {link.label}
-            </Link>
-          ))}
-          {SUPPORT_EMAIL ? (
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="transition-colors hover:text-ink">
-              კონტაქტი
-            </a>
-          ) : null}
-          <span className="text-subtle">© {new Date().getFullYear()} Dawere</span>
-        </nav>
+        <div className="flex flex-col gap-3 sm:items-end">
+          {nav}
+          <span className="text-[13px] text-subtle">© {year} Dawere</span>
+        </div>
       </div>
     </footer>
   );

@@ -66,13 +66,13 @@ export function LikeButton({
       aria-pressed={optimistic.liked}
       aria-label={optimistic.liked ? 'მოწონების მოხსნა' : 'სტატიის მოწონება'}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm transition-colors hover:bg-hover',
-        optimistic.liked ? 'text-rose-600 dark:text-rose-400' : 'text-muted hover:text-ink',
+        'inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] transition-colors hover:bg-hover',
+        optimistic.liked ? 'text-rose-600 dark:text-rose-400' : 'text-subtle hover:text-ink',
       )}
     >
       <Heart
         key={pops}
-        className={cn('size-[18px]', optimistic.liked && 'animate-heart-pop fill-current')}
+        className={cn('size-[17px]', optimistic.liked && 'animate-heart-pop fill-current')}
       />
       <span className="tabular-nums">{formatCount(optimistic.count)}</span>
       {withLabel ? <span className="sr-only">მოწონება</span> : null}
@@ -117,11 +117,11 @@ export function BookmarkButton({
       aria-pressed={optimistic}
       aria-label={optimistic ? 'შენახულებიდან ამოღება' : 'შენახვა მოგვიანებისთვის'}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm transition-colors hover:bg-hover',
-        optimistic ? 'text-accent' : 'text-muted hover:text-ink',
+        'inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] transition-colors hover:bg-hover',
+        optimistic ? 'text-accent' : 'text-subtle hover:text-ink',
       )}
     >
-      <Bookmark className={cn('size-[18px]', optimistic && 'fill-current')} />
+      <Bookmark className={cn('size-[17px]', optimistic && 'fill-current')} />
       {withLabel ? <span className="hidden sm:inline">{optimistic ? 'შენახულია' : 'შენახვა'}</span> : null}
     </button>
   );
@@ -132,9 +132,9 @@ export function CommentCountLink({ href, count }: { href: string; count: number 
     <Link
       href={href}
       aria-label={`კომენტარები: ${count}`}
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink"
+      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
     >
-      <MessageCircle className="size-[18px]" />
+      <MessageCircle className="size-[17px]" />
       <span className="tabular-nums">{formatCount(count)}</span>
     </Link>
   );
@@ -145,12 +145,15 @@ export function FollowButton({
   initialFollowing,
   signedIn,
   size = 'sm',
+  compact = false,
   className,
 }: {
   authorId: string;
   initialFollowing: boolean;
   signedIn: boolean;
   size?: 'sm' | 'md';
+  /** Text only, for tight rows like the sidebar. */
+  compact?: boolean;
   className?: string;
 }) {
   const signIn = useSignInRedirect();
@@ -175,9 +178,9 @@ export function FollowButton({
       size={size}
       variant={optimistic ? 'outline' : 'primary'}
       aria-pressed={optimistic}
-      className={className}
+      className={cn(compact && 'h-7 px-2.5 text-[12px]', className)}
     >
-      {optimistic ? <Check /> : <Plus />}
+      {compact ? null : optimistic ? <Check /> : <Plus />}
       {optimistic ? 'გამოწერილია' : 'გამოწერა'}
     </Button>
   );

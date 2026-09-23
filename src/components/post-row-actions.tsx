@@ -6,6 +6,8 @@ import { ExternalLink, MoreHorizontal, PenLine, Trash2 } from 'lucide-react';
 import { deletePostAction } from '@/app/actions/posts';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { toast } from '@/components/toaster';
+import { MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 /** The ⋯ menu on each dashboard row: open, edit, delete. */
 export function PostRowActions({
@@ -49,8 +51,6 @@ export function PostRowActions({
     });
   }
 
-  const item =
-    'flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-muted transition-colors hover:bg-hover hover:text-ink';
 
   return (
     <div ref={ref} className="relative">
@@ -60,22 +60,22 @@ export function PostRowActions({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="მოქმედებები"
-        className="flex size-9 items-center justify-center rounded-full text-subtle transition-colors hover:bg-hover hover:text-ink"
+        className="flex size-8 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-hover hover:text-ink"
       >
         <MoreHorizontal className="size-[18px]" />
       </button>
       {open ? (
         <div
           role="menu"
-          className="animate-pop-in absolute top-10 right-0 z-30 w-48 overflow-hidden rounded-2xl border border-line bg-raised py-1 shadow-lift"
+          className={cn(MENU_CLASS, 'absolute top-full right-0 mt-1 w-48')}
         >
-          <Link href={`/write/${postId}`} role="menuitem" className={item}>
-            <PenLine className="size-4" />
+          <Link href={`/write/${postId}`} role="menuitem" className={MENU_ITEM_CLASS}>
+            <PenLine />
             რედაქტირება
           </Link>
           {published ? (
-            <Link href={`/p/${slug}`} role="menuitem" className={item}>
-              <ExternalLink className="size-4" />
+            <Link href={`/p/${slug}`} role="menuitem" className={MENU_ITEM_CLASS}>
+              <ExternalLink />
               ნახვა
             </Link>
           ) : null}
@@ -86,9 +86,9 @@ export function PostRowActions({
               setOpen(false);
               setConfirming(true);
             }}
-            className={`${item} text-danger hover:text-danger`}
+            className={cn(MENU_ITEM_CLASS, 'text-danger hover:bg-danger-soft hover:text-danger')}
           >
-            <Trash2 className="size-4" />
+            <Trash2 />
             წაშლა
           </button>
         </div>

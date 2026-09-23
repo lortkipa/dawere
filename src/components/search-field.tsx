@@ -61,7 +61,7 @@ export function SearchField({
     <form action="/search" role="search" onSubmit={onSubmit} className={cn('relative', className)}>
       {keepTab ? <input type="hidden" name="tab" value={keepTab} /> : null}
 
-      <Search className="pointer-events-none absolute left-4.5 top-1/2 size-5 -translate-y-1/2 text-subtle" />
+      <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-subtle" />
       <input
         ref={inputRef}
         type="search"
@@ -75,13 +75,13 @@ export function SearchField({
         placeholder="სტატია, ავტორი ან თემა"
         aria-label="ძიება"
         className={cn(
-          'h-14 w-full rounded-2xl border border-line bg-raised pl-12.5 text-base',
+          'h-12 w-full rounded-xl border border-line-strong bg-raised pl-11 text-base',
           value ? 'pr-24' : 'pr-14',
-          'text-ink shadow-sm shadow-black/[0.03] transition-[border-color,box-shadow] placeholder:text-subtle hover:border-line-strong focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/15 [&::-webkit-search-cancel-button]:appearance-none',
+          'text-ink shadow-soft transition-[border-color,box-shadow] placeholder:text-subtle focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/15 [&::-webkit-search-cancel-button]:appearance-none',
         )}
       />
 
-      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+      <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
         {value && !pending ? (
           <button
             type="button"
@@ -90,7 +90,7 @@ export function SearchField({
               inputRef.current?.focus();
             }}
             aria-label="გასუფთავება"
-            className="flex size-9 items-center justify-center rounded-full text-subtle transition-colors hover:bg-hover hover:text-ink"
+            className="flex size-9 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-hover hover:text-ink"
           >
             <X className="size-4" />
           </button>
@@ -100,7 +100,7 @@ export function SearchField({
           aria-label="ძიება"
           disabled={pending}
           className={cn(
-            'flex size-10 items-center justify-center rounded-xl transition-colors',
+            'flex size-9 items-center justify-center rounded-lg transition-colors',
             value.trim()
               ? 'bg-primary text-primary-contrast hover:bg-primary-hover'
               : 'bg-sunken text-subtle',

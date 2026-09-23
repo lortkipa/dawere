@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { featuredTopics, publishedPostCount, suggestedAuthors, trendingFeed } from '@/lib/feed';
 import { Avatar, SectionHeading } from '@/components/ui';
 import { FollowButton } from '@/components/engage-buttons';
-import { topicEmoji } from '@/lib/topic-art';
 
 /**
  * Below this many live posts a "what people are reading" list only repeats
@@ -20,29 +19,28 @@ export async function Sidebar({ userId }: { userId: string | null }) {
   ]);
 
   return (
-    <aside className="space-y-10">
+    <aside className="space-y-9">
       {published >= TRENDING_MIN_POSTS && trending.posts.length > 0 ? (
         <section>
           <SectionHeading>ახლა კითხულობენ</SectionHeading>
-          <ol className="space-y-5">
+          <ol className="space-y-4">
             {trending.posts.map((post, index) => (
-              <li key={post.id} className="group flex gap-3.5">
-                <span className="w-8 shrink-0 font-serif text-2xl leading-none font-bold whitespace-nowrap text-line-strong tabular-nums">
-                  {String(index + 1).padStart(2, '0')}
+              <li key={post.id} className="group flex gap-3">
+                <span className="w-5 shrink-0 pt-px text-[13px] font-semibold text-subtle tabular-nums">
+                  {index + 1}
                 </span>
                 <div className="min-w-0">
                   <Link
-                    href={`/u/${post.author.username}`}
-                    className="flex items-center gap-1.5 text-[12px] text-muted hover:text-ink"
-                  >
-                    <Avatar name={post.author.name} src={post.author.avatarUrl} size="xs" className="size-4 text-[7px]" />
-                    <span className="truncate">{post.author.name}</span>
-                  </Link>
-                  <Link
                     href={`/p/${post.slug}`}
-                    className="mt-1 line-clamp-2 text-[15px] leading-snug font-semibold text-ink transition-colors group-hover:text-accent"
+                    className="line-clamp-2 text-sm leading-snug font-medium text-ink decoration-line-strong underline-offset-4 group-hover:underline"
                   >
                     {post.title}
+                  </Link>
+                  <Link
+                    href={`/u/${post.author.username}`}
+                    className="mt-1 block truncate text-[12px] text-subtle hover:text-ink"
+                  >
+                    {post.author.name}
                   </Link>
                 </div>
               </li>
@@ -54,24 +52,22 @@ export async function Sidebar({ userId }: { userId: string | null }) {
       {authors.length > 0 ? (
         <section>
           <SectionHeading>გამოსაწერი ავტორები</SectionHeading>
-          <ul className="space-y-4">
+          <ul className="space-y-3.5">
             {authors.map((author) => (
-              <li key={author.id} className="flex items-start gap-3">
+              <li key={author.id} className="flex items-center gap-3">
                 <Link href={`/u/${author.username}`} className="shrink-0">
-                  <Avatar name={author.name} src={author.avatar_url} size="md" />
+                  <Avatar name={author.name} src={author.avatar_url} size="sm" />
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/u/${author.username}`}
-                    className="block truncate text-sm font-semibold text-ink hover:text-accent"
+                    className="block truncate text-[13px] font-medium text-ink hover:underline"
                   >
                     {author.name}
                   </Link>
-                  <p className="line-clamp-1 text-[13px] leading-snug text-subtle">
-                    {author.bio || `${author.post_count} სტატია`}
-                  </p>
+                  <p className="truncate text-[12px] text-subtle">{author.bio || `${author.post_count} სტატია`}</p>
                 </div>
-                <FollowButton authorId={author.id} initialFollowing={false} signedIn={Boolean(userId)} />
+                <FollowButton authorId={author.id} initialFollowing={false} signedIn={Boolean(userId)} compact />
               </li>
             ))}
           </ul>
@@ -82,21 +78,20 @@ export async function Sidebar({ userId }: { userId: string | null }) {
         <section>
           <SectionHeading
             action={
-              <Link href="/search" className="text-[13px] font-medium text-accent hover:underline">
+              <Link href="/search" className="text-[12px] font-medium text-muted hover:text-ink">
                 ყველა
               </Link>
             }
           >
             თემები
           </SectionHeading>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {topics.map((topic) => (
               <Link
                 key={topic.id}
                 href={`/topic/${topic.slug}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-3 py-1.5 text-[13px] font-medium text-muted transition-colors hover:border-line-strong hover:text-ink"
+                className="inline-flex items-center rounded-md bg-sunken px-2.5 py-1 text-[13px] font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
               >
-                <span aria-hidden>{topicEmoji(topic.slug)}</span>
                 {topic.name}
               </Link>
             ))}

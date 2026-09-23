@@ -1,16 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { after } from 'next/server';
-import { SearchX } from 'lucide-react';
+import { ArrowRight, SearchX } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 import { searchEverything, type PersonHit, type SearchSort } from '@/lib/search';
 import { recordSearchSignal } from '@/lib/interests';
 import { featuredTopics, latestFeed } from '@/lib/feed';
-import { Avatar, Card, Chip, EmptyState, SectionHeading } from '@/components/ui';
-import { topicEmoji } from '@/lib/topic-art';
+import { Avatar, Card, Chip, EmptyState, PageHeader, SectionHeading } from '@/components/ui';
 import { FollowButton } from '@/components/engage-buttons';
 import { HighlightText } from '@/components/highlight-text';
-import { Pagination, Tabs } from '@/components/feed-tabs';
+import { Pagination, Segmented, Tabs } from '@/components/feed-tabs';
 import { PostCard } from '@/components/post-card';
 import { SearchField } from '@/components/search-field';
 import { cn, formatCount, pageParam } from '@/lib/utils';
@@ -52,22 +51,15 @@ type TopicLink = { id: string; slug: string; name: string };
 
 function TopicGrid({ topics }: { topics: TopicLink[] }) {
   return (
-    <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3">
       {topics.map((topic) => (
         <li key={topic.id}>
-          {/* Stacked on phones: two columns leave too little room beside the glyph
-              for long Georgian words, which would otherwise break mid-word. */}
           <Link
             href={`/topic/${topic.slug}`}
-            className="group flex h-full flex-col items-start gap-2.5 rounded-xl border border-line bg-raised p-3 transition-colors hover:border-line-strong hover:bg-hover sm:flex-row sm:items-center sm:gap-3 sm:p-2.5 sm:pr-3"
+            className="group flex h-full items-center justify-between gap-2 rounded-lg border border-line bg-raised px-3.5 py-3 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-hover"
           >
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sunken text-xl transition-colors group-hover:bg-raised"
-              aria-hidden
-            >
-              {topicEmoji(topic.slug)}
-            </span>
-            <span className="min-w-0 text-sm leading-snug font-medium text-ink">{topic.name}</span>
+            <span className="min-w-0">{topic.name}</span>
+            <ArrowRight className="size-3.5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
           </Link>
         </li>
       ))}
@@ -80,12 +72,7 @@ function TopicChips({ topics, className }: { topics: TopicLink[]; className?: st
     <div className={cn('flex flex-wrap gap-2', className)}>
       {topics.map((topic) => (
         <Link key={topic.id} href={`/topic/${topic.slug}`}>
-          <Chip>
-            <span className="mr-1.5" aria-hidden>
-              {topicEmoji(topic.slug)}
-            </span>
-            {topic.name}
-          </Chip>
+          <Chip>{topic.name}</Chip>
         </Link>
       ))}
     </div>
@@ -105,14 +92,14 @@ function PeopleList({
     <Card>
       <ul className="divide-y divide-line">
         {people.map((person) => (
-          <li key={person.id} className="flex items-center gap-3.5 px-4 py-3.5">
+          <li key={person.id} className="flex items-center gap-3 px-4 py-3">
             <Link href={`/u/${person.username}`} className="shrink-0">
               <Avatar name={person.name} src={person.avatarUrl} size="md" />
             </Link>
             <div className="min-w-0 flex-1">
               <Link
                 href={`/u/${person.username}`}
-                className="text-[15px] font-medium text-ink transition-colors hover:text-accent"
+                className="text-[15px] font-medium text-ink hover:underline"
               >
                 {person.name}
               </Link>
@@ -140,25 +127,11 @@ function PeopleList({
 
 function SortControl({ query, tab, sort }: { query: string; tab: Tab; sort: SearchSort }) {
   return (
-    <nav aria-label="დალაგება" className="flex rounded-full border border-line bg-sunken p-0.5">
-      {SORTS.map((option) => {
-        const active = option.key === sort;
-        return (
-          <Link
-            key={option.key}
-            href={searchHref(query, { tab, sort: option.key })}
-            aria-current={active ? 'true' : undefined}
-            scroll={false}
-            className={cn(
-              'rounded-full px-3 py-1 text-[13px] font-medium whitespace-nowrap transition-colors',
-              active ? 'bg-raised text-ink shadow-sm shadow-black/5' : 'text-muted hover:text-ink',
-            )}
-          >
-            {option.label}
-          </Link>
-        );
-      })}
-    </nav>
+    <Segmented
+      label="დალაგება"
+      active={sort}
+      options={SORTS.map((option) => ({ ...option, href: searchHref(query, { tab, sort: option.key }) }))}
+    />
   );
 }
 
@@ -177,33 +150,19 @@ async function Explore({ page }: { page: number }) {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-12 pb-20 sm:px-6 sm:pt-16">
-      <h1 className="text-center font-serif text-3xl font-semibold text-ink sm:text-4xl">რას ეძებ?</h1>
-      <SearchField autoFocus={page === 1} className="mx-auto mt-8 max-w-2xl" />
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+      <PageHeader title="აღმოაჩინე" description="იპოვე ტექსტები, ავტორები და თემები." className="mb-6" />
+      <SearchField autoFocus={page === 1} />
 
       {page === 1 && topics.length > 0 ? (
-        <section className="mt-14">
+        <section className="mt-12">
           <SectionHeading>თემები</SectionHeading>
-          <ul className="flex flex-wrap gap-2.5">
-            {topics.map((topic) => (
-              <li key={topic.id}>
-                <Link
-                  href={`/topic/${topic.slug}`}
-                  className="flex items-center gap-2 rounded-full border border-line bg-raised px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent/40 hover:text-accent"
-                >
-                  <span className="text-base leading-none" aria-hidden>
-                    {topicEmoji(topic.slug)}
-                  </span>
-                  {topic.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <TopicGrid topics={topics} />
         </section>
       ) : null}
 
       {latest.posts.length > 0 ? (
-        <section className="mt-14">
+        <section className="mt-12">
           <SectionHeading>უახლესი ტექსტები</SectionHeading>
           <div>
             {latest.posts.map((post) => (
@@ -264,7 +223,7 @@ export default async function SearchPage(props: PageProps<'/search'>) {
     ((tab === 'posts' && !showPosts) || (tab === 'people' && !showPeople) || (tab === 'topics' && !showTopics));
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-8 pb-16 sm:px-6 sm:pt-10">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-6 pb-16 sm:px-6 sm:pt-10">
       <SearchField key={query} defaultValue={query} tab={tab} />
 
       <Tabs
@@ -321,9 +280,9 @@ export default async function SearchPage(props: PageProps<'/search'>) {
                   results.people.length > PEOPLE_PREVIEW ? (
                     <Link
                       href={searchHref(query, { tab: 'people' })}
-                      className="text-[13px] font-medium text-muted transition-colors hover:text-ink"
+                      className="text-[12px] font-medium text-muted transition-colors hover:text-ink"
                     >
-                      ყველა →
+                      ყველა
                     </Link>
                   ) : null
                 }
@@ -350,8 +309,8 @@ export default async function SearchPage(props: PageProps<'/search'>) {
 
         {showPosts ? (
           <section>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-ink">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-[13px] font-semibold text-ink">
                 {formatCount(results.totalPosts)} სტატია
               </h2>
               <SortControl query={query} tab={tab} sort={sort} />

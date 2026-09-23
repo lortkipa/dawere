@@ -107,24 +107,21 @@ export default async function HomePage(props: PageProps<'/'>) {
   );
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-16">
-        <div className="min-w-0">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 sm:px-6">
+      <div className="grid gap-12 xl:grid-cols-[minmax(0,1fr)_17.5rem]">
+        <div className="mx-auto w-full max-w-2xl min-w-0 pb-12 xl:max-w-none">
           <Tabs
-            className="sticky top-16 z-20 -mx-4 mb-7 bg-surface/90 px-4 backdrop-blur-xl sm:mx-0 sm:px-0"
+            className="sticky top-14 z-20 -mx-4 bg-surface/90 px-4 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 md:pt-4"
             active={tab}
             tabs={TABS.map((t) => ({ ...t, href: t.key === 'for-you' ? '/' : `/?tab=${t.key}` }))}
           />
 
-          <PostCardList
-            posts={feed.posts}
-            signedIn
-            emptyState={emptyState}
-            featureFirst={page === 1 && feed.posts.length > 2}
-          />
+          <div className="mt-4">
+            <PostCardList posts={feed.posts} signedIn emptyState={<div className="pt-4">{emptyState}</div>} />
+          </div>
 
           {feed.posts.length > 0 ? (
-            <div className="mt-8">
+            <div className="mt-6">
               <Pagination
                 basePath={tab === 'for-you' ? '/' : `/?tab=${tab}`}
                 page={page}
@@ -136,7 +133,7 @@ export default async function HomePage(props: PageProps<'/'>) {
 
         {/* Not sticky: the rail can outgrow the viewport, and a sticky element
             taller than the screen hides its own bottom half. */}
-        <div className="hidden lg:block">
+        <div className="hidden border-l border-line py-8 pl-8 xl:block">
           <Sidebar userId={user.id} />
         </div>
       </div>

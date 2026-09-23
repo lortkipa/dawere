@@ -39,24 +39,25 @@ function StatCard({
   recent: number;
 }) {
   return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[13px] font-medium text-muted">{label}</span>
-        <span className="flex size-8 items-center justify-center rounded-xl bg-sunken text-subtle">
-          <Icon className="size-4" />
-        </span>
-      </div>
-      <p className="mt-3 font-serif text-[2rem] leading-none font-bold text-ink tabular-nums">{formatCount(value)}</p>
+    <div className="bg-raised p-4 sm:p-5">
+      <p className="flex items-center gap-1.5 text-[13px] font-medium text-muted">
+        <Icon className="size-3.5 text-subtle" />
+        {label}
+      </p>
+      <p className="mt-2 text-2xl leading-none font-semibold tracking-tight text-ink tabular-nums sm:text-[1.75rem]">
+        {formatCount(value)}
+      </p>
       <p
         className={cn(
-          'mt-2.5 inline-flex items-center gap-1 text-[12px] font-medium',
-          recent > 0 ? 'text-accent' : 'text-subtle',
+          'mt-2 inline-flex items-center gap-1 text-[12px]',
+          recent > 0 ? 'font-medium text-emerald-600 dark:text-emerald-400' : 'text-subtle',
         )}
       >
         {recent > 0 ? <TrendingUp className="size-3.5" /> : null}
-        {recent > 0 ? `+${formatCount(recent)}` : 'ცვლილება არ არის'} · 30 დღე
+        {recent > 0 ? `+${formatCount(recent)}` : 'ცვლილება არ არის'}
+        <span className="font-normal text-subtle">· 30 დღე</span>
       </p>
-    </Card>
+    </div>
   );
 }
 
@@ -152,7 +153,7 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
   const chartData: DayPoint[] = daily.map((d) => ({ day: d.day, views: d.views }));
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
       {searchParams.deleted === '1' ? <FlashToast message="სტატია წაიშალა" /> : null}
 
       <PageHeader
@@ -166,7 +167,7 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
         <StatCard icon={Eye} label="ნახვები" value={t?.views ?? 0} recent={t?.views_30 ?? 0} />
         <StatCard icon={Heart} label="მოწონებები" value={t?.likes ?? 0} recent={t?.likes_30 ?? 0} />
         <StatCard icon={MessageCircle} label="კომენტარები" value={t?.comments ?? 0} recent={t?.comments_30 ?? 0} />
@@ -174,15 +175,14 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
       </div>
 
       {(t?.published ?? 0) > 0 ? (
-        <Card className="mt-4 p-5 sm:p-6">
+        <Card className="mt-4 p-4 sm:p-6">
           <ViewsChart data={chartData} />
         </Card>
       ) : null}
 
-      <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <section className="min-w-0">
           <Tabs
-            className="mb-2"
             active={tab}
             tabs={[
               { key: 'published', label: `გამოქვეყნებული (${t?.published ?? 0})`, href: '/dashboard' },
@@ -211,7 +211,7 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={published ? `/p/${post.slug}` : `/write/${post.id}`}
-                        className="block truncate text-[15px] font-semibold text-ink hover:text-accent"
+                        className="block truncate text-[15px] font-medium text-ink hover:underline"
                       >
                         {post.title || 'უსათაურო'}
                       </Link>
@@ -221,7 +221,7 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
                         </span>
                         {post.has_pending ? <Badge tone="warning">გამოუქვეყნებელი ცვლილებები</Badge> : null}
                         {published ? (
-                          <span className="flex items-center gap-3 text-muted sm:hidden">
+                          <span className="flex items-center gap-3 sm:hidden">
                             <span className="inline-flex items-center gap-1">
                               <Eye className="size-3.5" /> {formatCount(post.view_count)}
                             </span>
@@ -237,17 +237,17 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
                       <dl className="hidden shrink-0 items-center gap-5 text-[13px] text-muted sm:flex">
                         <div className="flex items-center gap-1.5">
                           <dt className="sr-only">ნახვები</dt>
-                          <Eye className="size-4 text-subtle" />
+                          <Eye className="size-3.5 text-subtle" />
                           <dd className="tabular-nums">{formatCount(post.view_count)}</dd>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <dt className="sr-only">მოწონებები</dt>
-                          <Heart className="size-4 text-subtle" />
+                          <Heart className="size-3.5 text-subtle" />
                           <dd className="tabular-nums">{formatCount(post.like_count)}</dd>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <dt className="sr-only">კომენტარები</dt>
-                          <MessageCircle className="size-4 text-subtle" />
+                          <MessageCircle className="size-3.5 text-subtle" />
                           <dd className="tabular-nums">{formatCount(post.comment_count)}</dd>
                         </div>
                       </dl>
@@ -261,24 +261,24 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
           )}
         </section>
 
-        <aside className="space-y-10">
+        <aside className="space-y-8 lg:border-l lg:border-line lg:pl-8">
           {topPosts.length > 0 ? (
             <section>
               <SectionHeading>ყველაზე კითხვადი</SectionHeading>
-              <ol className="space-y-4">
+              <ol className="space-y-3.5">
                 {topPosts.map((post, index) => (
                   <li key={post.id} className="flex gap-3">
-                    <span className="w-6 shrink-0 font-serif text-xl leading-none font-bold text-line-strong tabular-nums">
+                    <span className="w-4 shrink-0 pt-px text-[13px] font-semibold text-subtle tabular-nums">
                       {index + 1}
                     </span>
                     <div className="min-w-0">
                       <Link
                         href={`/p/${post.slug}`}
-                        className="line-clamp-2 text-sm leading-snug font-semibold text-ink hover:text-accent"
+                        className="line-clamp-2 text-sm leading-snug font-medium text-ink hover:underline"
                       >
                         {post.title || 'უსათაურო'}
                       </Link>
-                      <p className="mt-1 text-[13px] text-subtle">{formatCount(post.view_count)} ნახვა</p>
+                      <p className="mt-0.5 text-[12px] text-subtle">{formatCount(post.view_count)} ნახვა</p>
                     </div>
                   </li>
                 ))}
@@ -289,7 +289,7 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
           {recentFollowers.length > 0 ? (
             <section>
               <SectionHeading>ახალი გამომწერები</SectionHeading>
-              <ul className="space-y-3.5">
+              <ul className="space-y-3">
                 {recentFollowers.map((follower) => (
                   <li key={follower.id} className="flex items-center gap-3">
                     <Link href={`/u/${follower.username}`}>
@@ -298,16 +298,22 @@ export default async function DashboardPage(props: PageProps<'/dashboard'>) {
                     <div className="min-w-0">
                       <Link
                         href={`/u/${follower.username}`}
-                        className="block truncate text-sm font-medium text-ink hover:text-accent"
+                        className="block truncate text-[13px] font-medium text-ink hover:underline"
                       >
                         {follower.name}
                       </Link>
-                      <span className="text-[13px] text-subtle">{timeAgo(follower.created_at)}</span>
+                      <span className="text-[12px] text-subtle">{timeAgo(follower.created_at)}</span>
                     </div>
                   </li>
                 ))}
               </ul>
             </section>
+          ) : null}
+
+          {topPosts.length === 0 && recentFollowers.length === 0 ? (
+            <p className="text-[13px] leading-relaxed text-subtle">
+              აქ გამოჩნდება შენი ყველაზე კითხვადი ტექსტები და ახალი გამომწერები.
+            </p>
           ) : null}
         </aside>
       </div>

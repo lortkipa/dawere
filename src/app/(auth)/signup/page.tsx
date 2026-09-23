@@ -8,8 +8,8 @@ export const metadata: Metadata = { title: 'ანგარიშის შე�
 export default function SignupPage() {
   return (
     <>
-      <h1 className="font-serif text-[2rem] leading-tight font-bold tracking-tight">შექმენი ანგარიში</h1>
-      <p className="mt-2 mb-8 text-[15px] text-muted">წერა, კითხვა და ნაკადი, რომელიც შენს გემოვნებას ერგება.</p>
+      <h1 className="text-2xl leading-tight font-semibold tracking-tight">შექმენი ანგარიში</h1>
+      <p className="mt-1.5 mb-7 text-[15px] text-muted">წერა, კითხვა და ნაკადი, რომელიც შენს გემოვნებას ერგება.</p>
 
       <AuthForm mode="signup" action={signUpAction} />
 
@@ -25,9 +25,9 @@ export default function SignupPage() {
         .
       </p>
 
-      <p className="mt-8 text-sm text-muted">
+      <p className="mt-7 border-t border-line pt-6 text-center text-sm text-muted">
         უკვე გაქვს ანგარიში?{' '}
-        <Link href="/login" className="font-medium text-accent hover:underline">
+        <Link href="/login" className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink">
           შესვლა
         </Link>
       </p>

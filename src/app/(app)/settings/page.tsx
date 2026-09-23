@@ -30,7 +30,7 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
       <PageHeader
         title="პარამეტრები"
         action={
@@ -41,14 +41,14 @@ export default async function SettingsPage() {
         }
       />
 
-      <div className="grid gap-8 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-12">
-        <nav aria-label="პარამეტრების განყოფილებები" className="lg:sticky lg:top-24 lg:self-start">
+      <div className="grid gap-6 lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-10">
+        <nav aria-label="პარამეტრების განყოფილებები" className="sticky top-14 z-10 -mx-4 border-b border-line bg-surface/90 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 lg:top-8 lg:mx-0 lg:self-start lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <ul className="no-scrollbar flex gap-1 overflow-x-auto lg:flex-col">
             {SECTIONS.map((section) => (
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="block rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-ink lg:rounded-xl"
+                  className="block rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-ink"
                 >
                   {section.label}
                 </a>
@@ -57,8 +57,8 @@ export default async function SettingsPage() {
           </ul>
         </nav>
 
-        <div className="min-w-0 space-y-12">
-          <section id="profile" className="scroll-mt-24 space-y-5">
+        <div className="min-w-0 space-y-10">
+          <section id="profile" className="scroll-mt-24 space-y-4">
             <AvatarForm name={user.name} avatarUrl={user.avatarUrl} />
             <ProfileForm
               initial={{
@@ -76,8 +76,8 @@ export default async function SettingsPage() {
             suggestions={featured.map(({ slug, name }) => ({ slug, name }))}
           />
 
-          <section id="account" className="scroll-mt-24 space-y-5">
-            <div className="rounded-2xl border border-line bg-sunken px-5 py-4 text-sm text-muted">
+          <section id="account" className="scroll-mt-24 space-y-4">
+            <div className="rounded-xl border border-line bg-sunken px-5 py-3.5 text-sm text-muted">
               შესული ხარ როგორც <span className="font-medium text-ink">{user.email}</span>
             </div>
             <PasswordForm />

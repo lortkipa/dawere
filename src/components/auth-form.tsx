@@ -11,7 +11,7 @@ const EMPTY: FormState = { ok: false };
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
+    <Button type="submit" size="lg" className="mt-2 w-full" disabled={pending}>
       {pending ? <Loader2 className="animate-spin" /> : null}
       {label}
     </Button>
@@ -42,7 +42,7 @@ function PasswordInput({
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute top-1/2 right-1.5 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-hover hover:text-ink"
+        className="absolute top-1/2 right-1 flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-subtle transition-colors hover:bg-hover hover:text-ink"
         aria-label={visible ? 'პაროლის დამალვა' : 'პაროლის ჩვენება'}
       >
         {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -72,7 +72,7 @@ export function AuthForm({
   // A form action resets the form when it returns; defaultValue from the echoed
   // values is what survives that reset, so a typo does not cost the whole form.
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form action={formAction} className="space-y-4" noValidate>
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <FormError>{state.error}</FormError>
 
@@ -112,7 +112,7 @@ export function AuthForm({
           isSignUp ? (
             'მინიმუმ 8 სიმბოლო'
           ) : forgotHref ? (
-            <a href={forgotHref} className="font-medium text-accent hover:underline">
+            <a href={forgotHref} className="font-medium text-muted hover:text-ink">
               დაგავიწყდა?
             </a>
           ) : undefined

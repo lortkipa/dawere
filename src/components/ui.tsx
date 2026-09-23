@@ -5,24 +5,24 @@ import { cn, avatarColor, initials } from '@/lib/utils';
 /* -------------------------------------------------------------------- button */
 
 const BUTTON_BASE =
-  'inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap ' +
-  'transition-[background-color,color,border-color,box-shadow,transform] active:scale-[0.98] ' +
-  'disabled:pointer-events-none disabled:opacity-50 [&>svg]:shrink-0';
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap select-none ' +
+  'transition-[background-color,color,border-color,box-shadow,opacity] ' +
+  'disabled:pointer-events-none disabled:opacity-45 [&>svg]:shrink-0';
 
 const BUTTON_VARIANTS = {
-  primary: 'bg-primary text-primary-contrast shadow-sm shadow-black/10 hover:bg-primary-hover',
-  accent: 'bg-accent text-accent-contrast shadow-sm shadow-accent/20 hover:bg-accent-hover',
-  outline: 'border border-line-strong bg-raised text-ink hover:border-ink/25 hover:bg-hover',
+  primary: 'bg-primary text-primary-contrast hover:bg-primary-hover',
+  accent: 'bg-accent text-accent-contrast hover:bg-accent-hover',
+  outline: 'border border-line-strong bg-raised text-ink shadow-soft hover:bg-hover',
   soft: 'bg-sunken text-ink hover:bg-hover',
   ghost: 'text-muted hover:bg-hover hover:text-ink',
-  danger: 'border border-danger/30 bg-danger-soft text-danger hover:bg-danger hover:text-white',
+  danger: 'border border-danger/25 bg-danger-soft text-danger hover:border-danger hover:bg-danger hover:text-white',
 } as const;
 
 const BUTTON_SIZES = {
-  sm: 'h-9 px-3.5 text-[13px] [&>svg]:size-4',
-  md: 'h-10 px-4.5 text-sm [&>svg]:size-4',
-  lg: 'h-12 px-6 text-[15px] [&>svg]:size-[18px]',
-  icon: 'size-10 [&>svg]:size-[18px]',
+  sm: 'h-8 px-3 text-[13px] [&>svg]:size-3.5',
+  md: 'h-9 px-3.5 text-sm [&>svg]:size-4',
+  lg: 'h-11 px-5 text-[15px] [&>svg]:size-[18px]',
+  icon: 'size-9 [&>svg]:size-[18px]',
 } as const;
 
 type ButtonStyleProps = {
@@ -55,12 +55,12 @@ export function ButtonLink({
 /* --------------------------------------------------------------------- input */
 
 export const INPUT_CLASS =
-  'w-full rounded-xl border border-line bg-raised px-3.5 py-2.5 text-[15px] text-ink placeholder:text-subtle ' +
-  'transition-colors hover:border-line-strong focus:border-accent focus:outline-none ' +
-  'focus:ring-2 focus:ring-accent/20 disabled:opacity-60';
+  'w-full rounded-lg border border-line-strong bg-raised px-3 py-2 text-[15px] text-ink shadow-soft placeholder:text-subtle ' +
+  'transition-[border-color,box-shadow] focus:border-accent focus:outline-none ' +
+  'focus:ring-3 focus:ring-accent/15 aria-[invalid=true]:border-danger disabled:opacity-60';
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
-  return <input className={cn(INPUT_CLASS, 'h-11', className)} {...props} />;
+  return <input className={cn(INPUT_CLASS, 'h-10', className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
@@ -83,12 +83,12 @@ export function Field({
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-1.5', className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
+        <label htmlFor={htmlFor} className="text-[13px] font-medium text-ink">
           {label}
         </label>
-        {hint ? <span className="text-[13px] text-subtle">{hint}</span> : null}
+        {hint ? <span className="text-[12px] text-subtle">{hint}</span> : null}
       </div>
       {children}
       {error ? (
@@ -104,7 +104,7 @@ export function Field({
 
 const AVATAR_SIZES = {
   xs: 'size-6 text-[10px]',
-  sm: 'size-9 text-[13px]',
+  sm: 'size-8 text-[12px]',
   md: 'size-10 text-sm',
   lg: 'size-14 text-lg',
   xl: 'size-20 text-2xl',
@@ -148,14 +148,14 @@ export function Avatar({
 /* ------------------------------------------------------------------ surfaces */
 
 export function Card({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('rounded-2xl border border-line bg-raised shadow-soft', className)} {...props} />;
+  return <div className={cn('rounded-xl border border-line bg-raised', className)} {...props} />;
 }
 
 const BADGE_TONES = {
-  neutral: 'bg-sunken text-muted',
-  accent: 'bg-accent-soft text-accent',
-  warning: 'bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300',
-  danger: 'bg-danger-soft text-danger',
+  neutral: 'bg-sunken text-muted ring-line',
+  accent: 'bg-accent-soft text-accent ring-accent/15',
+  warning: 'bg-warning-soft text-warning-text ring-warning-border',
+  danger: 'bg-danger-soft text-danger ring-danger/15',
 } as const;
 
 export function Badge({
@@ -170,7 +170,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-medium whitespace-nowrap [&>svg]:size-3',
+        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap ring-1 ring-inset [&>svg]:size-3',
         BADGE_TONES[tone],
         className,
       )}
@@ -182,8 +182,11 @@ export function Badge({
 
 /** Loading placeholder. Purely visual: screen readers get the page's own status. */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('shimmer rounded-lg', className)} aria-hidden />;
+  return <div className={cn('shimmer rounded-md', className)} aria-hidden />;
 }
+
+export const CHIP_CLASS =
+  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-medium transition-colors';
 
 export function Chip({
   children,
@@ -197,10 +200,10 @@ export function Chip({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-3 py-1 text-[13px] font-medium transition-colors',
+        CHIP_CLASS,
         active
           ? 'border-accent/30 bg-accent-soft text-accent'
-          : 'border-line bg-sunken text-muted hover:border-line-strong hover:text-ink',
+          : 'border-line bg-raised text-muted hover:border-line-strong hover:text-ink',
         className,
       )}
     >
@@ -237,10 +240,8 @@ export function PageHeader({
   return (
     <header className={cn('mb-8 flex flex-wrap items-end justify-between gap-4', className)}>
       <div className="min-w-0">
-        <h1 className="font-serif text-[28px] leading-tight font-semibold tracking-tight text-ink sm:text-[32px]">
-          {title}
-        </h1>
-        {description ? <p className="mt-1.5 text-[15px] text-muted">{description}</p> : null}
+        <h1 className="text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.75rem]">{title}</h1>
+        {description ? <p className="mt-1 text-[15px] text-muted">{description}</p> : null}
       </div>
       {action}
       {children}
@@ -264,17 +265,17 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-3xl border border-dashed border-line-strong/70 bg-raised/40 px-6 py-16 text-center',
+        'flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong px-6 py-14 text-center',
         className,
       )}
     >
       {icon ? (
-        <div className="mb-5 flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent [&>svg]:size-6">
+        <div className="mb-4 flex size-11 items-center justify-center rounded-full border border-line bg-sunken text-muted [&>svg]:size-5">
           {icon}
         </div>
       ) : null}
-      <h3 className="text-base font-semibold text-ink">{title}</h3>
-      {description ? <p className="mt-2 max-w-sm text-sm text-muted">{description}</p> : null}
+      <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
+      {description ? <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted">{description}</p> : null}
       {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
@@ -291,7 +292,7 @@ export function SectionHeading({
 }) {
   return (
     <div className={cn('mb-4 flex items-center justify-between gap-4', className)}>
-      <h2 className="text-[13px] font-semibold tracking-wide text-subtle uppercase">{children}</h2>
+      <h2 className="text-[13px] font-semibold text-ink">{children}</h2>
       {action}
     </div>
   );
@@ -302,7 +303,7 @@ export function FormError({ children }: { children?: ReactNode }) {
   return (
     <p
       role="alert"
-      className="rounded-xl border border-danger/25 bg-danger-soft px-3.5 py-2.5 text-sm text-danger"
+      className="rounded-lg border border-danger/20 bg-danger-soft px-3 py-2 text-sm text-danger"
     >
       {children}
     </p>
@@ -312,3 +313,10 @@ export function FormError({ children }: { children?: ReactNode }) {
 export function Divider({ className }: { className?: string }) {
   return <hr className={cn('border-line', className)} />;
 }
+
+/** A shared frame for dropdown menus and popovers. */
+export const MENU_CLASS =
+  'animate-pop-in z-50 overflow-hidden rounded-xl border border-line bg-raised p-1 shadow-lift';
+
+export const MENU_ITEM_CLASS =
+  'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted transition-colors hover:bg-hover hover:text-ink [&>svg]:size-4 [&>svg]:shrink-0';

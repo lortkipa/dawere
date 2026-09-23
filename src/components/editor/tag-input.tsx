@@ -38,18 +38,18 @@ export function TagInput({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-line bg-raised px-2.5 py-2 transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20">
+      <div className="-mx-2 flex flex-wrap items-center gap-1.5 rounded-lg border border-transparent px-2 py-1 transition-colors hover:border-line focus-within:border-line-strong">
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-accent-soft py-1 pr-1 pl-2.5 text-[13px] font-medium text-accent"
+            className="inline-flex items-center gap-1 rounded-md bg-sunken py-0.5 pr-1 pl-2 text-[13px] font-medium text-ink ring-1 ring-line ring-inset"
           >
             {tag}
             <button
               type="button"
               onClick={() => onChange(value.filter((t) => t !== tag))}
               aria-label={`${tag} — წაშლა`}
-              className="flex size-4 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-accent-contrast"
+              className="flex size-4 items-center justify-center rounded-sm text-subtle transition-colors hover:bg-hover hover:text-ink"
             >
               <X className="size-3" />
             </button>

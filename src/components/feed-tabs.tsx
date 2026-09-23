@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { buttonClass } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
+/** Underlined tabs that are real links, so every tab has its own URL. */
 export function Tabs({
   tabs,
   active,
@@ -17,7 +18,7 @@ export function Tabs({
       {/* The baseline is an inset shadow rather than a border: a scrolling strip
           clips anything that hangs below it, so a -1px underline overlap would
           vanish. The fade only matters when the strip overflows, on phones. */}
-      <div className="no-scrollbar fade-x flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--border)] sm:[mask-image:none]">
+      <div className="no-scrollbar fade-x flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--border)] sm:[mask-image:none]">
         {tabs.map((tab) => {
           const isActive = tab.key === active;
           return (
@@ -26,10 +27,8 @@ export function Tabs({
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors',
-                isActive
-                  ? 'border-ink text-ink'
-                  : 'border-transparent text-muted hover:border-line-strong hover:text-ink',
+                'border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
+                isActive ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink',
               )}
             >
               {tab.label}
@@ -39,6 +38,41 @@ export function Tabs({
         <span className="w-6 shrink-0 sm:hidden" aria-hidden />
       </div>
     </div>
+  );
+}
+
+/** A compact pill switch for small option sets (sort orders, filters). */
+export function Segmented({
+  options,
+  active,
+  label,
+  className,
+}: {
+  options: { key: string; label: string; href: string }[];
+  active: string;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <nav aria-label={label} className={cn('inline-flex rounded-lg bg-sunken p-0.5 ring-1 ring-line ring-inset', className)}>
+      {options.map((option) => {
+        const isActive = option.key === active;
+        return (
+          <Link
+            key={option.key}
+            href={option.href}
+            aria-current={isActive ? 'true' : undefined}
+            scroll={false}
+            className={cn(
+              'rounded-md px-3 py-1 text-[13px] font-medium whitespace-nowrap transition-colors',
+              isActive ? 'bg-raised text-ink shadow-soft ring-1 ring-line' : 'text-muted hover:text-ink',
+            )}
+          >
+            {option.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

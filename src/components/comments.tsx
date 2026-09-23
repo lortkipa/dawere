@@ -9,7 +9,7 @@ import { Avatar, Button, ButtonLink, FormError, Textarea } from '@/components/ui
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { toast } from '@/components/toaster';
 import type { CommentNode } from '@/lib/posts';
-import { cn, timeAgo } from '@/lib/utils';
+import { timeAgo } from '@/lib/utils';
 
 type Viewer = { id: string; name: string; username: string; avatarUrl: string | null } | null;
 
@@ -79,7 +79,6 @@ function CommentForm({
           autoFocus={autoFocus}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="rounded-2xl"
         />
         {error ? <FormError>{error}</FormError> : null}
         <div className="flex items-center gap-2">
@@ -145,11 +144,11 @@ function Comment({
       </Link>
 
       <div className="min-w-0 flex-1">
-        <div className={cn('rounded-2xl px-4 py-3', isReply ? 'bg-sunken/70' : 'bg-sunken')}>
+        <div>
           <div className="flex flex-wrap items-baseline gap-x-2">
             <Link
               href={`/u/${comment.author.username}`}
-              className="text-sm font-semibold text-ink hover:text-accent"
+              className="text-sm font-medium text-ink hover:underline"
             >
               {comment.author.name}
             </Link>
@@ -160,12 +159,12 @@ function Comment({
 
           {/* wrap-anywhere: a pasted URL or an unbroken 300-character "word" must
               wrap here, not widen the article and give the page a scrollbar. */}
-          <p className="wrap-anywhere mt-1 text-[15px] leading-relaxed whitespace-pre-wrap text-ink">
+          <p className="wrap-anywhere mt-0.5 text-[15px] leading-relaxed whitespace-pre-wrap text-ink/90">
             {comment.body}
           </p>
         </div>
 
-        <div className="mt-1.5 flex items-center gap-4 px-2">
+        <div className="mt-1.5 flex items-center gap-4">
           {viewer && canReply && !isReply ? (
             <button
               type="button"
@@ -202,7 +201,7 @@ function Comment({
         ) : null}
 
         {comment.replies.length > 0 ? (
-          <ul className="mt-4 min-w-0 space-y-4">
+          <ul className="mt-5 min-w-0 space-y-5 border-l border-line pl-4">
             {comment.replies.map((reply) => (
               <Comment
                 key={reply.id}
@@ -255,10 +254,10 @@ export function Comments({
 
   return (
     <section id="comments" className="min-w-0 scroll-mt-24">
-      <h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+      <h2 className="mb-6 flex items-center gap-2 text-lg font-semibold tracking-tight">
         კომენტარები
         {total > 0 ? (
-          <span className="rounded-full bg-sunken px-2.5 py-0.5 text-sm font-medium text-muted tabular-nums">
+          <span className="rounded-md bg-sunken px-2 py-0.5 text-[13px] font-medium text-muted tabular-nums">
             {total}
           </span>
         ) : null}
@@ -269,7 +268,7 @@ export function Comments({
           <CommentForm postId={postId} viewer={viewer} placeholder="რას ფიქრობ?" />
         </div>
       ) : (
-        <div className="mb-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-raised px-5 py-4">
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-sunken px-4 py-3">
           <p className="text-sm text-muted">შედი, რომ კომენტარი დაწერო.</p>
           <ButtonLink href={`/login?next=${encodeURIComponent(`${pathname}#comments`)}`} size="sm" variant="outline">
             შესვლა
@@ -278,12 +277,12 @@ export function Comments({
       )}
 
       {comments.length === 0 ? (
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-line py-10 text-center">
-          <MessageCircle className="size-6 text-subtle" />
-          <p className="mt-3 text-sm text-muted">ჯერ არავის დაუწერია. იყავი პირველი.</p>
+        <div className="flex flex-col items-center rounded-xl border border-dashed border-line-strong py-10 text-center">
+          <MessageCircle className="size-5 text-subtle" />
+          <p className="mt-2.5 text-sm text-muted">ჯერ არავის დაუწერია. იყავი პირველი.</p>
         </div>
       ) : (
-        <ul className="min-w-0 space-y-6">
+        <ul className="min-w-0 space-y-7">
           {comments.map((comment) => (
             <Comment
               key={comment.id}
