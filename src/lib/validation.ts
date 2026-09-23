@@ -51,6 +51,32 @@ export const profileSchema = z.object({
     .default(''),
 });
 
+/** What an admin may change on someone's profile: the settings fields plus the email. */
+export const adminUserSchema = profileSchema.extend({ email: emailSchema });
+
+export const adminCreateUserSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  // Blank means "derive one from the name", as sign-up does.
+  username: z.union([z.literal(''), usernameSchema]).default(''),
+  // Blank means "generate one", shown once to the admin who made the account.
+  password: z.union([z.literal(''), passwordSchema]).default(''),
+  access: z.enum(['user', 'admin']).default('user'),
+});
+
+export const topicSchema = z.object({
+  name: z.string().trim().min(1, 'მიეცი თემას სახელი.').max(40, 'სახელი მაქსიმუმ 40 სიმბოლოა.'),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(40, 'მისამართი მაქსიმუმ 40 სიმბოლოა.')
+    .regex(/^[a-z0-9-]*$/, 'მხოლოდ ლათინური ასოები, ციფრები და ტირე.')
+    .default(''),
+  description: z.string().trim().max(200, 'აღწერა მაქსიმუმ 200 სიმბოლოა.').default(''),
+  isFeatured: z.boolean().default(false),
+});
+
 export const passwordChangeSchema = z
   .object({
     currentPassword: z.string().min(1, 'შეიყვანე მიმდინარე პაროლი.'),

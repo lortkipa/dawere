@@ -33,7 +33,11 @@ export function SiteHeader() {
 }
 
 /** Signed-in phones: the sidebar is hidden, so the essentials sit up here. */
-export function MobileTopBar({ user }: { user: { name: string; username: string; avatarUrl: string | null } }) {
+export function MobileTopBar({
+  user,
+}: {
+  user: { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean };
+}) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-xl md:hidden">
       <div className="flex h-14 items-center gap-1 px-4">

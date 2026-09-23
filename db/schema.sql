@@ -34,6 +34,56 @@ alter table users add column if not exists role             text not null defaul
 
 create index if not exists users_name_trgm_idx on users using gin (name gin_trgm_ops);
 create index if not exists users_username_trgm_idx on users using gin (username gin_trgm_ops);
+create index if not exists users_email_trgm_idx on users using gin (email gin_trgm_ops);
+
+-- ------------------------------------------------------------------ staff access
+
+-- Who may open /admin. Separate from `role` above, which is only the
+-- onboarding answer ("reader" / "writer") and grants nothing.
+--   'user'        everyone
+--   'admin'       moderates users, posts, comments and topics
+--   'super_admin' an admin who can also appoint and remove admins; exactly one
+alter table users add column if not exists access text not null default 'user';
+-- Set when an admin suspends the account: it cannot sign in until lifted.
+alter table users add column if not exists suspended_at     timestamptz;
+alter table users add column if not exists suspended_reason text not null default '';
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'users_access_check') then
+    alter table users add constraint users_access_check
+      check (access in ('user', 'admin', 'super_admin'));
+  end if;
+end $$;
+
+-- At most one super admin, enforced by the database rather than by care.
+create unique index if not exists users_one_super_admin_idx on users ((true)) where access = 'super_admin';
+create index if not exists users_access_idx on users (access) where access <> 'user';
+
+-- The address that becomes super admin while the seat is empty: on setup if the
+-- account already exists, otherwise the moment it signs up. Once someone holds
+-- the seat this is ignored; hand it on from /admin/team or db/super-admin.mts.
+create or replace function default_super_admin_email() returns text as $$
+  select 'nikusha191208@gmail.com'::text;
+$$ language sql immutable;
+
+create or replace function claim_super_admin() returns trigger as $$
+begin
+  if lower(new.email) = default_super_admin_email()
+     and not exists (select 1 from users where access = 'super_admin') then
+    new.access := 'super_admin';
+  end if;
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists users_claim_super_admin on users;
+create trigger users_claim_super_admin before insert on users
+  for each row execute function claim_super_admin();
+
+update users set access = 'super_admin'
+where lower(email) = default_super_admin_email()
+  and not exists (select 1 from users where access = 'super_admin');
 
 -- Session tokens are stored as sha256 hashes: a database leak must not hand out live sessions.
 create table if not exists sessions (
@@ -453,6 +503,31 @@ create table if not exists rate_limits (
 );
 
 create index if not exists rate_limits_window_idx on rate_limits (window_start);
+
+-- ------------------------------------------------------------------ admin log
+
+-- Every change made from /admin, so there is always an answer to "who did
+-- this?". Names are copied at write time: the log must stay readable after the
+-- admin or the thing they acted on is deleted.
+create table if not exists admin_log (
+  id           bigserial primary key,
+  actor_id     uuid references users(id) on delete set null,
+  actor_name   text not null,
+  action       text not null,
+  -- 'user' | 'post' | 'comment' | 'topic'
+  target_type  text not null,
+  target_id    text,
+  target_label text not null default '',
+  details      jsonb,
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists admin_log_created_idx on admin_log (created_at desc);
+create index if not exists admin_log_target_idx on admin_log (target_type, target_id, created_at desc);
+
+create index if not exists comments_created_idx on comments (created_at desc);
+create index if not exists comments_body_trgm_idx on comments using gin (body gin_trgm_ops);
+create index if not exists users_created_idx on users (created_at desc);
 
 -- ------------------------------------------------------------ editorial topics
 

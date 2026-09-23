@@ -11,7 +11,8 @@
     "db:setup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env db/setup.mts",
     "db:reset": "node --env-file-if-exists=.env.local --env-file-if-exists=.env db/setup.mts --reset",
     "db:seed": "node --env-file-if-exists=.env.local --env-file-if-exists=.env db/seed.mts",
-    "user:reset-password": "node --env-file-if-exists=.env.local --env-file-if-exists=.env db/reset-password.mts"
+    "user:reset-password": "node --env-file-if-exists=.env.local --env-file-if-exists=.env db/reset-password.mts",
+    "admin:super": "node --env-file-if-exists=.env.local --env-file-if-exists=.env db/super-admin.mts"
   },
   "engines": {
     "node": ">=22.18"

@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isStaff } from '@/lib/auth';
 import { AppSidebar, MobileNav } from '@/components/nav-links';
 import { SearchDialog } from '@/components/search-dialog';
 import { SiteFooter } from '@/components/site-footer';
@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
     );
   }
 
-  const navUser = { name: user.name, username: user.username, avatarUrl: user.avatarUrl };
+  const navUser = { name: user.name, username: user.username, avatarUrl: user.avatarUrl, isAdmin: isStaff(user) };
 
   return (
     <div className="flex flex-1">

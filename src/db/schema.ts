@@ -40,6 +40,12 @@ export const users = pgTable(
     role: text('role', { enum: ['', 'reader', 'writer', 'both'] })
       .notNull()
       .default(''),
+    /** Staff access; see db/schema.sql. Nothing to do with `role` above. */
+    access: text('access', { enum: ['user', 'admin', 'super_admin'] })
+      .notNull()
+      .default('user'),
+    suspendedAt: timestamp('suspended_at', { withTimezone: true }),
+    suspendedReason: text('suspended_reason').notNull().default(''),
     onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -253,6 +259,22 @@ export const media = pgTable('media', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const adminLog = pgTable(
+  'admin_log',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    actorName: text('actor_name').notNull(),
+    action: text('action').notNull(),
+    targetType: text('target_type', { enum: ['user', 'post', 'comment', 'topic'] }).notNull(),
+    targetId: text('target_id'),
+    targetLabel: text('target_label').notNull().default(''),
+    details: jsonb('details').$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('admin_log_created_idx').on(t.createdAt)],
+);
+
 export type PostRevision = {
   title: string;
   subtitle: string;
@@ -262,6 +284,7 @@ export type PostRevision = {
 };
 
 export type User = typeof users.$inferSelect;
+export type Access = User['access'];
 export type Post = typeof posts.$inferSelect;
 export type Topic = typeof topics.$inferSelect;
 export type Comment = typeof comments.$inferSelect;

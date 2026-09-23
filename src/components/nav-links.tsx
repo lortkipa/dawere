@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Bookmark, Compass, Home, PenLine, User } from 'lucide-react';
+import { BarChart3, Bookmark, Compass, Home, PenLine, ShieldCheck, User } from 'lucide-react';
 import { Avatar, buttonClass } from '@/components/ui';
 import { Logo, LogoMark } from '@/components/logo';
 import { SearchTrigger } from '@/components/search-dialog';
@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/user-menu';
 import { cn } from '@/lib/utils';
 
-type NavUser = { name: string; username: string; avatarUrl: string | null };
+type NavUser = { name: string; username: string; avatarUrl: string | null; isAdmin?: boolean };
 
 const isExplore = (p: string) => p.startsWith('/search') || p.startsWith('/topic');
 
@@ -52,6 +52,7 @@ export function AppSidebar({ user }: { user: NavUser }) {
     { href: '/bookmarks', label: 'შენახულები', icon: Bookmark, active: pathname.startsWith('/bookmarks') },
     { href: '/dashboard', label: 'პანელი', icon: BarChart3, active: pathname.startsWith('/dashboard') },
     { href: profileHref, label: 'პროფილი', icon: User, active: pathname === profileHref },
+    ...(user.isAdmin ? [{ href: '/admin', label: 'ადმინისტრირება', icon: ShieldCheck, active: false }] : []),
   ];
 
   return (

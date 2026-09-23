@@ -39,6 +39,27 @@ topics (required, seeds your feed), where you heard about us, and whether you re
 or write. The last two are skippable and land in `users.discovery_source`,
 `users.discovery_note` and `users.role`.
 
+## Admin
+
+`/admin` is for staff: users, posts, comments, topics, the team and an activity log.
+Everyone else gets a 404. Access lives in `users.access`, separate from the
+onboarding `role` answer:
+
+- **admin** can create, search, filter, edit, suspend and delete members and reset their
+  passwords; edit, unpublish and delete any post; delete comments; manage topics. Every
+  change is written to the log.
+- **super admin** can also appoint and remove admins, and edit their accounts. There is
+  exactly one, enforced by a unique index.
+
+`nikusha191208@gmail.com` becomes the super admin as soon as that account exists
+(on `db:setup` if it already does, otherwise when it signs up), as long as nobody holds
+the seat yet. The address is `default_super_admin_email()` in `db/schema.sql`. The
+super admin hands the seat on from `/admin/team`; if that is impossible (lost password,
+account gone), run `npm run admin:super -- their@email`.
+
+A suspended account cannot sign in, and every session it had ends. Deleting an account,
+or handing on the super admin seat, asks for the admin's own password.
+
 ## What to try
 
 - **Write** — hit *Write*. Headings, bullet and numbered lists, tables, code blocks,
@@ -62,6 +83,7 @@ or write. The last two are skippable and land in `users.discovery_source`,
 | `npm run db:reset` | drop everything, then re-apply |
 | `npm run db:seed` | wipe content and reload demo data (refuses when `NODE_ENV=production`) |
 | `npm run user:reset-password -- <email>` | give an account a new random password and sign it out everywhere |
+| `npm run admin:super -- <email>` | make an existing account the super admin (the previous one stays an admin) |
 | `npm run typecheck` / `npm run lint` | checks |
 
 ## Layout
@@ -70,13 +92,14 @@ or write. The last two are skippable and land in `users.discovery_source`,
 db/schema.sql        source of truth for tables, indexes, triggers
 db/seed.mts          demo data
 src/db/schema.ts     Drizzle mirror of the SQL, for typed queries
-src/lib/auth.ts      sessions (bcrypt + hashed cookie tokens)
+src/lib/auth.ts      sessions (bcrypt + hashed cookie tokens), requireAdmin
 src/lib/search.ts    full-text + prefix + trigram search, typo correction
 src/lib/feed.ts      feed ranking
 src/lib/interests.ts what nudges the feed after every interaction
 src/lib/rate-limit.ts  Postgres-backed limits on sign-in, sign-up, comments, uploads
 src/proxy.ts         sends signed-out visitors on private pages to /login
-src/app/actions/     server actions (auth, posts, engagement, profile)
+src/app/actions/     server actions (auth, posts, engagement, profile, admin)
+src/app/admin/       the admin area; src/lib/admin.ts holds who-may-manage-whom
 ```
 
 **How the feed ranks.** Every view, like, bookmark, comment, follow and search

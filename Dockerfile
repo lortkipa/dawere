@@ -32,7 +32,7 @@ COPY --from=build --chown=nextjs:nodejs /app/public ./public
 # The db/ scripts run outside the Next bundle, so give them their packages.
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/postgres ./node_modules/postgres
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modules/bcryptjs
-COPY --chown=nextjs:nodejs db/schema.sql db/setup.mts db/reset-password.mts ./db/
+COPY --chown=nextjs:nodejs db/schema.sql db/setup.mts db/reset-password.mts db/super-admin.mts ./db/
 COPY deploy/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # uploads is owned by nextjs so a fresh named volume mounted there inherits it.
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh \

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, ChevronsUpDown, LogOut, Settings, User } from 'lucide-react';
+import { BarChart3, ChevronsUpDown, LogOut, Settings, ShieldCheck, User } from 'lucide-react';
 import { Avatar, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { signOutAction } from '@/app/actions/auth';
@@ -16,6 +16,7 @@ export function UserMenu({
   name,
   username,
   avatarUrl,
+  isAdmin = false,
   placement = 'bottom',
   variant = 'avatar',
   className,
@@ -23,6 +24,7 @@ export function UserMenu({
   name: string;
   username: string;
   avatarUrl: string | null;
+  isAdmin?: boolean;
   placement?: 'top' | 'bottom';
   variant?: 'avatar' | 'row';
   className?: string;
@@ -50,6 +52,7 @@ export function UserMenu({
     { href: `/u/${username}`, label: 'პროფილი', icon: User },
     ...(variant === 'avatar' ? [{ href: '/dashboard', label: 'პანელი', icon: BarChart3 }] : []),
     { href: '/settings', label: 'პარამეტრები', icon: Settings },
+    ...(isAdmin ? [{ href: '/admin', label: 'ადმინისტრირება', icon: ShieldCheck }] : []),
   ];
 
   return (

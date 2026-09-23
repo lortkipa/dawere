@@ -111,6 +111,17 @@ export async function signInAction(_prev: FormState, formData: FormData): Promis
   }
   if (!(await verifyPassword(password, user.passwordHash))) return INVALID;
 
+  // Only after the password matched: a suspension is nobody else's business.
+  if (user.suspendedAt) {
+    return {
+      ok: false,
+      error: user.suspendedReason
+        ? `ეს ანგარიში შეჩერებულია: ${user.suspendedReason}`
+        : 'ეს ანგარიში შეჩერებულია.',
+      values,
+    };
+  }
+
   await createSession(user.id);
   redirect(user.onboardedAt ? safeNext(formData.get('next')) : '/onboarding');
 }

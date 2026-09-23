@@ -3,8 +3,8 @@ import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
 import { cache } from 'react';
 import { cookies, headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { and, eq, gt, lt, ne } from 'drizzle-orm';
+import { notFound, redirect } from 'next/navigation';
+import { and, eq, gt, isNull, lt, ne } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { db } from '@/db';
 import { sessions, users, type User } from '@/db/schema';
@@ -73,7 +73,8 @@ export async function destroySession() {
 
 /**
  * Current user, or null. Cached for the lifetime of one request so that a page
- * plus its layouts and components share a single query.
+ * plus its layouts and components share a single query. A suspended account
+ * reads as signed out even if a session somehow outlived the suspension.
  */
 export const getCurrentUser = cache(async (): Promise<User | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -83,7 +84,9 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
     .select({ user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(eq(sessions.id, digest(token)), gt(sessions.expiresAt, new Date())))
+    .where(
+      and(eq(sessions.id, digest(token)), gt(sessions.expiresAt, new Date()), isNull(users.suspendedAt)),
+    )
     .limit(1);
 
   return rows[0]?.user ?? null;
@@ -97,6 +100,34 @@ export async function requireUser(next?: string): Promise<User> {
   const user = await getCurrentUser();
   if (!user) redirect(next ? `/login?next=${encodeURIComponent(next)}` : '/login');
   return user;
+}
+
+export function isStaff(user: Pick<User, 'access'> | null | undefined): boolean {
+  return user?.access === 'admin' || user?.access === 'super_admin';
+}
+
+/**
+ * The signed-in admin. Anyone else gets a 404, not a 403: the admin area does
+ * not advertise that it exists. Every admin page and every admin action calls
+ * this (or requireSuperAdmin) itself; the layout's check alone would leave the
+ * actions open, since they can be POSTed without rendering any page.
+ */
+export async function requireAdmin(next = '/admin'): Promise<User> {
+  const user = await requireUser(next);
+  if (!isStaff(user)) notFound();
+  return user;
+}
+
+export async function requireSuperAdmin(next = '/admin'): Promise<User> {
+  const user = await requireUser(next);
+  if (user.access !== 'super_admin') notFound();
+  return user;
+}
+
+/** Ends every session an account has; used when an admin locks it out. */
+export async function revokeAllSessions(userId: string): Promise<number> {
+  const removed = await db.delete(sessions).where(eq(sessions.userId, userId)).returning({ id: sessions.id });
+  return removed.length;
 }
 
 /** Signs the user out everywhere except this browser. Returns how many sessions ended. */

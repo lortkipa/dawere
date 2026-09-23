@@ -15,7 +15,7 @@ const BUTTON_VARIANTS = {
   outline: 'border border-line-strong bg-raised text-ink shadow-soft hover:bg-hover',
   soft: 'bg-sunken text-ink hover:bg-hover',
   ghost: 'text-muted hover:bg-hover hover:text-ink',
-  danger: 'border border-danger/25 bg-danger-soft text-danger hover:border-danger hover:bg-danger hover:text-white',
+  danger: 'border border-danger/25 bg-danger-soft text-danger hover:border-danger hover:bg-danger hover:text-danger-contrast',
 } as const;
 
 const BUTTON_SIZES = {

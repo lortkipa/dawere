@@ -21,7 +21,20 @@ function niceMax(value: number): number {
  * every bar has a hover tooltip placed over it. The same numbers are available
  * as a table for screen readers and for anyone who wants the values.
  */
-export function ViewsChart({ data, className }: { data: DayPoint[]; className?: string }) {
+export function ViewsChart({
+  data,
+  className,
+  title = 'ნახვები, ბოლო 30 დღე',
+  unit = 'ნახვა',
+  column = 'ნახვები',
+}: {
+  data: DayPoint[];
+  className?: string;
+  /** The same bars serve other daily counts (sign-ups in the admin overview). */
+  title?: string;
+  unit?: string;
+  column?: string;
+}) {
   const [hovered, setHovered] = useState<number | null>(null);
 
   const peak = Math.max(0, ...data.map((d) => d.views));
@@ -39,7 +52,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
     <figure className={cn('relative', className)}>
       <figcaption className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <span className="text-sm font-semibold text-ink">ნახვები, ბოლო 30 დღე</span>
+          <span className="text-sm font-semibold text-ink">{title}</span>
           <p className="mt-0.5 text-[13px] text-subtle">
             ეს კვირა: {formatCount(lastWeek)} · წინა: {formatCount(weekBefore)}
           </p>
@@ -78,7 +91,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
                 onFocus={() => setHovered(index)}
                 onBlur={() => setHovered(null)}
                 className="relative flex h-full flex-1 items-end focus-visible:outline-offset-0"
-                aria-label={`${formatDayShort(point.day)}: ${point.views} ნახვა`}
+                aria-label={`${formatDayShort(point.day)}: ${point.views} ${unit}`}
               >
                 <span
                   className={cn(
@@ -97,7 +110,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
             className="pointer-events-none absolute -top-3 z-10 rounded-lg border border-line bg-raised px-2.5 py-1.5 text-[13px] whitespace-nowrap shadow-lift"
             style={{ left: `calc(2rem + (100% - 2rem) * ${tooltipLeft / 100})`, transform: `translate(${tooltipShift}, -100%)` }}
           >
-            <span className="font-semibold text-ink tabular-nums">{formatCount(active.views)} ნახვა</span>
+            <span className="font-semibold text-ink tabular-nums">{formatCount(active.views)} {unit}</span>
             <span className="ml-1.5 text-subtle">{formatDayShort(active.day)}</span>
           </div>
         ) : null}
@@ -118,7 +131,7 @@ export function ViewsChart({ data, className }: { data: DayPoint[]; className?: 
             <thead className="sticky top-0 bg-sunken">
               <tr>
                 <th scope="col" className="px-3 py-1.5 font-medium text-muted">დღე</th>
-                <th scope="col" className="px-3 py-1.5 text-right font-medium text-muted">ნახვები</th>
+                <th scope="col" className="px-3 py-1.5 text-right font-medium text-muted">{column}</th>
               </tr>
             </thead>
             <tbody>
