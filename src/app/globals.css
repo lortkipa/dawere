@@ -484,6 +484,42 @@ dialog::backdrop {
   backdrop-filter: blur(2px);
 }
 
+/* The "ask AI" panel (ask-ai.tsx): rises from the bottom edge on phones,
+   slides in from the right from md up. A lighter backdrop keeps the article
+   it is about in view. */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateX(24px); }
+}
+
+dialog.ask-sheet[open] {
+  animation: sheet-up 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (width >= 48rem) {
+  dialog.ask-sheet[open] {
+    animation: sheet-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+dialog.ask-sheet::backdrop {
+  background: rgb(0 0 0 / 0.25);
+  backdrop-filter: none;
+}
+
+/* Three dots while an answer is on its way. */
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+.animate-typing {
+  animation: typing 1.2s ease-in-out infinite;
+}
+
 /* ================================================================== landing
    The signed-out cover page and the auth screens: calm paper, serif display
    type, and one landscape (src/components/landscape.tsx). */
@@ -800,7 +836,9 @@ body:has(.landing) .site-header {
   .animate-caret,
   .animate-pop-in,
   .animate-shake,
+  .animate-typing,
   dialog[open],
+  dialog.ask-sheet[open],
   .shimmer {
     animation: none;
   }

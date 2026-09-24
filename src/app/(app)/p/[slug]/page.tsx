@@ -11,6 +11,7 @@ import { cn, excerpt, formatCount, formatDate } from '@/lib/utils';
 import { Avatar, ButtonLink, TopicPills } from '@/components/ui';
 import { BookmarkButton, CommentCountLink, FollowButton, LikeButton } from '@/components/engage-buttons';
 import { FlashToast, ReadingProgress, ShareButton, TableOfContents } from '@/components/article-chrome';
+import { AskAi } from '@/components/ask-ai';
 import { ViewTracker } from '@/components/view-tracker';
 import { Comments } from '@/components/comments';
 import { ReportButton } from '@/components/report-dialog';
@@ -243,6 +244,8 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
                   withLabel
                 />
                 <ShareButton title={post.title} />
+                <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+                <AskAi postId={post.id} postTitle={post.title} signedIn={signedIn} />
               </div>
             </div>
           ) : null}
