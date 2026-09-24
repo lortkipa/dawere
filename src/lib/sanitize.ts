@@ -83,15 +83,34 @@ export function htmlToText(html: string): string {
   // vector and the excerpt. Give every block boundary a space first.
   const spaced = html.replace(/<\/(p|h[1-6]|li|td|th|tr|blockquote|pre|div)>|<br\s*\/?>/gi, ' ');
 
-  return sanitizeHtml(spaced, { allowedTags: [], allowedAttributes: {} })
+  return stripTags(spaced).replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Plain text that keeps the article's shape — a blank line between blocks, one
+ * line per list item — for readers that follow structure, like the assistant.
+ */
+export function htmlToParagraphs(html: string): string {
+  const broken = html
+    .replace(/<\/(p|h[1-6]|blockquote|pre|div|table)>/gi, '\n\n')
+    .replace(/<\/(li|tr)>|<br\s*\/?>/gi, '\n')
+    .replace(/<\/(td|th)>/gi, ' ');
+
+  return stripTags(broken)
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/ ?\n ?/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function stripTags(html: string): string {
+  return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} })
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
+    .replace(/&#39;/g, "'");
 }
 
 /** True when the editor produced nothing but empty paragraphs. */

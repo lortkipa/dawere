@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { posts } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
-import { answerAboutPost, askSchema } from '@/lib/assistant';
+import { answerAboutPost, askSchema, assistantEnabled } from '@/lib/assistant';
 import { TOO_MANY, rateLimit } from '@/lib/rate-limit';
 import { isUuid } from '@/lib/utils';
 
@@ -11,11 +11,12 @@ const UNAVAILABLE = 'ეს სტატია მიუწვდომელი
 
 /**
  * A reader's question about a published post, answered as a plain-text stream.
- * Signed-in readers only: once a model is behind this, every answer costs money.
+ * Signed-in readers only: every answer is a paid model call.
  */
 export async function POST(request: Request, ctx: RouteContext<'/api/posts/[id]/ask'>) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'კითხვის დასასმელად საჭიროა შესვლა.' }, { status: 401 });
+  if (!assistantEnabled()) return NextResponse.json({ error: 'ასისტენტი ჯერ არ არის ჩართული.' }, { status: 503 });
 
   const { id } = await ctx.params;
   if (!isUuid(id)) return NextResponse.json({ error: UNAVAILABLE }, { status: 404 });
@@ -28,7 +29,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/posts/[id]/
   if (!parsed.success) return NextResponse.json({ error: 'კითხვა ვერ მივიღეთ.' }, { status: 400 });
 
   const [post] = await db
-    .select({ title: posts.title })
+    .select({ title: posts.title, subtitle: posts.subtitle, contentHtml: posts.contentHtml })
     .from(posts)
     .where(and(eq(posts.id, id), eq(posts.status, 'published')))
     .limit(1);

@@ -133,6 +133,10 @@ Set `SUPPORT_EMAIL` to show a contact address in the footer, on the sign-in page
 reset: when someone writes in, run `npm run user:reset-password -- their@email`
 and pass the printed password on privately.
 
+Set `OPENAI_API_KEY` to turn on "ჰკითხე AI-ს" under each article: signed-in readers
+ask about the post and `gpt-6-luna` answers from its text (`src/lib/assistant.ts`).
+Without a key the button is hidden. Each reader gets 20 questions per 10 minutes.
+
 ## Notes
 
 - Uploaded images are written to `./uploads` and served from `/api/media/[id]`.

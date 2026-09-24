@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Eye, PenLine } from 'lucide-react';
 import { getCurrentUser, isStaff } from '@/lib/auth';
+import { assistantEnabled } from '@/lib/assistant';
 import { getComments, getPostBySlug } from '@/lib/posts';
 import { relatedPosts } from '@/lib/feed';
 import { DEFAULT_SHARE_IMAGE, SITE_URL } from '@/lib/site';
@@ -244,8 +245,12 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
                   withLabel
                 />
                 <ShareButton title={post.title} />
-                <span className="mx-1 h-5 w-px bg-line" aria-hidden />
-                <AskAi postId={post.id} postTitle={post.title} signedIn={signedIn} />
+                {assistantEnabled() ? (
+                  <>
+                    <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+                    <AskAi postId={post.id} postTitle={post.title} signedIn={signedIn} />
+                  </>
+                ) : null}
               </div>
             </div>
           ) : null}
