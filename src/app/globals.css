@@ -484,15 +484,17 @@ dialog::backdrop {
   backdrop-filter: blur(2px);
 }
 
-/* The "ask AI" panel (ask-ai.tsx): rises from the bottom edge on phones,
-   slides in from the right from md up. A lighter backdrop keeps the article
-   it is about in view. */
+/* The "ask AI" panel (ask-ai.tsx): rises from the bottom edge on phones over
+   a lighter backdrop; from md up it slides out of the right edge and docks
+   there, and the page gives up its width (--ask-width, set while it is open),
+   so nothing sits under it. Fixed bars that span the page end at
+   --ask-inset. */
 @keyframes sheet-up {
   from { transform: translateY(100%); }
 }
 
 @keyframes sheet-in {
-  from { opacity: 0; transform: translateX(24px); }
+  from { transform: translateX(100%); }
 }
 
 dialog.ask-sheet[open] {
@@ -508,6 +510,26 @@ dialog.ask-sheet[open] {
 dialog.ask-sheet::backdrop {
   background: rgb(0 0 0 / 0.25);
   backdrop-filter: none;
+}
+
+@media (width >= 48rem) {
+  html[data-ask-open] {
+    --ask-inset: var(--ask-width);
+  }
+
+  html[data-ask-open] body {
+    padding-right: var(--ask-inset);
+  }
+}
+
+@media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
+  body {
+    transition: padding-right 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html[data-ask-resizing] body {
+    transition: none;
+  }
 }
 
 /* Three dots while an answer is on its way. */

@@ -100,232 +100,230 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
         </>
       ) : null}
 
-      <div
-        className={cn(
-          'mx-auto max-w-6xl px-4 sm:px-6',
-          signedIn
-            ? '2xl:grid 2xl:grid-cols-[minmax(0,1fr)_minmax(0,42rem)_minmax(0,1fr)] 2xl:gap-12'
-            : 'xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,42rem)_minmax(0,1fr)] xl:gap-12',
-        )}
-      >
-        <div aria-hidden className={cn('hidden', signedIn ? '2xl:block' : 'xl:block')} />
+      {/* Sized by the room the page has rather than the window, which the
+          docked "ask AI" panel takes a share of. */}
+      <div className="@container">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 @min-[78rem]:grid @min-[78rem]:grid-cols-[minmax(0,1fr)_minmax(0,42rem)_minmax(0,1fr)] @min-[78rem]:gap-12">
+          <div aria-hidden className="hidden @min-[78rem]:block" />
 
-        <div className="mx-auto w-full max-w-[42rem] min-w-0">
-          {post.status !== 'published' ? (
-            <Notice
-              text="მონახაზი — ხედავ მხოლოდ შენ."
-              action={
-                <ButtonLink href={`/write/${post.id}`} size="sm" variant="outline">
-                  <PenLine />
-                  რედაქტირება
-                </ButtonLink>
-              }
-            />
-          ) : isAuthor && post.hasPendingRevision ? (
-            <Notice
-              text="გაქვს ცვლილებები, რომლებიც ჯერ არ გამოქვეყნებულა."
-              action={
-                <ButtonLink href={`/write/${post.id}`} size="sm" variant="outline">
-                  <PenLine />
-                  გაგრძელება
-                </ButtonLink>
-              }
-            />
-          ) : null}
-
-          <article id="article-body" className="min-w-0 pt-12 sm:pt-20">
-            <header>
-              {post.topics.length > 0 ? (
-                <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium">
-                  {post.topics.map((topic, index) => (
-                    <span key={topic.slug} className="flex items-center gap-2">
-                      {index > 0 ? (
-                        <span className="text-subtle" aria-hidden>
-                          ·
-                        </span>
-                      ) : null}
-                      <Link href={`/topic/${topic.slug}`} className="text-accent transition-colors hover:text-accent-hover">
-                        {topic.name}
-                      </Link>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-
-              <h1 className="headline text-[2.15rem] leading-[1.12] text-ink sm:text-[2.9rem]">
-                {post.title || 'უსათაურო'}
-              </h1>
-
-              {post.subtitle ? (
-                <p className="mt-5 text-lg leading-relaxed text-pretty text-muted sm:text-[1.3rem]">{post.subtitle}</p>
-              ) : null}
-
-              <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-3">
-                <Link href={`/u/${post.author.username}`} className="shrink-0">
-                  <Avatar name={post.author.name} src={post.author.avatarUrl} size="md" />
-                </Link>
-                <div className="min-w-[9rem] flex-1">
-                  <Link
-                    href={`/u/${post.author.username}`}
-                    className="text-[15px] font-medium text-ink hover:underline"
-                  >
-                    {post.author.name}
-                  </Link>
-                  <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-subtle">
-                    <time dateTime={post.publishedAt?.toISOString()}>{formatDate(post.publishedAt ?? post.updatedAt)}</time>
-                    <span aria-hidden>·</span>
-                    <span>{post.readingMinutes} წთ კითხვა</span>
-                    {post.status === 'published' ? (
-                      <>
-                        <span aria-hidden>·</span>
-                        <span className="inline-flex items-center gap-1">
-                          <Eye className="size-3.5" aria-hidden />
-                          {formatCount(post.viewCount)}
-                          <span className="sr-only">ნახვა</span>
-                        </span>
-                      </>
-                    ) : null}
-                  </p>
-                </div>
-                {isAuthor ? (
+          <div className="mx-auto w-full max-w-[42rem] min-w-0">
+            {post.status !== 'published' ? (
+              <Notice
+                text="მონახაზი — ხედავ მხოლოდ შენ."
+                action={
                   <ButtonLink href={`/write/${post.id}`} size="sm" variant="outline">
                     <PenLine />
                     რედაქტირება
                   </ButtonLink>
-                ) : (
+                }
+              />
+            ) : isAuthor && post.hasPendingRevision ? (
+              <Notice
+                text="გაქვს ცვლილებები, რომლებიც ჯერ არ გამოქვეყნებულა."
+                action={
+                  <ButtonLink href={`/write/${post.id}`} size="sm" variant="outline">
+                    <PenLine />
+                    გაგრძელება
+                  </ButtonLink>
+                }
+              />
+            ) : null}
+
+            <article id="article-body" className="min-w-0 pt-12 sm:pt-20">
+              <header>
+                {post.topics.length > 0 ? (
+                  <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium">
+                    {post.topics.map((topic, index) => (
+                      <span key={topic.slug} className="flex items-center gap-2">
+                        {index > 0 ? (
+                          <span className="text-subtle" aria-hidden>
+                            ·
+                          </span>
+                        ) : null}
+                        <Link href={`/topic/${topic.slug}`} className="text-accent transition-colors hover:text-accent-hover">
+                          {topic.name}
+                        </Link>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+
+                <h1 className="headline text-[2.15rem] leading-[1.12] text-ink sm:text-[2.9rem]">
+                  {post.title || 'უსათაურო'}
+                </h1>
+
+                {post.subtitle ? (
+                  <p className="mt-5 text-lg leading-relaxed text-pretty text-muted sm:text-[1.3rem]">{post.subtitle}</p>
+                ) : null}
+
+                <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-3">
+                  <Link href={`/u/${post.author.username}`} className="shrink-0">
+                    <Avatar name={post.author.name} src={post.author.avatarUrl} size="md" />
+                  </Link>
+                  <div className="min-w-[9rem] flex-1">
+                    <Link
+                      href={`/u/${post.author.username}`}
+                      className="text-[15px] font-medium text-ink hover:underline"
+                    >
+                      {post.author.name}
+                    </Link>
+                    <p className="flex flex-wrap items-center gap-x-1.5 text-[13px] text-subtle">
+                      <time dateTime={post.publishedAt?.toISOString()}>{formatDate(post.publishedAt ?? post.updatedAt)}</time>
+                      <span aria-hidden>·</span>
+                      <span>{post.readingMinutes} წთ კითხვა</span>
+                      {post.status === 'published' ? (
+                        <>
+                          <span aria-hidden>·</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Eye className="size-3.5" aria-hidden />
+                            {formatCount(post.viewCount)}
+                            <span className="sr-only">ნახვა</span>
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                  {isAuthor ? (
+                    <ButtonLink href={`/write/${post.id}`} size="sm" variant="outline">
+                      <PenLine />
+                      რედაქტირება
+                    </ButtonLink>
+                  ) : (
+                    <FollowButton
+                      authorId={post.author.id}
+                      initialFollowing={post.author.followedByViewer}
+                      signedIn={signedIn}
+                    />
+                  )}
+                </div>
+              </header>
+
+              {post.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={post.coverImageUrl}
+                  alt=""
+                  className="mt-12 w-full rounded-2xl border border-line object-cover"
+                />
+              ) : (
+                <hr className="mt-10 border-line" />
+              )}
+
+              {/* Stored HTML is sanitised on write (src/lib/sanitize.ts), never on read. */}
+              <div className="article mt-12" dangerouslySetInnerHTML={{ __html: html }} />
+
+              {post.topics.length > 0 ? (
+                <TopicPills topics={post.topics} size="sm" className="mt-14" />
+              ) : null}
+            </article>
+
+            {/* ------------------------------------------------- action bar */}
+            {post.status === 'published' ? (
+              <div
+                className={cn(
+                  // Labels show when the bar has room for them (@min-[30rem] inside).
+                  '@container sticky z-20 mt-12 flex justify-center',
+                  signedIn ? 'bottom-20 md:bottom-6' : 'bottom-6',
+                )}
+              >
+                <div className="flex items-center gap-0.5 rounded-full border border-line bg-raised/90 p-1 shadow-lift backdrop-blur-xl">
+                  <LikeButton
+                    postId={post.id}
+                    initialLiked={post.liked}
+                    initialCount={post.likeCount}
+                    signedIn={signedIn}
+                  />
+                  <CommentCountLink href="#comments" count={post.commentCount} />
+                  <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+                  <BookmarkButton
+                    postId={post.id}
+                    initialSaved={post.bookmarked}
+                    signedIn={signedIn}
+                    withLabel
+                  />
+                  <ShareButton title={post.title} />
+                  {assistantEnabled() ? (
+                    <>
+                      <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+                      <AskAi postId={post.id} postTitle={post.title} signedIn={signedIn} />
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {/* ------------------------------------------------- author card */}
+            <section aria-label="ავტორი" className="mt-14 rounded-2xl bg-sunken p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-4">
+                <Link href={`/u/${post.author.username}`} className="shrink-0">
+                  <Avatar name={post.author.name} src={post.author.avatarUrl} size="lg" />
+                </Link>
+                {/* A real minimum width, so on a phone the follow button wraps
+                    below instead of crushing the name into a column. */}
+                <div className="min-w-[9rem] flex-1">
+                  <Link
+                    href={`/u/${post.author.username}`}
+                    className="headline block text-[1.35rem] text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4"
+                  >
+                    {post.author.name}
+                  </Link>
+                  <p className="mt-0.5 text-[13px] text-subtle">{formatCount(post.author.followerCount)} გამომწერი</p>
+                </div>
+                {isAuthor ? null : (
                   <FollowButton
                     authorId={post.author.id}
                     initialFollowing={post.author.followedByViewer}
                     signedIn={signedIn}
+                    size="md"
                   />
                 )}
               </div>
-            </header>
+              {post.author.bio ? (
+                <p className="mt-5 text-[15px] leading-relaxed text-pretty text-muted">{post.author.bio}</p>
+              ) : null}
+            </section>
 
-            {post.coverImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={post.coverImageUrl}
-                alt=""
-                className="mt-12 w-full rounded-2xl border border-line object-cover"
+            {post.status === 'published' && !isAuthor ? (
+              <div className="mt-5 flex justify-end">
+                <ReportButton targetType="post" targetId={post.id} signedIn={signedIn} />
+              </div>
+            ) : null}
+
+            <div className="mt-14 border-t border-line pt-12">
+              <Comments
+                postId={post.id}
+                postAuthorId={post.author.id}
+                total={post.commentCount}
+                comments={comments}
+                canModerate={isAuthor || isStaff(user)}
+                canComment={post.status === 'published'}
+                viewer={
+                  user
+                    ? { id: user.id, name: user.name, username: user.username, avatarUrl: user.avatarUrl }
+                    : null
+                }
               />
-            ) : (
-              <hr className="mt-10 border-line" />
-            )}
-
-            {/* Stored HTML is sanitised on write (src/lib/sanitize.ts), never on read. */}
-            <div className="article mt-12" dangerouslySetInnerHTML={{ __html: html }} />
-
-            {post.topics.length > 0 ? (
-              <TopicPills topics={post.topics} size="sm" className="mt-14" />
-            ) : null}
-          </article>
-
-          {/* ------------------------------------------------- action bar */}
-          {post.status === 'published' ? (
-            <div
-              className={cn(
-                'sticky z-20 mt-12 flex justify-center',
-                signedIn ? 'bottom-20 md:bottom-6' : 'bottom-6',
-              )}
-            >
-              <div className="flex items-center gap-0.5 rounded-full border border-line bg-raised/90 p-1 shadow-lift backdrop-blur-xl">
-                <LikeButton
-                  postId={post.id}
-                  initialLiked={post.liked}
-                  initialCount={post.likeCount}
-                  signedIn={signedIn}
-                />
-                <CommentCountLink href="#comments" count={post.commentCount} />
-                <span className="mx-1 h-5 w-px bg-line" aria-hidden />
-                <BookmarkButton
-                  postId={post.id}
-                  initialSaved={post.bookmarked}
-                  signedIn={signedIn}
-                  withLabel
-                />
-                <ShareButton title={post.title} />
-                {assistantEnabled() ? (
-                  <>
-                    <span className="mx-1 h-5 w-px bg-line" aria-hidden />
-                    <AskAi postId={post.id} postTitle={post.title} signedIn={signedIn} />
-                  </>
-                ) : null}
-              </div>
             </div>
-          ) : null}
-
-          {/* ------------------------------------------------- author card */}
-          <section aria-label="ავტორი" className="mt-14 rounded-2xl bg-sunken p-6 sm:p-8">
-            <div className="flex flex-wrap items-center gap-4">
-              <Link href={`/u/${post.author.username}`} className="shrink-0">
-                <Avatar name={post.author.name} src={post.author.avatarUrl} size="lg" />
-              </Link>
-              {/* A real minimum width, so on a phone the follow button wraps
-                  below instead of crushing the name into a column. */}
-              <div className="min-w-[9rem] flex-1">
-                <Link
-                  href={`/u/${post.author.username}`}
-                  className="headline block text-[1.35rem] text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4"
-                >
-                  {post.author.name}
-                </Link>
-                <p className="mt-0.5 text-[13px] text-subtle">{formatCount(post.author.followerCount)} გამომწერი</p>
-              </div>
-              {isAuthor ? null : (
-                <FollowButton
-                  authorId={post.author.id}
-                  initialFollowing={post.author.followedByViewer}
-                  signedIn={signedIn}
-                  size="md"
-                />
-              )}
-            </div>
-            {post.author.bio ? (
-              <p className="mt-5 text-[15px] leading-relaxed text-pretty text-muted">{post.author.bio}</p>
-            ) : null}
-          </section>
-
-          {post.status === 'published' && !isAuthor ? (
-            <div className="mt-5 flex justify-end">
-              <ReportButton targetType="post" targetId={post.id} signedIn={signedIn} />
-            </div>
-          ) : null}
-
-          <div className="mt-14 border-t border-line pt-12">
-            <Comments
-              postId={post.id}
-              postAuthorId={post.author.id}
-              total={post.commentCount}
-              comments={comments}
-              canModerate={isAuthor || isStaff(user)}
-              canComment={post.status === 'published'}
-              viewer={
-                user
-                  ? { id: user.id, name: user.name, username: user.username, avatarUrl: user.avatarUrl }
-                  : null
-              }
-            />
           </div>
-        </div>
 
-        {/* ------------------------------------------------------- outline */}
-        <div className={cn('hidden', signedIn ? '2xl:block' : 'xl:block')}>
-          {showToc ? (
-            <div className="sticky top-24 max-w-56 pt-40">
-              <TableOfContents headings={headings} />
-            </div>
-          ) : null}
+          {/* ------------------------------------------------------- outline */}
+          <div className="hidden @min-[78rem]:block">
+            {showToc ? (
+              <div className="sticky top-24 max-w-56 pt-40">
+                <TableOfContents headings={headings} />
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
       {related.length > 0 ? (
-        <section aria-labelledby="read-next" className="mt-20 border-t border-line">
+        <section aria-labelledby="read-next" className="@container mt-20 border-t border-line">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
             <h2 id="read-next" className="headline text-center text-[1.75rem] text-ink sm:text-[2rem]">
               წაიკითხე შემდეგ
             </h2>
-            <div className="mt-10 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-x-10 gap-y-12 @xl:grid-cols-2 @5xl:grid-cols-3">
               {related.map((item) => (
                 <CompactPostCard key={item.id} post={item} />
               ))}

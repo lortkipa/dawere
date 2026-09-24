@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { ArrowUp, RotateCcw, Sparkles, Square, X } from 'lucide-react';
 import type { ChatMessage } from '@/lib/assistant';
@@ -17,13 +18,41 @@ const HISTORY = 20;
 
 const FAILED = 'პასუხი ვერ მივიღეთ. სცადე თავიდან.';
 
+/** From here up the panel is docked beside the page; below it, a bottom sheet. */
+const DOCKED = '(width >= 48rem)';
+
+/** Docked panel width, in px: the default, the narrowest and the widest. */
+const WIDTH = 416;
+const MIN_WIDTH = 320;
+const MAX_WIDTH = 900;
+/** The page always keeps at least this much beside the panel. */
+const MIN_PAGE = 480;
+const WIDTH_KEY = 'dawere-ask-width';
+
+function clampWidth(width: number) {
+  // The page starts after the sidebar when there is one.
+  const pageLeft = document.querySelector('main')?.getBoundingClientRect().left ?? 0;
+  const room = window.innerWidth - pageLeft - MIN_PAGE;
+  return Math.round(Math.max(MIN_WIDTH, Math.min(width, MAX_WIDTH, room)));
+}
+
+/** Docked, the page stays usable beside the panel; as a sheet it is modal. */
+function show(dialog: HTMLDialogElement) {
+  if (matchMedia(DOCKED).matches) dialog.show();
+  else dialog.showModal();
+}
+
+const noopSubscribe = () => () => {};
+
 const ICON_BUTTON =
   'flex size-9 shrink-0 items-center justify-center rounded-full text-subtle transition-colors hover:bg-hover hover:text-ink [&>svg]:size-[18px]';
 
 /**
  * "Ask AI" for one article: a button for the action bar and the panel it opens —
- * a bottom sheet on phones, a panel at the right edge from md up. The
- * conversation lives here, so closing the panel and opening it again keeps it.
+ * a bottom sheet on phones; from md up, a panel docked at the right edge that
+ * takes its width from the page (see `html[data-ask-open]` in globals.css), so
+ * the article narrows beside it as the reader drags the panel's left edge.
+ * The conversation lives here, so closing the panel and opening it again keeps it.
  */
 export function AskAi({ postId, postTitle, signedIn }: { postId: string; postTitle: string; signedIn: boolean }) {
   const pathname = usePathname();
@@ -37,6 +66,56 @@ export function AskAi({ postId, postTitle, signedIn }: { postId: string; postTit
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [width, setWidth] = useState(WIDTH);
+  // What the reader asked for; `width` is that, fitted to the window.
+  const chosenWidth = useRef(WIDTH);
+  // Only a press that starts on the backdrop closes the sheet, so a drag that
+  // ends out there (selecting an answer) leaves it open.
+  const pressedBackdrop = useRef(false);
+  // The panel lives in <body>, outside the article's layout.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
+
+  // Before paint, so the page and the panel never disagree on the width.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const root = document.documentElement;
+    root.dataset.askOpen = '';
+    root.style.setProperty('--ask-width', `${width}px`);
+    return () => {
+      delete root.dataset.askOpen;
+      root.style.removeProperty('--ask-width');
+    };
+  }, [isOpen, width]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const docked = matchMedia(DOCKED);
+    const refit = () => setWidth(clampWidth(chosenWidth.current));
+    // Crossing the breakpoint turns the panel into the sheet, or back.
+    const reshape = () => {
+      const dialog = dialogRef.current;
+      if (!dialog?.open) return;
+      dialog.close();
+      show(dialog);
+      refit();
+    };
+    window.addEventListener('resize', refit);
+    docked.addEventListener('change', reshape);
+    return () => {
+      window.removeEventListener('resize', refit);
+      docked.removeEventListener('change', reshape);
+    };
+  }, [isOpen]);
+
+  function resize(next: number) {
+    const clamped = clampWidth(next);
+    chosenWidth.current = clamped;
+    setWidth(clamped);
+    try {
+      localStorage.setItem(WIDTH_KEY, String(clamped));
+    } catch {}
+  }
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -47,7 +126,15 @@ export function AskAi({ postId, postTitle, signedIn }: { postId: string; postTit
   useEffect(() => () => abortRef.current?.abort(), []);
 
   function open() {
-    dialogRef.current?.showModal();
+    // The last width the reader dragged to, fitted to the window as it is now.
+    let stored = 0;
+    try {
+      stored = Number(localStorage.getItem(WIDTH_KEY));
+    } catch {}
+    chosenWidth.current = stored || WIDTH;
+    setWidth(clampWidth(chosenWidth.current));
+    setIsOpen(true);
+    if (dialogRef.current) show(dialogRef.current);
     // Only with a real keyboard: on a phone this would throw the keyboard up over the sheet.
     if (signedIn && matchMedia('(pointer: fine)').matches) inputRef.current?.focus();
   }
@@ -116,6 +203,125 @@ export function AskAi({ postId, postTitle, signedIn }: { postId: string; postTit
     inputRef.current?.focus();
   }
 
+  const panel = (
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="ask-ai-title"
+      // The close event arrives a moment later, possibly after a reopen.
+      onClose={() => setIsOpen(Boolean(dialogRef.current?.open))}
+      onKeyDown={(event) => {
+        // Only the modal sheet closes on Escape by itself.
+        if (event.key === 'Escape' && !event.currentTarget.matches(':modal')) event.currentTarget.close();
+      }}
+      // A press on the backdrop lands on the dialog element itself.
+      onPointerDown={(event) => (pressedBackdrop.current = event.target === dialogRef.current)}
+      onClick={(event) => {
+        if (pressedBackdrop.current && event.target === dialogRef.current) dialogRef.current.close();
+      }}
+      className={cn(
+        'ask-sheet overflow-hidden border border-line bg-raised p-0 text-ink shadow-lift',
+        'mx-0 mt-auto mb-0 h-[85dvh] max-h-none w-full max-w-none rounded-t-3xl border-b-0',
+        'md:fixed md:inset-y-0 md:right-0 md:left-auto md:z-40 md:m-0 md:h-dvh md:w-(--ask-width) md:rounded-none md:border-t-0 md:border-r-0 md:shadow-none',
+      )}
+    >
+      <div className="flex h-full flex-col">
+        <header className="flex items-center gap-1 border-b border-line py-3 pr-3 pl-5">
+          <div className="min-w-0 flex-1">
+            <h2 id="ask-ai-title" className="headline text-[1.2rem] text-ink">
+              ჰკითხე AI-ს
+            </h2>
+            <p className="truncate text-[13px] text-subtle">{postTitle}</p>
+          </div>
+          {messages.length > 0 ? (
+            <button type="button" onClick={startOver} title="ახალი საუბარი" aria-label="ახალი საუბარი" className={ICON_BUTTON}>
+              <RotateCcw />
+            </button>
+          ) : null}
+          <button type="button" onClick={() => dialogRef.current?.close()} aria-label="დახურვა" className={ICON_BUTTON}>
+            <X />
+          </button>
+        </header>
+
+        <div
+          ref={scrollRef}
+          onScroll={(event) => {
+            const el = event.currentTarget;
+            pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+          }}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6"
+        >
+          {!signedIn ? (
+            <SignInPrompt next={pathname} />
+          ) : messages.length === 0 ? (
+            <Suggestions onPick={ask} />
+          ) : (
+            <ol role="log" aria-busy={streaming} className="space-y-6 text-[15px] leading-relaxed text-ink">
+              {messages.map((message, index) => (
+                <Bubble
+                  key={message.id}
+                  message={message}
+                  arriving={streaming && index === messages.length - 1}
+                />
+              ))}
+            </ol>
+          )}
+        </div>
+
+        {signedIn ? (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              ask(draft);
+            }}
+            className="p-3 pt-0"
+          >
+            <div className="flex items-end gap-2 rounded-2xl border border-line-strong bg-raised p-1.5 pl-4 shadow-soft transition-[border-color,box-shadow] focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15">
+              <textarea
+                ref={inputRef}
+                rows={1}
+                maxLength={1000}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  // Enter sends, Shift + Enter breaks the line; never mid-composition.
+                  if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    ask(draft);
+                  }
+                }}
+                placeholder="დასვი კითხვა ამ სტატიაზე"
+                aria-label="კითხვა სტატიაზე"
+                // 16px on phones: anything smaller makes iOS zoom in on focus.
+                className="field-sizing-content max-h-40 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-base leading-relaxed text-ink placeholder:text-subtle focus-visible:outline-none sm:text-[15px]"
+              />
+              {streaming ? (
+                <button
+                  type="button"
+                  onClick={() => abortRef.current?.abort()}
+                  aria-label="შეჩერება"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-contrast transition-colors hover:bg-primary-hover"
+                >
+                  <Square className="size-3.5 fill-current" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!draft.trim()}
+                  aria-label="გაგზავნა"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-contrast transition-[background-color,opacity] hover:bg-primary-hover disabled:opacity-30"
+                >
+                  <ArrowUp className="size-[18px]" />
+                </button>
+              )}
+            </div>
+          </form>
+        ) : null}
+      </div>
+      {/* Last, so opening the panel does not put focus on it first. */}
+      <ResizeHandle width={width} onResize={resize} onReset={() => resize(WIDTH)} />
+    </dialog>
+  );
+
   return (
     <>
       <button
@@ -126,117 +332,62 @@ export function AskAi({ postId, postTitle, signedIn }: { postId: string; postTit
         className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent-soft px-2.5 text-[13px] font-medium text-accent transition-colors hover:text-accent-hover"
       >
         <Sparkles className="size-[17px]" />
-        <span className="hidden sm:inline">ჰკითხე AI-ს</span>
+        <span className="hidden @min-[30rem]:inline">ჰკითხე AI-ს</span>
       </button>
 
-      <dialog
-        ref={dialogRef}
-        aria-labelledby="ask-ai-title"
-        onClick={(event) => {
-          // A click on the backdrop lands on the dialog element itself.
-          if (event.target === dialogRef.current) dialogRef.current.close();
-        }}
-        className={cn(
-          'ask-sheet overflow-hidden border border-line bg-raised p-0 text-ink shadow-lift',
-          'mx-0 mt-auto mb-0 h-[85dvh] max-h-none w-full max-w-none rounded-t-3xl border-b-0',
-          'md:mt-3 md:mr-3 md:mb-3 md:ml-auto md:h-[calc(100dvh-1.5rem)] md:w-[26rem] md:rounded-2xl md:border-b',
-        )}
-      >
-        <div className="flex h-full flex-col">
-          <header className="flex items-center gap-1 border-b border-line py-3 pr-3 pl-5">
-            <div className="min-w-0 flex-1">
-              <h2 id="ask-ai-title" className="headline text-[1.2rem] text-ink">
-                ჰკითხე AI-ს
-              </h2>
-              <p className="truncate text-[13px] text-subtle">{postTitle}</p>
-            </div>
-            {messages.length > 0 ? (
-              <button type="button" onClick={startOver} title="ახალი საუბარი" aria-label="ახალი საუბარი" className={ICON_BUTTON}>
-                <RotateCcw />
-              </button>
-            ) : null}
-            <button type="button" onClick={() => dialogRef.current?.close()} aria-label="დახურვა" className={ICON_BUTTON}>
-              <X />
-            </button>
-          </header>
-
-          <div
-            ref={scrollRef}
-            onScroll={(event) => {
-              const el = event.currentTarget;
-              pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
-            }}
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6"
-          >
-            {!signedIn ? (
-              <SignInPrompt next={pathname} />
-            ) : messages.length === 0 ? (
-              <Suggestions onPick={ask} />
-            ) : (
-              <ol role="log" aria-busy={streaming} className="space-y-6 text-[15px] leading-relaxed text-ink">
-                {messages.map((message, index) => (
-                  <Bubble
-                    key={message.id}
-                    message={message}
-                    arriving={streaming && index === messages.length - 1}
-                  />
-                ))}
-              </ol>
-            )}
-          </div>
-
-          {signedIn ? (
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                ask(draft);
-              }}
-              className="p-3 pt-0"
-            >
-              <div className="flex items-end gap-2 rounded-2xl border border-line-strong bg-raised p-1.5 pl-4 shadow-soft transition-[border-color,box-shadow] focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15">
-                <textarea
-                  ref={inputRef}
-                  rows={1}
-                  maxLength={1000}
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    // Enter sends, Shift + Enter breaks the line; never mid-composition.
-                    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-                      event.preventDefault();
-                      ask(draft);
-                    }
-                  }}
-                  placeholder="დასვი კითხვა ამ სტატიაზე"
-                  aria-label="კითხვა სტატიაზე"
-                  // 16px on phones: anything smaller makes iOS zoom in on focus.
-                  className="field-sizing-content max-h-40 min-h-9 flex-1 resize-none bg-transparent py-1.5 text-base leading-relaxed text-ink placeholder:text-subtle focus-visible:outline-none sm:text-[15px]"
-                />
-                {streaming ? (
-                  <button
-                    type="button"
-                    onClick={() => abortRef.current?.abort()}
-                    aria-label="შეჩერება"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-contrast transition-colors hover:bg-primary-hover"
-                  >
-                    <Square className="size-3.5 fill-current" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={!draft.trim()}
-                    aria-label="გაგზავნა"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-contrast transition-[background-color,opacity] hover:bg-primary-hover disabled:opacity-30"
-                  >
-                    <ArrowUp className="size-[18px]" />
-                  </button>
-                )}
-              </div>
-            </form>
-          ) : null}
-        </div>
-      </dialog>
+      {mounted ? createPortal(panel, document.body) : null}
     </>
+  );
+}
+
+/**
+ * The panel's left edge from md up: drag it, or focus it and use the arrow keys.
+ * Double-click puts the default width back.
+ */
+function ResizeHandle({
+  width,
+  onResize,
+  onReset,
+}: {
+  width: number;
+  onResize: (width: number) => void;
+  onReset: () => void;
+}) {
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="პანელის სიგანე"
+      aria-valuenow={width}
+      aria-valuemin={MIN_WIDTH}
+      tabIndex={0}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return;
+        // Keeps the drag from selecting text on its way across the page.
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        // The page follows the pointer directly rather than easing after it.
+        document.documentElement.dataset.askResizing = '';
+      }}
+      onLostPointerCapture={() => delete document.documentElement.dataset.askResizing}
+      onPointerMove={(event) => {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) onResize(window.innerWidth - event.clientX);
+      }}
+      onDoubleClick={onReset}
+      onKeyDown={(event) => {
+        const step = event.shiftKey ? 64 : 16;
+        if (event.key === 'ArrowLeft') onResize(width + step);
+        else if (event.key === 'ArrowRight') onResize(width - step);
+        else return;
+        event.preventDefault();
+      }}
+      className="group absolute inset-y-0 left-0 z-10 hidden w-2 cursor-col-resize touch-none focus-visible:outline-none md:block"
+    >
+      <span
+        className="absolute inset-y-0 left-0 w-0.5 bg-accent opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
+        aria-hidden
+      />
+    </div>
   );
 }
 

@@ -40,7 +40,7 @@ export function ReadingProgress({ targetId }: { targetId: string }) {
   }, [targetId]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-0.5" aria-hidden>
+    <div className="pointer-events-none fixed top-0 right-[var(--ask-inset,0px)] left-0 z-50 h-0.5" aria-hidden>
       <div ref={bar} className="h-full origin-left scale-x-0 bg-accent" />
     </div>
   );
@@ -133,7 +133,7 @@ export function ShareButton({ title }: { title: string }) {
       aria-label="სტატიის გაზიარება"
     >
       {copied ? <Check className="size-[17px] text-accent" /> : <Share2 className="size-[17px]" />}
-      <span className="hidden sm:inline">{copied ? 'დაკოპირდა' : 'გაზიარება'}</span>
+      <span className="hidden @min-[30rem]:inline">{copied ? 'დაკოპირდა' : 'გაზიარება'}</span>
     </button>
   );
 }

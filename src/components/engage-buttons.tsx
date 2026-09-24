@@ -122,7 +122,7 @@ export function BookmarkButton({
       )}
     >
       <Bookmark className={cn('size-[17px]', optimistic && 'fill-current')} />
-      {withLabel ? <span className="hidden sm:inline">{optimistic ? 'შენახულია' : 'შენახვა'}</span> : null}
+      {withLabel ? <span className="hidden @min-[30rem]:inline">{optimistic ? 'შენახულია' : 'შენახვა'}</span> : null}
     </button>
   );
 }
