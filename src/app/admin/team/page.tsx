@@ -56,7 +56,7 @@ export default async function AdminTeamPage(props: PageProps<'/admin/team'>) {
       <PageHeader title="გუნდი" description={`${team.length} ადამიანი მართავს საიტს.`} />
 
       <div className="space-y-4">
-        <div className="overflow-hidden rounded-xl border border-line bg-raised">
+        <div className="overflow-hidden rounded-2xl border border-line bg-raised">
           <ul className="divide-y divide-line">
             {team.map((member) => (
               <li key={member.id} className="flex flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap">
@@ -101,7 +101,7 @@ export default async function AdminTeamPage(props: PageProps<'/admin/team'>) {
             </AdminSection>
           </>
         ) : (
-          <p className="rounded-xl border border-line bg-sunken px-4 py-3 text-sm text-muted">
+          <p className="rounded-2xl border border-line bg-sunken px-4 py-3 text-sm text-muted">
             გუნდს მხოლოდ სუპერადმინი ცვლის.
           </p>
         )}

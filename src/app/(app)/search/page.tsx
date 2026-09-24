@@ -6,7 +6,7 @@ import { getCurrentUser } from '@/lib/auth';
 import { searchEverything, type PersonHit, type SearchSort } from '@/lib/search';
 import { recordSearchSignal } from '@/lib/interests';
 import { featuredTopics, latestFeed } from '@/lib/feed';
-import { Avatar } from '@/components/ui';
+import { Avatar, TEXT_LINK, TopicPills } from '@/components/ui';
 import { FollowButton } from '@/components/engage-buttons';
 import { HighlightText } from '@/components/highlight-text';
 import { Pagination, Segmented } from '@/components/feed-tabs';
@@ -45,26 +45,6 @@ function searchHref(query: string, { tab = 'all', sort = 'relevance' }: { tab?: 
   if (tab !== 'all') params.set('tab', tab);
   if (sort !== 'relevance') params.set('sort', sort);
   return `/search?${params}`;
-}
-
-type TopicLink = { id: string; slug: string; name: string };
-
-/** Topic links as soft pills, the same shape as the onboarding picker. */
-function TopicPills({ topics, className }: { topics: TopicLink[]; className?: string }) {
-  return (
-    <ul className={cn('flex flex-wrap gap-2', className)}>
-      {topics.map((topic) => (
-        <li key={topic.id}>
-          <Link
-            href={`/topic/${topic.slug}`}
-            className="inline-flex h-10 items-center rounded-full border border-transparent bg-sunken px-4 text-[14.5px] font-medium text-ink transition-[background-color,border-color] duration-200 hover:border-line-strong hover:bg-raised"
-          >
-            {topic.name}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 /** Serif section title; `action` sits at the far end of the line. */
@@ -157,8 +137,6 @@ function SortControl({ query, tab, sort }: { query: string; tab: Tab; sort: Sear
     />
   );
 }
-
-const TEXT_LINK = 'font-medium text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink';
 
 const EXPLORE_PAGE_SIZE = 8;
 

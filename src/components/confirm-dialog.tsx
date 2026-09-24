@@ -47,8 +47,8 @@ export function ConfirmDialog({
       className="m-auto w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-line bg-raised p-0 text-ink shadow-lift"
     >
       <div className="p-6">
-        <h2 className="text-base font-semibold">{title}</h2>
-        {description ? <div className="mt-1.5 text-sm leading-relaxed text-muted">{description}</div> : null}
+        <h2 className="headline text-[1.35rem] text-ink">{title}</h2>
+        {description ? <div className="mt-2 text-sm leading-relaxed text-muted">{description}</div> : null}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={onClose} disabled={pending}>
             გაუქმება

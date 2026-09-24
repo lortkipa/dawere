@@ -1,4 +1,4 @@
-import { Compass, Feather, PenLine, Sparkles } from 'lucide-react';
+import { PenLine } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 import {
   followingFeed,
@@ -51,11 +51,10 @@ export default async function HomePage(props: PageProps<'/'>) {
 
   const emptyState = siteIsEmpty ? (
     <EmptyState
-      icon={<Feather />}
       title="აქ ჯერ არაფერი გამოქვეყნებულა"
-      description="Dawere ახლა იწყება. პირველი ტექსტი შეიძლება შენი იყოს — დანარჩენები მას მოჰყვება."
+      description="Dawere ახლა იწყება. პირველი ტექსტი შეიძლება შენი იყოს."
       action={
-        <div className="flex flex-wrap justify-center gap-2.5">
+        <>
           <ButtonLink href="/write" prefetch={false}>
             <PenLine />
             დაწერე პირველი
@@ -63,12 +62,11 @@ export default async function HomePage(props: PageProps<'/'>) {
           <ButtonLink href="/search" variant="outline">
             თემების დათვალიერება
           </ButtonLink>
-        </div>
+        </>
       }
     />
   ) : tab === 'following' ? (
     <EmptyState
-      icon={<Compass />}
       title="ჯერ არავინ გამოგიწერია"
       description="გამოიწერე ავტორები და მათი ახალი ტექსტები აქ მოგროვდება."
       action={
@@ -79,9 +77,8 @@ export default async function HomePage(props: PageProps<'/'>) {
     />
   ) : tab === 'for-you' ? (
     <EmptyState
-      icon={<Sparkles />}
       title="ნაკადი ჯერ ცარიელია"
-      description="წაიკითხე ორიოდე ტექსტი და შენს გემოვნებას მოერგება."
+      description="წაიკითხე რამდენიმე ტექსტი და ნაკადი შენს ინტერესებს მოერგება."
       action={
         <ButtonLink href="/?tab=latest" variant="outline">
           უახლესი ტექსტები
@@ -90,8 +87,7 @@ export default async function HomePage(props: PageProps<'/'>) {
     />
   ) : (
     <EmptyState
-      icon={<PenLine />}
-      title="ამ გვერდზე სტატიები აღარ არის"
+      title="ამ გვერდზე ტექსტები აღარ არის"
       action={
         <ButtonLink href="/?tab=latest" variant="outline">
           პირველ გვერდზე
@@ -101,17 +97,18 @@ export default async function HomePage(props: PageProps<'/'>) {
   );
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 sm:px-6">
-      <div className="grid gap-12 xl:grid-cols-[minmax(0,1fr)_17.5rem]">
-        <div className="mx-auto w-full max-w-2xl min-w-0 pb-12 xl:max-w-none">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 sm:px-6 lg:px-10">
+      <div className="grid gap-16 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="mx-auto w-full max-w-2xl min-w-0 pb-16 xl:mx-0 xl:max-w-none">
           <Tabs
-            className="sticky top-14 z-20 -mx-4 bg-surface/90 px-4 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 md:pt-4"
+            label="ნაკადი"
+            className="sticky top-14 z-20 -mx-4 bg-surface/85 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 md:pt-8 md:pb-4 lg:-mx-10 lg:px-10 xl:mr-0"
             active={tab}
             tabs={TABS.map((t) => ({ ...t, href: t.key === 'for-you' ? '/' : `/?tab=${t.key}` }))}
           />
 
-          <div className="mt-4">
-            <PostCardList posts={feed.posts} signedIn emptyState={<div className="pt-4">{emptyState}</div>} />
+          <div className="mt-2">
+            <PostCardList posts={feed.posts} signedIn emptyState={emptyState} />
           </div>
 
           {feed.posts.length > 0 ? (
@@ -127,7 +124,7 @@ export default async function HomePage(props: PageProps<'/'>) {
 
         {/* Not sticky: the rail can outgrow the viewport, and a sticky element
             taller than the screen hides its own bottom half. */}
-        <div className="hidden border-l border-line py-8 pl-8 xl:block">
+        <div className="hidden pt-10 pb-16 xl:block">
           <Sidebar userId={user.id} />
         </div>
       </div>

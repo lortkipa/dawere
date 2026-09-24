@@ -274,7 +274,7 @@ export function PostEditor({
           <Link
             href="/dashboard"
             aria-label="პანელზე დაბრუნება"
-            className="flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-ink"
+            className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
           >
             <ArrowLeft className="size-[18px]" />
           </Link>
@@ -291,7 +291,7 @@ export function PostEditor({
             {published ? (
               <Link
                 href={`/p/${slug}`}
-                className="hidden h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
+                className="hidden h-9 items-center gap-1.5 rounded-full px-3.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
               >
                 <ExternalLink className="size-4" />
                 ნახვა
@@ -305,7 +305,7 @@ export function PostEditor({
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label="სხვა მოქმედებები"
-                className="flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-hover hover:text-ink"
+                className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
               >
                 <MoreHorizontal className="size-[18px]" />
               </button>
@@ -357,9 +357,9 @@ export function PostEditor({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 pt-8 pb-24 sm:px-6 sm:pt-14">
+      <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 pt-10 pb-24 sm:px-6 sm:pt-16">
         {published && pendingChanges ? (
-          <div className="mb-8 flex flex-wrap items-center gap-3 rounded-lg border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text">
+          <div className="mb-8 flex flex-wrap items-center gap-3 rounded-2xl border border-warning-border bg-warning-soft px-5 py-3.5 text-sm text-warning-text">
             <AlertCircle className="size-4 shrink-0" />
             <span className="min-w-0 flex-1">
               ცვლილებებს ჯერ მხოლოდ შენ ხედავ. მკითხველი ძველ ვერსიას კითხულობს, სანამ „განახლებას“ არ დააჭერ.
@@ -375,14 +375,14 @@ export function PostEditor({
 
         {/* ------------------------------------------------------------ cover */}
         {draft.coverImageUrl ? (
-          <div className="group relative mb-8 overflow-hidden rounded-xl border border-line">
+          <div className="group relative mb-10 overflow-hidden rounded-2xl border border-line">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={draft.coverImageUrl} alt="" className="max-h-96 w-full object-cover" />
             <div className="absolute top-3 right-3 flex gap-2 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
               <button
                 type="button"
                 onClick={() => coverRef.current?.click()}
-                className="flex h-8 items-center gap-1.5 rounded-lg bg-black/65 px-3 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
+                className="flex h-8 items-center gap-1.5 rounded-full bg-black/65 px-3.5 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
               >
                 {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
                 შეცვლა
@@ -390,7 +390,7 @@ export function PostEditor({
               <button
                 type="button"
                 onClick={() => update({ coverImageUrl: null })}
-                className="flex size-8 items-center justify-center rounded-lg bg-black/65 text-white backdrop-blur hover:bg-black/80"
+                className="flex size-8 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur hover:bg-black/80"
                 aria-label="ყდის სურათის წაშლა"
               >
                 <X className="size-4" />
@@ -402,7 +402,7 @@ export function PostEditor({
             type="button"
             onClick={() => coverRef.current?.click()}
             disabled={uploadingCover}
-            className="mb-6 inline-flex h-8 items-center gap-2 rounded-lg px-2.5 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
+            className="mb-6 -ml-3 inline-flex h-9 items-center gap-2 rounded-full px-3 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
           >
             {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
             ყდის სურათი
@@ -429,7 +429,7 @@ export function PostEditor({
           rows={1}
           maxLength={160}
           aria-label="სათაური"
-          className="w-full resize-none overflow-hidden bg-transparent text-[2rem] leading-[1.15] font-bold tracking-tight text-ink placeholder:text-subtle/60 focus:outline-none sm:text-[2.6rem]"
+          className="headline w-full resize-none overflow-hidden bg-transparent text-[2.15rem] leading-[1.12] text-ink placeholder:text-subtle/60 focus:outline-none sm:text-[2.9rem]"
         />
 
         <textarea
@@ -440,7 +440,7 @@ export function PostEditor({
           rows={1}
           maxLength={240}
           aria-label="ქვესათაური"
-          className="mt-3 w-full resize-none overflow-hidden bg-transparent text-lg leading-relaxed text-muted placeholder:text-subtle/60 focus:outline-none sm:text-xl"
+          className="mt-4 w-full resize-none overflow-hidden bg-transparent text-lg leading-relaxed text-muted placeholder:text-subtle/60 focus:outline-none sm:text-[1.3rem]"
         />
 
         <div className="mt-5">

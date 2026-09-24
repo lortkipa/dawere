@@ -70,14 +70,14 @@ export function RowMenu({ items, label = 'მოქმედებები' }: 
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        className="flex size-8 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-hover hover:text-ink"
+        className="flex size-8 items-center justify-center rounded-full text-subtle transition-colors hover:bg-hover hover:text-ink"
       >
         <MoreHorizontal className="size-[18px]" />
       </button>
       {position ? (
         <div role="menu" style={position} className={cn(MENU_CLASS, 'w-56')}>
           {items.map((item, index) => {
-            if (!item) return <div key={`d${index}`} className="-mx-1 my-1 border-t border-line" />;
+            if (!item) return <div key={`d${index}`} className="-mx-1.5 my-1.5 border-t border-line" />;
             const className = cn(MENU_ITEM_CLASS, item.danger && 'text-danger hover:bg-danger-soft hover:text-danger');
             return 'href' in item ? (
               <Link key={item.label} href={item.href} role="menuitem" className={className}>
@@ -284,7 +284,7 @@ export function BulkBar({
 }) {
   if (count === 0) return null;
   return (
-    <div className="animate-pop-in mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-accent/25 bg-accent-soft px-3 py-2">
+    <div className="animate-pop-in mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-accent/25 bg-accent-soft px-3 py-2">
       <span className="mr-auto text-[13px] font-medium text-accent">მონიშნულია: {count}</span>
       {children}
       <Button variant="ghost" size="sm" onClick={onClear}>
@@ -302,7 +302,7 @@ export const TD_CLASS = 'px-3 py-3 align-middle first:pl-4 last:pr-4';
 
 export function TableFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-raised">
+    <div className="overflow-x-auto rounded-2xl border border-line bg-raised">
       <table className={TABLE_CLASS}>{children}</table>
     </div>
   );
@@ -369,7 +369,7 @@ export function FormDialog({
             onConfirm(new FormData(event.currentTarget));
           }}
         >
-          <h2 className="text-base font-semibold">{title}</h2>
+          <h2 className="headline text-[1.35rem] text-ink">{title}</h2>
           {description ? <div className="mt-1.5 text-sm leading-relaxed text-muted">{description}</div> : null}
           {children ? <div className="mt-5 space-y-4">{children}</div> : null}
           {error ? (
@@ -411,9 +411,9 @@ export function SecretDialog({
     <dialog ref={ref} onClose={onClose} className={DIALOG_CLASS}>
       {secret ? (
         <div className="p-6">
-          <h2 className="text-base font-semibold">{title}</h2>
+          <h2 className="headline text-[1.35rem] text-ink">{title}</h2>
           <div className="mt-1.5 text-sm leading-relaxed text-muted">{description}</div>
-          <div className="mt-5 flex items-center gap-2 rounded-lg border border-line bg-sunken py-2 pr-2 pl-3">
+          <div className="mt-5 flex items-center gap-2 rounded-xl border border-line bg-sunken py-2 pr-2 pl-3">
             <code className="min-w-0 flex-1 truncate font-mono text-[15px] text-ink select-all">{secret}</code>
             <Button
               type="button"

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { sql, type SQL } from 'drizzle-orm';
-import { History } from 'lucide-react';
 import { db } from '@/db';
 import { requireAdmin } from '@/lib/auth';
 import { PAGE_SIZE, actionLabel, likePattern, listHref, pick, readParams, omit } from '@/lib/admin';
@@ -140,12 +139,11 @@ export default async function AdminLogPage(props: PageProps<'/admin/log'>) {
 
       {entries.length === 0 ? (
         <EmptyState
-          icon={<History />}
           title={filtered ? 'ვერაფერი მოიძებნა' : 'ჟურნალი ცარიელია'}
           description={filtered ? 'სცადე სხვა სიტყვა ან მოხსენი ფილტრები.' : 'აქ ჩაიწერება ყველა ცვლილება, რომელსაც ადმინები გააკეთებენ.'}
         />
       ) : (
-        <ol className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-raised">
+        <ol className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-raised">
           {entries.slice(0, PAGE_SIZE).map((entry) => {
             const href = targetHref(entry);
             const note = describe(entry.details);

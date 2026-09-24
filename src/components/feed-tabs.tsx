@@ -1,24 +1,26 @@
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { buttonClass } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { cn, formatCount } from '@/lib/utils';
 
-/** Underlined tabs that are real links, so every tab has its own URL. */
+/**
+ * Pill tabs that are real links, so every tab has its own URL. The strip
+ * scrolls sideways on phones rather than wrapping.
+ */
 export function Tabs({
   tabs,
   active,
+  label = 'ჩანართები',
   className,
 }: {
-  tabs: { key: string; label: string; href: string }[];
+  tabs: { key: string; label: string; href: string; count?: number }[];
   active: string;
+  label?: string;
   className?: string;
 }) {
   return (
-    <div className={className}>
-      {/* The baseline is an inset shadow rather than a border: a scrolling strip
-          clips anything that hangs below it, so a -1px underline overlap would
-          vanish. The fade only matters when the strip overflows, on phones. */}
-      <div className="no-scrollbar fade-x flex gap-5 overflow-x-auto shadow-[inset_0_-1px_0_var(--border)] sm:[mask-image:none]">
+    <nav aria-label={label} className={cn('no-scrollbar fade-x overflow-x-auto sm:[mask-image:none]', className)}>
+      <div className="flex w-max gap-1.5 pr-6 sm:pr-0">
         {tabs.map((tab) => {
           const isActive = tab.key === active;
           return (
@@ -27,17 +29,21 @@ export function Tabs({
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'border-b-2 py-3 text-sm font-medium whitespace-nowrap transition-colors',
-                isActive ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink',
+                'inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors',
+                isActive ? 'bg-primary text-primary-contrast' : 'text-muted hover:bg-hover hover:text-ink',
               )}
             >
               {tab.label}
+              {tab.count !== undefined ? (
+                <span className={cn('text-[13px] tabular-nums', isActive ? 'opacity-65' : 'text-subtle')}>
+                  {formatCount(tab.count)}
+                </span>
+              ) : null}
             </Link>
           );
         })}
-        <span className="w-6 shrink-0 sm:hidden" aria-hidden />
       </div>
-    </div>
+    </nav>
   );
 }
 
@@ -93,7 +99,7 @@ export function Pagination({
     n === 1 ? basePath : `${basePath}${basePath.includes('?') ? '&' : '?'}page=${n}`;
 
   return (
-    <nav className="flex items-center justify-between gap-3 border-t border-line pt-6" aria-label="გვერდები">
+    <nav className="flex items-center justify-between gap-3 pt-4" aria-label="გვერდები">
       {page > 1 ? (
         <Link href={join(page - 1)} className={buttonClass({ variant: 'outline', size: 'sm' })}>
           <ArrowLeft />

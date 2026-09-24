@@ -61,8 +61,8 @@ export function UserMenu({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'flex items-center rounded-lg transition-colors focus-visible:outline-2',
-          variant === 'row' ? 'gap-2.5 p-1 hover:bg-hover xl:w-full xl:px-2 xl:py-1.5' : 'rounded-full',
+          'flex items-center rounded-full transition-colors focus-visible:outline-2',
+          variant === 'row' ? 'gap-2.5 p-1 hover:bg-hover xl:w-full xl:py-1.5 xl:pr-3 xl:pl-1.5' : null,
           open && variant === 'row' && 'bg-hover',
         )}
         aria-haspopup="menu"
@@ -90,18 +90,18 @@ export function UserMenu({
             placement === 'top' ? 'bottom-full left-0 mb-2' : 'top-full right-0 mt-2',
           )}
         >
-          <div className="px-2.5 pt-2 pb-2.5">
+          <div className="px-3 pt-2 pb-2.5">
             <p className="truncate text-sm font-medium text-ink">{name}</p>
             <p className="truncate text-[12px] text-subtle">@{username}</p>
           </div>
-          <div className="-mx-1 mb-1 border-t border-line" />
+          <div className="-mx-1.5 mb-1.5 border-t border-line" />
           {links.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)} className={MENU_ITEM_CLASS}>
               <Icon />
               {label}
             </Link>
           ))}
-          <div className="-mx-1 my-1 border-t border-line" />
+          <div className="-mx-1.5 my-1.5 border-t border-line" />
           <form action={signOutAction}>
             <button type="submit" role="menuitem" className={MENU_ITEM_CLASS}>
               <LogOut />

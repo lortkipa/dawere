@@ -61,7 +61,7 @@ export function AdminSidebar({ user, badges = {} }: { user: AdminUser; badges?: 
       <Link href="/admin" aria-label="ადმინისტრირება" className="mb-6 flex h-9 items-center justify-center gap-2 xl:justify-start xl:px-2">
         <LogoMark className="xl:hidden" />
         <Logo className="hidden xl:block" />
-        <span className="hidden rounded-md bg-accent-soft px-1.5 py-0.5 text-[11px] font-semibold text-accent xl:inline">
+        <span className="hidden rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent xl:inline">
           ადმინი
         </span>
       </Link>
@@ -76,7 +76,7 @@ export function AdminSidebar({ user, badges = {} }: { user: AdminUser; badges?: 
               title={label}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'relative flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium transition-colors xl:justify-start xl:px-3',
+                'relative flex h-10 items-center justify-center gap-3 rounded-full text-sm font-medium transition-colors xl:justify-start xl:px-3.5',
                 active ? 'bg-hover text-ink' : 'text-muted hover:bg-hover hover:text-ink',
               )}
             >
@@ -91,7 +91,7 @@ export function AdminSidebar({ user, badges = {} }: { user: AdminUser; badges?: 
       <Link
         href="/"
         title="საიტზე დაბრუნება"
-        className="mt-5 flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-ink xl:justify-start xl:px-3"
+        className="mt-5 flex h-10 items-center justify-center gap-3 rounded-full text-sm font-medium text-muted transition-colors hover:bg-hover hover:text-ink xl:justify-start xl:px-3.5"
       >
         <ArrowLeft className="size-[18px] shrink-0" strokeWidth={1.75} />
         <span className="sr-only xl:not-sr-only">საიტზე დაბრუნება</span>
@@ -114,7 +114,7 @@ export function AdminMobileBar({ user, badges = {} }: { user: AdminUser; badges?
       <div className="flex h-14 items-center gap-1 px-4">
         <Link href="/" aria-label="საიტზე დაბრუნება" className="mr-auto flex items-center gap-2">
           <Logo />
-          <span className="rounded-md bg-accent-soft px-1.5 py-0.5 text-[11px] font-semibold text-accent">ადმინი</span>
+          <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">ადმინი</span>
         </Link>
         <ThemeToggle />
         <div className="ml-1.5">
@@ -130,7 +130,7 @@ export function AdminMobileBar({ user, badges = {} }: { user: AdminUser; badges?
               href={href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors',
+                'flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors',
                 active ? 'bg-hover text-ink' : 'text-muted hover:text-ink',
               )}
             >

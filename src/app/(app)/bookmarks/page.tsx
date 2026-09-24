@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Bookmark } from 'lucide-react';
 import { requireUser } from '@/lib/auth';
 import { bookmarkedFeed } from '@/lib/feed';
 import { PostCardList } from '@/components/post-card';
@@ -18,25 +17,26 @@ export default async function BookmarksPage(props: PageProps<'/bookmarks'>) {
   const feed = await bookmarkedFeed(user.id, PAGE_SIZE, (page - 1) * PAGE_SIZE);
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
-      <PageHeader title="შენახულები" className="mb-4 border-b border-line pb-6" />
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-12 pb-20 sm:px-6 sm:pt-20">
+      <PageHeader title="შენახულები" className="mb-8" />
 
-      <PostCardList
-        posts={feed.posts}
-        signedIn
-        emptyState={
-          <EmptyState
-            icon={<Bookmark />}
-            title="ჯერ არაფერია შენახული"
-            description="სანიშნის ხატულა ნებისმიერ ტექსტზე — და აქ დაგელოდება."
-            action={
-              <ButtonLink href="/" variant="outline">
-                ტექსტების დათვალიერება
-              </ButtonLink>
-            }
-          />
-        }
-      />
+      <div className="border-t border-line pt-4">
+        <PostCardList
+          posts={feed.posts}
+          signedIn
+          emptyState={
+            <EmptyState
+              title="ჯერ არაფერია შენახული"
+              description="ტექსტს სანიშნის ღილაკით შეინახავ და მერე აქ იპოვი."
+              action={
+                <ButtonLink href="/" variant="outline">
+                  ტექსტების დათვალიერება
+                </ButtonLink>
+              }
+            />
+          }
+        />
+      </div>
 
       {feed.posts.length > 0 ? (
         <div className="mt-6">

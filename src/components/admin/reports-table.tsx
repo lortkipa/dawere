@@ -372,7 +372,7 @@ export function ReportsTable({ groups }: { groups: ReportGroup[] }) {
                   <tr className="bg-sunken/60">
                     <td />
                     <td colSpan={5} className="px-3 pt-1 pb-4 pr-4">
-                      <ul className="divide-y divide-line rounded-lg border border-line bg-raised">
+                      <ul className="divide-y divide-line rounded-xl border border-line bg-raised">
                         {group.items.map((item) => (
                           <li key={item.id} className="px-3 py-2.5 text-[13px]">
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

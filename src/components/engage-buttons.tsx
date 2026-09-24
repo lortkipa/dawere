@@ -66,7 +66,7 @@ export function LikeButton({
       aria-pressed={optimistic.liked}
       aria-label={optimistic.liked ? 'მოწონების მოხსნა' : 'სტატიის მოწონება'}
       className={cn(
-        'inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] transition-colors hover:bg-hover',
+        'inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] transition-colors hover:bg-hover',
         optimistic.liked ? 'text-rose-600 dark:text-rose-400' : 'text-subtle hover:text-ink',
       )}
     >
@@ -117,7 +117,7 @@ export function BookmarkButton({
       aria-pressed={optimistic}
       aria-label={optimistic ? 'შენახულებიდან ამოღება' : 'შენახვა მოგვიანებისთვის'}
       className={cn(
-        'inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] transition-colors hover:bg-hover',
+        'inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] transition-colors hover:bg-hover',
         optimistic ? 'text-accent' : 'text-subtle hover:text-ink',
       )}
     >
@@ -132,7 +132,7 @@ export function CommentCountLink({ href, count }: { href: string; count: number 
     <Link
       href={href}
       aria-label={`კომენტარები: ${count}`}
-      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
+      className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
     >
       <MessageCircle className="size-[17px]" />
       <span className="tabular-nums">{formatCount(count)}</span>
@@ -176,9 +176,10 @@ export function FollowButton({
       type="button"
       onClick={onClick}
       size={size}
-      variant={optimistic ? 'outline' : 'primary'}
+      // In a list of people a row of solid buttons shouts; the rail's are quiet.
+      variant={compact ? (optimistic ? 'ghost' : 'outline') : optimistic ? 'outline' : 'primary'}
       aria-pressed={optimistic}
-      className={cn(compact && 'h-7 px-2.5 text-[12px]', className)}
+      className={cn(compact && 'h-7 px-3 text-[12px]', className)}
     >
       {compact ? null : optimistic ? <Check /> : <Plus />}
       {optimistic ? 'გამოწერილია' : 'გამოწერა'}

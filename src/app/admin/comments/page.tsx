@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { eq, sql, type SQL } from 'drizzle-orm';
-import { MessageSquare, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { db } from '@/db';
 import { posts, users } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
@@ -172,7 +172,6 @@ export default async function AdminCommentsPage(props: PageProps<'/admin/comment
 
       {tableRows.length === 0 ? (
         <EmptyState
-          icon={<MessageSquare />}
           title={filtered ? 'ვერაფერი მოიძებნა' : 'კომენტარები ჯერ არ არის'}
           description={filtered ? 'სცადე სხვა სიტყვა ან მოხსენი ფილტრები.' : undefined}
         />

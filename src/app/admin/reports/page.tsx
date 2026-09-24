@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { eq, sql, type SQL } from 'drizzle-orm';
-import { Flag, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
@@ -226,7 +226,6 @@ export default async function AdminReportsPage(props: PageProps<'/admin/reports'
 
       {groups.length === 0 ? (
         <EmptyState
-          icon={<Flag />}
           title={filtered ? 'ვერაფერი მოიძებნა' : status === '' ? 'განსახილველი საჩივარი არ არის' : 'საჩივრები ჯერ არ არის'}
           description={
             filtered

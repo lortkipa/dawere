@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { eq, sql, type SQL } from 'drizzle-orm';
-import { FileText, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
@@ -175,7 +175,6 @@ export default async function AdminPostsPage(props: PageProps<'/admin/posts'>) {
 
       {tableRows.length === 0 ? (
         <EmptyState
-          icon={<FileText />}
           title={filtered ? 'ვერაფერი მოიძებნა' : 'სტატიები ჯერ არ არის'}
           description={filtered ? 'სცადე სხვა სიტყვა ან მოხსენი ფილტრები.' : undefined}
         />

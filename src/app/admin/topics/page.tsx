@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { sql, type SQL } from 'drizzle-orm';
-import { Tags } from 'lucide-react';
 import { db } from '@/db';
 import { requireAdmin } from '@/lib/auth';
 import { likePattern, pick, readParams, omit } from '@/lib/admin';
@@ -98,7 +97,7 @@ export default async function AdminTopicsPage(props: PageProps<'/admin/topics'>)
       />
 
       {topicRows.length === 0 && (q || kind) ? (
-        <EmptyState icon={<Tags />} title="ვერაფერი მოიძებნა" description="სცადე სხვა სიტყვა ან მოხსენი ფილტრები." />
+        <EmptyState title="ვერაფერი მოიძებნა" description="სცადე სხვა სიტყვა ან მოხსენი ფილტრები." />
       ) : (
         <TopicsManager rows={topicRows} />
       )}

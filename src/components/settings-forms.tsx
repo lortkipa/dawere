@@ -64,10 +64,10 @@ function SectionCard({
   tone?: 'danger';
 }) {
   return (
-    <Card id={id} className={cn('scroll-mt-24 p-5 sm:p-6', tone === 'danger' && 'border-danger/30')}>
-      <h2 className={cn('text-[15px] font-semibold tracking-tight', tone === 'danger' && 'text-danger')}>{title}</h2>
-      {description ? <p className="mt-1 text-[13px] leading-relaxed text-muted">{description}</p> : null}
-      <div className="mt-5">{children}</div>
+    <Card id={id} className={cn('scroll-mt-24 p-6 sm:p-8', tone === 'danger' && 'border-danger/30')}>
+      <h2 className={cn('headline text-[1.35rem] text-ink', tone === 'danger' && 'text-danger')}>{title}</h2>
+      {description ? <p className="mt-1.5 text-sm leading-relaxed text-pretty text-muted">{description}</p> : null}
+      <div className="mt-6">{children}</div>
     </Card>
   );
 }
@@ -92,7 +92,7 @@ export function AvatarForm({ name, avatarUrl }: { name: string; avatarUrl: strin
         <div className="flex flex-wrap items-center gap-2">
           <label
             className={cn(
-              'inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-line-strong bg-raised px-3.5 text-sm font-medium text-ink shadow-soft transition-colors hover:bg-hover',
+              'inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-raised px-4.5 text-sm font-medium text-ink shadow-soft transition-colors hover:bg-hover',
               'focus-within:ring-2 focus-within:ring-accent',
               uploading && 'pointer-events-none opacity-60',
             )}
@@ -289,10 +289,11 @@ export function InterestsForm({
                   onClick={() => toggle(topic.slug)}
                   aria-pressed={on}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-lg border py-1.5 pr-3 pl-2.5 text-[13px] font-medium transition-colors [&>svg]:size-3.5',
+                    'inline-flex h-10 items-center gap-1.5 rounded-full border pr-4 pl-3 text-[14px] font-medium [&>svg]:size-3.5',
+                    'transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97]',
                     on
-                      ? 'border-accent/40 bg-accent-soft text-accent hover:border-accent'
-                      : 'border-line bg-raised text-muted hover:border-line-strong hover:text-ink',
+                      ? 'border-primary bg-primary text-primary-contrast'
+                      : 'border-transparent bg-sunken text-ink hover:border-line-strong hover:bg-raised',
                   )}
                 >
                   {on ? <Check strokeWidth={3} /> : <Plus strokeWidth={2.5} />}
@@ -357,7 +358,7 @@ export function NotificationSettingsForm({ muted }: { muted: NotificationType[] 
             const on = enabled.has(type);
             const copy = NOTIFICATION_COPY[type];
             return (
-              <li key={type} className="flex items-center justify-between gap-4 py-3">
+              <li key={type} className="flex items-center justify-between gap-4 py-3.5">
                 <div className="min-w-0">
                   <p id={`notify-${type}`} className="text-sm font-medium text-ink">
                     {copy.setting}
@@ -372,12 +373,13 @@ export function NotificationSettingsForm({ muted }: { muted: NotificationType[] 
                   onClick={() => toggle(type)}
                   className={cn(
                     'relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2',
-                    on ? 'bg-accent' : 'bg-line-strong',
+                    on ? 'bg-primary' : 'bg-line-strong',
                   )}
                 >
                   <span
                     className={cn(
-                      'inline-block size-5 rounded-full bg-white shadow-soft transition-transform',
+                      'inline-block size-5 rounded-full shadow-soft transition-transform',
+                      on ? 'bg-primary-contrast' : 'bg-white',
                       on ? 'translate-x-[18px]' : 'translate-x-0.5',
                     )}
                   />

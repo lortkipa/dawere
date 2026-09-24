@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { featuredTopics, publishedPostCount, suggestedAuthors, trendingFeed } from '@/lib/feed';
-import { Avatar, SectionHeading } from '@/components/ui';
+import { Avatar, SectionHeading, TopicPills } from '@/components/ui';
 import { FollowButton } from '@/components/engage-buttons';
 
 /**
@@ -19,20 +19,20 @@ export async function Sidebar({ userId }: { userId: string | null }) {
   ]);
 
   return (
-    <aside className="space-y-9">
+    <aside className="space-y-11">
       {published >= TRENDING_MIN_POSTS && trending.posts.length > 0 ? (
         <section>
           <SectionHeading>ახლა კითხულობენ</SectionHeading>
           <ol className="space-y-4">
             {trending.posts.map((post, index) => (
               <li key={post.id} className="group flex gap-3">
-                <span className="w-5 shrink-0 pt-px text-[13px] font-semibold text-subtle tabular-nums">
+                <span className="w-5 shrink-0 font-serif text-[15px] leading-snug font-semibold text-subtle tabular-nums">
                   {index + 1}
                 </span>
                 <div className="min-w-0">
                   <Link
                     href={`/p/${post.slug}`}
-                    className="line-clamp-2 text-sm leading-snug font-medium text-ink decoration-line-strong underline-offset-4 group-hover:underline"
+                    className="line-clamp-2 font-serif text-[15px] leading-snug font-semibold text-ink decoration-line-strong underline-offset-4 group-hover:underline"
                   >
                     {post.title}
                   </Link>
@@ -52,7 +52,7 @@ export async function Sidebar({ userId }: { userId: string | null }) {
       {authors.length > 0 ? (
         <section>
           <SectionHeading>გამოსაწერი ავტორები</SectionHeading>
-          <ul className="space-y-3.5">
+          <ul className="space-y-4">
             {authors.map((author) => (
               <li key={author.id} className="flex items-center gap-3">
                 <Link href={`/u/${author.username}`} className="shrink-0">
@@ -85,17 +85,7 @@ export async function Sidebar({ userId }: { userId: string | null }) {
           >
             თემები
           </SectionHeading>
-          <div className="flex flex-wrap gap-1.5">
-            {topics.map((topic) => (
-              <Link
-                key={topic.id}
-                href={`/topic/${topic.slug}`}
-                className="inline-flex items-center rounded-md bg-sunken px-2.5 py-1 text-[13px] font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
-              >
-                {topic.name}
-              </Link>
-            ))}
-          </div>
+          <TopicPills topics={topics} size="sm" />
         </section>
       ) : null}
     </aside>

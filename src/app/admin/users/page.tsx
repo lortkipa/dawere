@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { sql, type SQL } from 'drizzle-orm';
-import { UserPlus, Users } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { db } from '@/db';
 import { requireAdmin } from '@/lib/auth';
 import { PAGE_SIZE, canManage, likePattern, listHref, pick, readParams, omit } from '@/lib/admin';
@@ -146,7 +146,6 @@ export default async function AdminUsersPage(props: PageProps<'/admin/users'>) {
 
       {tableRows.length === 0 ? (
         <EmptyState
-          icon={<Users />}
           title={filtered ? 'ვერაფერი მოიძებნა' : 'მომხმარებლები ჯერ არ არიან'}
           description={filtered ? 'სცადე სხვა სიტყვა ან მოხსენი ფილტრები.' : undefined}
         />

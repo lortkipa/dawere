@@ -7,7 +7,7 @@ import { cn, formatCount, formatDate, timeAgo } from '@/lib/utils';
 /** Every admin page sits in the same frame; lists want the width. */
 export function AdminMain({ children, narrow }: { children: ReactNode; narrow?: boolean }) {
   return (
-    <main className={cn('mx-auto w-full flex-1 px-4 pt-6 pb-16 sm:px-6 sm:pt-10', narrow ? 'max-w-4xl' : 'max-w-6xl')}>
+    <main className={cn('mx-auto w-full flex-1 px-4 pt-8 pb-20 sm:px-6 sm:pt-14', narrow ? 'max-w-4xl' : 'max-w-6xl')}>
       {children}
     </main>
   );
@@ -27,16 +27,18 @@ export function StatTile({
   const body = (
     <>
       <p className="text-[13px] font-medium text-muted">{label}</p>
-      <p className="mt-2 text-2xl leading-none font-semibold tracking-tight text-ink tabular-nums">{formatCount(value)}</p>
+      <p className="mt-3 font-serif text-[1.9rem] leading-none font-semibold tracking-tight text-ink tabular-nums">
+        {formatCount(value)}
+      </p>
       {note ? <p className="mt-2 text-[12px] text-subtle">{note}</p> : null}
     </>
   );
   return href ? (
-    <Link href={href} className="block bg-raised p-4 transition-colors hover:bg-hover sm:p-5">
+    <Link href={href} className="block bg-raised p-5 transition-colors hover:bg-hover sm:p-6">
       {body}
     </Link>
   ) : (
-    <div className="bg-raised p-4 sm:p-5">{body}</div>
+    <div className="bg-raised p-5 sm:p-6">{body}</div>
   );
 }
 

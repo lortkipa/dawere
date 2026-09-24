@@ -68,7 +68,7 @@ export function ReportDialog({
           <label
             key={value}
             className={cn(
-              'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors',
+              'flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm transition-colors',
               reason === value ? 'border-accent/40 bg-accent-soft text-ink' : 'border-transparent text-muted hover:bg-hover hover:text-ink',
             )}
           >
@@ -131,7 +131,7 @@ export function ReportButton({
           onClick={onClick}
           title="დარღვევის შეტყობინება"
           aria-label="დარღვევის შეტყობინება"
-          className="flex size-9 items-center justify-center rounded-lg border border-line-strong bg-raised text-muted shadow-soft transition-colors hover:bg-hover hover:text-ink"
+          className="flex size-10 items-center justify-center rounded-full border border-line-strong bg-raised text-muted shadow-soft transition-colors hover:bg-hover hover:text-ink"
         >
           <Flag className="size-4" />
         </button>

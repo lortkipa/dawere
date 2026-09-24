@@ -65,7 +65,7 @@ function TopicDialog({ topic, onClose }: { topic: Editing; onClose: () => void }
     >
       {open ? (
         <form action={formAction} className="space-y-4 p-6">
-          <h2 className="text-base font-semibold">{t ? 'თემის რედაქტირება' : 'ახალი თემა'}</h2>
+          <h2 className="headline text-[1.35rem] text-ink">{t ? 'თემის რედაქტირება' : 'ახალი თემა'}</h2>
           {t ? <input type="hidden" name="id" value={t.id} /> : null}
           <Field label="სახელი" htmlFor="topic-name" error={errors.name}>
             <Input id="topic-name" name="name" defaultValue={v.name} required maxLength={40} autoFocus />

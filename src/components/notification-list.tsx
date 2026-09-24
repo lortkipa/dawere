@@ -4,7 +4,6 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import {
   AtSign,
-  Bell,
   Check,
   CheckCheck,
   Circle,
@@ -30,7 +29,7 @@ import { setUnread } from '@/components/notification-bell';
 import { toast } from '@/components/toaster';
 import { Avatar, Button, ButtonLink, EmptyState, PageHeader } from '@/components/ui';
 import { NOTIFICATION_COPY, type NotificationView } from '@/lib/notification-copy';
-import { cn, formatCount, timeAgo } from '@/lib/utils';
+import { cn, timeAgo } from '@/lib/utils';
 
 const ICONS: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
   post_like: { icon: Heart, tone: 'bg-danger text-danger-contrast' },
@@ -114,7 +113,7 @@ export function NotificationCenter({
     <>
       <PageHeader
         title="შეტყობინებები"
-        className="mb-2"
+        className="mb-8"
         action={
           <div className="flex items-center gap-1.5">
             <Button
@@ -140,13 +139,15 @@ export function NotificationCenter({
       />
 
       <Tabs
-        className="mb-2"
+        label="ფილტრი"
+        className="mb-4"
         active={filter}
         tabs={[
           { key: 'all', label: 'ყველა', href: '/notifications' },
           {
             key: 'unread',
-            label: unread > 0 ? `წაუკითხავი · ${formatCount(unread)}` : 'წაუკითხავი',
+            label: 'წაუკითხავი',
+            count: unread > 0 ? unread : undefined,
             href: '/notifications?filter=unread',
           },
         ]}
@@ -154,8 +155,7 @@ export function NotificationCenter({
 
       {items.length === 0 ? (
         <EmptyState
-          className="mt-6"
-          icon={filter === 'unread' ? <Check /> : <Bell />}
+          className="border-t border-line"
           title={filter === 'unread' ? 'ყველაფერი წაკითხული გაქვს' : 'შეტყობინებები ჯერ არ არის'}
           description={
             filter === 'unread'
@@ -171,7 +171,7 @@ export function NotificationCenter({
           }
         />
       ) : (
-        <ul className="divide-y divide-line">
+        <ul className="space-y-1 border-t border-line pt-3">
           {items.map((item) => (
             <NotificationRow
               key={item.id}
@@ -204,8 +204,8 @@ function NotificationRow({
   return (
     <li
       className={cn(
-        'group relative -mx-3 flex gap-3 rounded-xl px-3 py-4 transition-colors hover:bg-hover/60 sm:-mx-4 sm:px-4',
-        !item.read && 'bg-accent-soft/50',
+        'group relative -mx-3 flex gap-3.5 rounded-2xl px-3 py-4 transition-colors hover:bg-hover/70 sm:-mx-4 sm:px-4',
+        !item.read && 'bg-accent-soft/60',
       )}
     >
       <div className="relative shrink-0 self-start">
@@ -227,7 +227,7 @@ function NotificationRow({
           <Link
             href={item.href}
             onClick={onOpen}
-            className="truncate text-[15px] font-semibold text-ink after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-accent"
+            className="truncate text-[15px] font-semibold text-ink after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-accent"
           >
             {item.actor.name}
           </Link>
@@ -254,7 +254,7 @@ function NotificationRow({
         </p>
 
         {item.comment ? (
-          <p className="mt-2 line-clamp-2 border-l-2 border-line-strong pl-2.5 text-sm leading-relaxed text-muted">
+          <p className="mt-2 line-clamp-2 rounded-xl bg-surface/70 px-3 py-2 text-sm leading-relaxed text-muted ring-1 ring-line">
             {item.comment.excerpt}
           </p>
         ) : null}

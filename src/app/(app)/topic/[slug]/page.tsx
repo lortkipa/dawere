@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { after } from 'next/server';
 import { cache } from 'react';
 import { eq } from 'drizzle-orm';
-import { Hash } from 'lucide-react';
+import { PenLine } from 'lucide-react';
 import { db } from '@/db';
 import { topics } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
@@ -13,7 +13,7 @@ import { SIGNAL, isFollowingTopic, recordTopicSignal } from '@/lib/interests';
 import { PostCardList } from '@/components/post-card';
 import { Pagination } from '@/components/feed-tabs';
 import { TopicFollowButton } from '@/components/engage-buttons';
-import { ButtonLink, EmptyState, SectionHeading } from '@/components/ui';
+import { ButtonLink, EmptyState, TopicPills } from '@/components/ui';
 import { formatCount, pageParam } from '@/lib/utils';
 
 const PAGE_SIZE = 12;
@@ -57,16 +57,16 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
   const related = others.filter((t) => t.id !== topic.id).slice(0, 10);
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
-      <header className="mb-4 border-b border-line pb-8">
-        <Link href="/search" className="text-[13px] font-medium text-subtle transition-colors hover:text-ink">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-12 pb-20 sm:px-6 sm:pt-20">
+      <header className="animate-rise text-center">
+        <Link href="/search" className="text-sm font-medium text-subtle transition-colors hover:text-ink">
           თემები
         </Link>
-        <h1 className="mt-2 text-3xl leading-tight font-bold tracking-tight text-ink sm:text-4xl">{topic.name}</h1>
+        <h1 className="headline mt-3 text-[2.4rem] text-ink sm:text-[3.2rem]">{topic.name}</h1>
         {topic.description ? (
-          <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-muted">{topic.description}</p>
+          <p className="mx-auto mt-4 max-w-lg text-[16px] leading-relaxed text-pretty text-muted">{topic.description}</p>
         ) : null}
-        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div className="mt-8 flex flex-col items-center gap-3">
           <TopicFollowButton topicId={topic.id} initialFollowing={following} signedIn={Boolean(user)} />
           {topic.postCount > 0 ? (
             <span className="text-[13px] text-subtle">{formatCount(topic.postCount)} სტატია</span>
@@ -74,22 +74,23 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
         </div>
       </header>
 
-      <PostCardList
-        posts={feed.posts}
-        signedIn={Boolean(user)}
-        emptyState={
-          <EmptyState
-            className="mt-6"
-            icon={<Hash />}
-            title={`„${topic.name}“ პირველ ტექსტს ელოდება`}
-            action={
-              <ButtonLink href="/write" prefetch={false}>
-                დაწერე შენ
-              </ButtonLink>
-            }
-          />
-        }
-      />
+      <div className="mt-14 border-t border-line pt-4">
+        <PostCardList
+          posts={feed.posts}
+          signedIn={Boolean(user)}
+          emptyState={
+            <EmptyState
+              title={`„${topic.name}“ პირველ ტექსტს ელოდება`}
+              action={
+                <ButtonLink href="/write" prefetch={false}>
+                  <PenLine />
+                  დაწერე შენ
+                </ButtonLink>
+              }
+            />
+          }
+        />
+      </div>
 
       {feed.posts.length > 0 ? (
         <div className="mt-6">
@@ -98,19 +99,11 @@ export default async function TopicPage(props: PageProps<'/topic/[slug]'>) {
       ) : null}
 
       {related.length > 0 ? (
-        <section className="mt-16 border-t border-line pt-10">
-          <SectionHeading>სხვა თემები</SectionHeading>
-          <div className="flex flex-wrap gap-1.5">
-            {related.map((t) => (
-              <Link
-                key={t.id}
-                href={`/topic/${t.slug}`}
-                className="inline-flex items-center rounded-md bg-sunken px-2.5 py-1 text-[13px] font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
-              >
-                {t.name}
-              </Link>
-            ))}
-          </div>
+        <section aria-labelledby="other-topics" className="mt-20 border-t border-line pt-14 text-center">
+          <h2 id="other-topics" className="headline text-[1.6rem] text-ink sm:text-[1.75rem]">
+            სხვა თემები
+          </h2>
+          <TopicPills topics={related} className="mt-6 justify-center" />
         </section>
       ) : null}
     </main>

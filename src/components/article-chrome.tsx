@@ -129,7 +129,7 @@ export function ShareButton({ title }: { title: string }) {
     <button
       type="button"
       onClick={share}
-      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
+      className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
       aria-label="სტატიის გაზიარება"
     >
       {copied ? <Check className="size-[17px] text-accent" /> : <Share2 className="size-[17px]" />}

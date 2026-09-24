@@ -231,7 +231,7 @@ export function CreateUserForm({ canAppointAdmins }: { canAppointAdmins: boolean
   return (
     <>
       {state.ok ? (
-        <div role="status" className="mb-6 rounded-xl border border-accent/25 bg-accent-soft px-4 py-3 text-sm text-ink">
+        <div role="status" className="mb-6 rounded-2xl border border-accent/25 bg-accent-soft px-4 py-3 text-sm text-ink">
           ანგარიში შეიქმნა: <strong>@{state.username}</strong>.{' '}
           <Link href={`/admin/users/${state.userId}`} className="font-medium text-accent hover:underline">
             გახსნა

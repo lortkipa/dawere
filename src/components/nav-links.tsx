@@ -81,7 +81,7 @@ export function AppSidebar({ user }: { user: NavUser }) {
             title={label}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'group relative flex h-10 items-center justify-center gap-3 rounded-lg text-sm font-medium transition-colors xl:justify-start xl:px-3',
+              'group relative flex h-10 items-center justify-center gap-3 rounded-full text-sm font-medium transition-colors xl:justify-start xl:px-3.5',
               active ? 'bg-hover text-ink' : 'text-muted hover:bg-hover hover:text-ink',
             )}
           >
@@ -142,7 +142,7 @@ export function MobileNav({ user }: { user: NavUser }) {
             className="flex flex-col items-center gap-0.5 text-[10.5px] font-medium"
           >
             {primary ? (
-              <span className="flex h-8 w-11 items-center justify-center rounded-lg bg-primary text-primary-contrast">
+              <span className="flex h-8 w-12 items-center justify-center rounded-full bg-primary text-primary-contrast">
                 <Icon className="size-[18px]" />
               </span>
             ) : (

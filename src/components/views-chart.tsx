@@ -52,12 +52,12 @@ export function ViewsChart({
     <figure className={cn('relative', className)}>
       <figcaption className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <span className="text-sm font-semibold text-ink">{title}</span>
-          <p className="mt-0.5 text-[13px] text-subtle">
+          <span className="headline text-[1.15rem] text-ink">{title}</span>
+          <p className="mt-1 text-[13px] text-subtle">
             ეს კვირა: {formatCount(lastWeek)} · წინა: {formatCount(weekBefore)}
           </p>
         </div>
-        <span className="text-2xl font-semibold tracking-tight text-ink tabular-nums">{formatCount(total)}</span>
+        <span className="font-serif text-[1.9rem] leading-none font-semibold tracking-tight text-ink tabular-nums">{formatCount(total)}</span>
       </figcaption>
 
       <div className="relative pl-8">

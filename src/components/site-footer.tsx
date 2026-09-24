@@ -32,7 +32,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <footer className="mt-auto border-t border-line">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
           {nav}
           <span className="text-[13px] text-subtle">© {year} Dawere</span>
         </div>

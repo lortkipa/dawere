@@ -32,25 +32,25 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-12 pb-20 sm:px-6 sm:pt-20">
       <PageHeader
         title="პარამეტრები"
         action={
-          <ButtonLink href={`/u/${user.username}`} variant="outline" size="sm">
+          <ButtonLink href={`/u/${user.username}`} variant="outline">
             <ExternalLink />
             პროფილის ნახვა
           </ButtonLink>
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-10">
-        <nav aria-label="პარამეტრების განყოფილებები" className="sticky top-14 z-10 -mx-4 border-b border-line bg-surface/90 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 lg:top-8 lg:mx-0 lg:self-start lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+      <div className="grid gap-6 lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-12">
+        <nav aria-label="პარამეტრების განყოფილებები" className="sticky top-14 z-10 -mx-4 bg-surface/85 px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 lg:top-8 lg:mx-0 lg:self-start lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <ul className="no-scrollbar flex gap-1 overflow-x-auto lg:flex-col">
             {SECTIONS.map((section) => (
               <li key={section.id}>
                 <a
                   href={`#${section.id}`}
-                  className="block rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-ink"
+                  className="flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted transition-colors hover:bg-hover hover:text-ink"
                 >
                   {section.label}
                 </a>
@@ -59,7 +59,7 @@ export default async function SettingsPage() {
           </ul>
         </nav>
 
-        <div className="min-w-0 space-y-10">
+        <div className="min-w-0 space-y-6">
           <section id="profile" className="scroll-mt-24 space-y-4">
             <AvatarForm name={user.name} avatarUrl={user.avatarUrl} />
             <ProfileForm
@@ -81,7 +81,7 @@ export default async function SettingsPage() {
           <NotificationSettingsForm muted={user.mutedNotifications} />
 
           <section id="account" className="scroll-mt-24 space-y-4">
-            <div className="rounded-xl border border-line bg-sunken px-5 py-3.5 text-sm text-muted">
+            <div className="rounded-2xl bg-sunken px-6 py-4 text-sm text-muted sm:px-8">
               შესული ხარ როგორც <span className="font-medium text-ink">{user.email}</span>
             </div>
             <PasswordForm />

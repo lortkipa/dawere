@@ -23,7 +23,7 @@ export default async function NotificationsPage(props: PageProps<'/notifications
   const renderedAt = new Date().toISOString();
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-12 pb-20 sm:px-6 sm:pt-20">
       {/* Keyed by render time: a server redraw (a new notification, a refresh) replaces local edits. */}
       <NotificationCenter
         key={renderedAt}

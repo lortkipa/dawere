@@ -60,7 +60,7 @@ export function PostRowActions({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="მოქმედებები"
-        className="flex size-8 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-hover hover:text-ink"
+        className="flex size-8 items-center justify-center rounded-full text-subtle transition-colors hover:bg-hover hover:text-ink"
       >
         <MoreHorizontal className="size-[18px]" />
       </button>

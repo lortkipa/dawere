@@ -114,8 +114,8 @@ export default async function AdminUserPage(props: PageProps<'/admin/users/[id]'
           href={`/admin/reports?owner=${user.id}${stats.reports_open > 0 ? '' : '&status=all'}`}
           className={
             stats.reports_open > 0
-              ? 'mb-6 flex items-center gap-2 rounded-xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text'
-              : 'mb-6 flex items-center gap-2 rounded-xl border border-line bg-sunken px-4 py-3 text-sm text-muted hover:text-ink'
+              ? 'mb-6 flex items-center gap-2 rounded-2xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text'
+              : 'mb-6 flex items-center gap-2 rounded-2xl border border-line bg-sunken px-4 py-3 text-sm text-muted hover:text-ink'
           }
         >
           <Flag className="size-4 shrink-0" />
@@ -126,14 +126,14 @@ export default async function AdminUserPage(props: PageProps<'/admin/users/[id]'
       ) : null}
 
       {user.suspendedAt ? (
-        <div className="mb-6 rounded-xl border border-danger/25 bg-danger-soft px-4 py-3 text-sm text-danger">
+        <div className="mb-6 rounded-2xl border border-danger/25 bg-danger-soft px-4 py-3 text-sm text-danger">
           შეჩერებულია {timeAgo(user.suspendedAt)}
           {user.suspendedReason ? `: ${user.suspendedReason}` : '.'}
         </div>
       ) : null}
 
       {!manageable ? (
-        <div className="mb-6 rounded-xl border border-line bg-sunken px-4 py-3 text-sm text-muted">
+        <div className="mb-6 rounded-2xl border border-line bg-sunken px-4 py-3 text-sm text-muted">
           {isSelf ? (
             <>
               ეს შენი ანგარიშია. შეცვალე ის{' '}
@@ -152,7 +152,7 @@ export default async function AdminUserPage(props: PageProps<'/admin/users/[id]'
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-4">
-          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
             {[
               ['გამოქვეყნებული', stats.published],
               ['მონახაზი', stats.drafts],

@@ -89,7 +89,7 @@ export default async function AdminOverviewPage() {
       {t.reported > 0 ? (
         <Link
           href="/admin/reports"
-          className="mb-4 flex items-center gap-3 rounded-xl border border-warning-border bg-warning-soft px-4 py-3 transition-colors hover:border-warning-text/40"
+          className="mb-4 flex items-center gap-3 rounded-2xl border border-warning-border bg-warning-soft px-4 py-3 transition-colors hover:border-warning-text/40"
         >
           <Flag className="size-4 shrink-0 text-warning-text" />
           <p className="min-w-0 flex-1 text-sm text-warning-text">
@@ -100,7 +100,7 @@ export default async function AdminOverviewPage() {
         </Link>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line lg:grid-cols-4">
         <StatTile
           label="მომხმარებლები"
           value={t.users}
@@ -128,7 +128,7 @@ export default async function AdminOverviewPage() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Card className="p-4 sm:p-6">
+        <Card className="p-5 sm:p-7">
           <ViewsChart
             data={toPoints(signups)}
             title="რეგისტრაციები, ბოლო 30 დღე"
@@ -136,12 +136,12 @@ export default async function AdminOverviewPage() {
             column="რეგისტრაციები"
           />
         </Card>
-        <Card className="p-4 sm:p-6">
+        <Card className="p-5 sm:p-7">
           <ViewsChart data={toPoints(views)} title="ნახვები მთელ საიტზე, ბოლო 30 დღე" />
         </Card>
       </div>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-3">
+      <div className="mt-14 grid gap-12 lg:grid-cols-3">
         <section>
           <SectionHeading
             action={

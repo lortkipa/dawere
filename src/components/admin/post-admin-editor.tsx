@@ -86,7 +86,7 @@ export function AdminPostEditor({
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_17rem]">
       <div className="min-w-0">
         {hasPending ? (
-          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text">
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-warning-border bg-warning-soft px-4 py-3 text-sm text-warning-text">
             <AlertCircle className="size-4 shrink-0" />
             <span className="min-w-0 flex-1">
               ავტორს აქვს გამოუქვეყნებელი ცვლილებები. აქ ჩანს საიტზე არსებული ვერსია; თუ ავტორი „განახლებას“ დააჭერს,
@@ -105,16 +105,16 @@ export function AdminPostEditor({
           </div>
         ) : null}
 
-        <div className="rounded-xl border border-line bg-raised px-4 py-6 sm:px-8 sm:py-8">
+        <div className="rounded-2xl border border-line bg-raised px-4 py-6 sm:px-8 sm:py-8">
           {draft.coverImageUrl ? (
-            <div className="group relative mb-6 overflow-hidden rounded-lg border border-line">
+            <div className="group relative mb-6 overflow-hidden rounded-xl border border-line">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={draft.coverImageUrl} alt="" className="max-h-72 w-full object-cover" />
               <div className="absolute top-3 right-3 flex gap-2">
                 <button
                   type="button"
                   onClick={() => coverRef.current?.click()}
-                  className="flex h-8 items-center gap-1.5 rounded-lg bg-black/65 px-3 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
+                  className="flex h-8 items-center gap-1.5 rounded-full bg-black/65 px-3 text-[13px] font-medium text-white backdrop-blur hover:bg-black/80"
                 >
                   {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
                   შეცვლა
@@ -122,7 +122,7 @@ export function AdminPostEditor({
                 <button
                   type="button"
                   onClick={() => update({ coverImageUrl: null })}
-                  className="flex size-8 items-center justify-center rounded-lg bg-black/65 text-white backdrop-blur hover:bg-black/80"
+                  className="flex size-8 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur hover:bg-black/80"
                   aria-label="ყდის სურათის წაშლა"
                 >
                   <X className="size-4" />
@@ -134,7 +134,7 @@ export function AdminPostEditor({
               type="button"
               onClick={() => coverRef.current?.click()}
               disabled={uploadingCover}
-              className="mb-4 inline-flex h-8 items-center gap-2 rounded-lg px-2.5 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
+              className="mb-4 inline-flex h-8 items-center gap-2 rounded-full px-2.5 text-[13px] text-subtle transition-colors hover:bg-hover hover:text-ink"
             >
               {uploadingCover ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
               ყდის სურათი

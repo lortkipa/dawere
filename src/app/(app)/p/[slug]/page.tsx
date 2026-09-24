@@ -8,7 +8,7 @@ import { relatedPosts } from '@/lib/feed';
 import { DEFAULT_SHARE_IMAGE, SITE_URL } from '@/lib/site';
 import { withHeadingIds } from '@/lib/toc';
 import { cn, excerpt, formatCount, formatDate } from '@/lib/utils';
-import { Avatar, ButtonLink } from '@/components/ui';
+import { Avatar, ButtonLink, TopicPills } from '@/components/ui';
 import { BookmarkButton, CommentCountLink, FollowButton, LikeButton } from '@/components/engage-buttons';
 import { FlashToast, ReadingProgress, ShareButton, TableOfContents } from '@/components/article-chrome';
 import { ViewTracker } from '@/components/view-tracker';
@@ -86,7 +86,7 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
   return (
     <main className="w-full flex-1 pb-16">
       <ReadingProgress targetId="article-body" />
-      {searchParams.published === '1' ? <FlashToast message="სტატია გამოქვეყნდა 🎉" /> : null}
+      {searchParams.published === '1' ? <FlashToast message="სტატია გამოქვეყნდა" /> : null}
       {post.status === 'published' ? (
         <>
           <ViewTracker postId={post.id} fromSearch={searchParams.from === 'search'} />
@@ -131,10 +131,10 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
             />
           ) : null}
 
-          <article id="article-body" className="min-w-0 pt-10 sm:pt-16">
+          <article id="article-body" className="min-w-0 pt-12 sm:pt-20">
             <header>
               {post.topics.length > 0 ? (
-                <div className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] font-medium">
+                <div className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium">
                   {post.topics.map((topic, index) => (
                     <span key={topic.slug} className="flex items-center gap-2">
                       {index > 0 ? (
@@ -150,15 +150,15 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
                 </div>
               ) : null}
 
-              <h1 className="text-[2rem] leading-[1.15] font-bold tracking-tight text-ink sm:text-[2.6rem]">
+              <h1 className="headline text-[2.15rem] leading-[1.12] text-ink sm:text-[2.9rem]">
                 {post.title || 'უსათაურო'}
               </h1>
 
               {post.subtitle ? (
-                <p className="mt-4 text-lg leading-relaxed text-muted sm:text-xl">{post.subtitle}</p>
+                <p className="mt-5 text-lg leading-relaxed text-pretty text-muted sm:text-[1.3rem]">{post.subtitle}</p>
               ) : null}
 
-              <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-3">
+              <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-3">
                 <Link href={`/u/${post.author.username}`} className="shrink-0">
                   <Avatar name={post.author.name} src={post.author.avatarUrl} size="md" />
                 </Link>
@@ -205,27 +205,17 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
               <img
                 src={post.coverImageUrl}
                 alt=""
-                className="mt-10 w-full rounded-xl border border-line object-cover"
+                className="mt-12 w-full rounded-2xl border border-line object-cover"
               />
             ) : (
-              <hr className="mt-8 border-line" />
+              <hr className="mt-10 border-line" />
             )}
 
             {/* Stored HTML is sanitised on write (src/lib/sanitize.ts), never on read. */}
-            <div className="article mt-10" dangerouslySetInnerHTML={{ __html: html }} />
+            <div className="article mt-12" dangerouslySetInnerHTML={{ __html: html }} />
 
             {post.topics.length > 0 ? (
-              <div className="mt-12 flex flex-wrap gap-2">
-                {post.topics.map((topic) => (
-                  <Link
-                    key={topic.slug}
-                    href={`/topic/${topic.slug}`}
-                    className="rounded-md bg-sunken px-2.5 py-1 text-[13px] font-medium text-muted transition-colors hover:bg-hover hover:text-ink"
-                  >
-                    {topic.name}
-                  </Link>
-                ))}
-              </div>
+              <TopicPills topics={post.topics} size="sm" className="mt-14" />
             ) : null}
           </article>
 
@@ -233,11 +223,11 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
           {post.status === 'published' ? (
             <div
               className={cn(
-                'sticky z-20 mt-10 flex justify-center',
+                'sticky z-20 mt-12 flex justify-center',
                 signedIn ? 'bottom-20 md:bottom-6' : 'bottom-6',
               )}
             >
-              <div className="flex items-center gap-0.5 rounded-xl border border-line bg-raised/95 p-1 shadow-lift backdrop-blur-xl">
+              <div className="flex items-center gap-0.5 rounded-full border border-line bg-raised/90 p-1 shadow-lift backdrop-blur-xl">
                 <LikeButton
                   postId={post.id}
                   initialLiked={post.liked}
@@ -258,7 +248,7 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
           ) : null}
 
           {/* ------------------------------------------------- author card */}
-          <section className="mt-12 border-t border-line pt-10">
+          <section aria-label="ავტორი" className="mt-14 rounded-2xl bg-sunken p-6 sm:p-8">
             <div className="flex flex-wrap items-center gap-4">
               <Link href={`/u/${post.author.username}`} className="shrink-0">
                 <Avatar name={post.author.name} src={post.author.avatarUrl} size="lg" />
@@ -266,14 +256,13 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
               {/* A real minimum width, so on a phone the follow button wraps
                   below instead of crushing the name into a column. */}
               <div className="min-w-[9rem] flex-1">
-                <p className="text-[12px] text-subtle">ავტორი</p>
                 <Link
                   href={`/u/${post.author.username}`}
-                  className="block text-lg font-semibold tracking-tight text-ink hover:underline"
+                  className="headline block text-[1.35rem] text-ink hover:underline hover:decoration-line-strong hover:underline-offset-4"
                 >
                   {post.author.name}
                 </Link>
-                <p className="text-[13px] text-subtle">{formatCount(post.author.followerCount)} გამომწერი</p>
+                <p className="mt-0.5 text-[13px] text-subtle">{formatCount(post.author.followerCount)} გამომწერი</p>
               </div>
               {isAuthor ? null : (
                 <FollowButton
@@ -285,16 +274,17 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
               )}
             </div>
             {post.author.bio ? (
-              <p className="mt-4 text-[15px] leading-relaxed text-muted">{post.author.bio}</p>
-            ) : null}
-            {post.status === 'published' && !isAuthor ? (
-              <div className="mt-6">
-                <ReportButton targetType="post" targetId={post.id} signedIn={signedIn} />
-              </div>
+              <p className="mt-5 text-[15px] leading-relaxed text-pretty text-muted">{post.author.bio}</p>
             ) : null}
           </section>
 
-          <div className="mt-12 border-t border-line pt-10">
+          {post.status === 'published' && !isAuthor ? (
+            <div className="mt-5 flex justify-end">
+              <ReportButton targetType="post" targetId={post.id} signedIn={signedIn} />
+            </div>
+          ) : null}
+
+          <div className="mt-14 border-t border-line pt-12">
             <Comments
               postId={post.id}
               postAuthorId={post.author.id}
@@ -322,10 +312,12 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
       </div>
 
       {related.length > 0 ? (
-        <section className="mt-20 border-t border-line">
-          <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
-            <h2 className="text-lg font-semibold tracking-tight text-ink">წაიკითხე შემდეგ</h2>
-            <div className="mt-6 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        <section aria-labelledby="read-next" className="mt-20 border-t border-line">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+            <h2 id="read-next" className="headline text-center text-[1.75rem] text-ink sm:text-[2rem]">
+              წაიკითხე შემდეგ
+            </h2>
+            <div className="mt-10 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((item) => (
                 <CompactPostCard key={item.id} post={item} />
               ))}
@@ -339,7 +331,7 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
 
 function Notice({ text, action }: { text: string; action: React.ReactNode }) {
   return (
-    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning-border bg-warning-soft px-4 py-3">
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-warning-border bg-warning-soft py-3 pr-3 pl-5">
       <p className="text-sm text-warning-text">{text}</p>
       {action}
     </div>

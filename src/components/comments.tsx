@@ -654,10 +654,10 @@ export function Comments({
     <Thread.Provider value={context}>
       <section id="comments" className="min-w-0 scroll-mt-24 [--thread-line:var(--border-strong)]">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <h2 className="headline flex items-center gap-2 text-[1.5rem] text-ink">
             კომენტარები
             {total > 0 ? (
-              <span className="rounded-md bg-sunken px-2 py-0.5 text-[13px] font-medium text-muted tabular-nums">
+              <span className="rounded-full bg-sunken px-2.5 py-0.5 font-sans text-[13px] font-medium tracking-normal text-muted tabular-nums">
                 {total}
               </span>
             ) : null}

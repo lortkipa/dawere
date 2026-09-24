@@ -5,7 +5,7 @@ import { cn, avatarColor, initials } from '@/lib/utils';
 /* -------------------------------------------------------------------- button */
 
 const BUTTON_BASE =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium whitespace-nowrap select-none ' +
+  'inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap select-none ' +
   'transition-[background-color,color,border-color,box-shadow,opacity] ' +
   'disabled:pointer-events-none disabled:opacity-45 [&>svg]:shrink-0';
 
@@ -19,10 +19,10 @@ const BUTTON_VARIANTS = {
 } as const;
 
 const BUTTON_SIZES = {
-  sm: 'h-8 px-3 text-[13px] [&>svg]:size-3.5',
-  md: 'h-9 px-3.5 text-sm [&>svg]:size-4',
-  lg: 'h-11 px-5 text-[15px] [&>svg]:size-[18px]',
-  icon: 'size-9 [&>svg]:size-[18px]',
+  sm: 'h-8 px-3.5 text-[13px] [&>svg]:size-3.5',
+  md: 'h-10 px-4.5 text-sm [&>svg]:size-4',
+  lg: 'h-12 px-6 text-[15px] [&>svg]:size-[18px]',
+  icon: 'size-10 [&>svg]:size-[18px]',
 } as const;
 
 type ButtonStyleProps = {
@@ -55,12 +55,12 @@ export function ButtonLink({
 /* --------------------------------------------------------------------- input */
 
 export const INPUT_CLASS =
-  'w-full rounded-lg border border-line-strong bg-raised px-3 py-2 text-[15px] text-ink shadow-soft placeholder:text-subtle ' +
+  'w-full rounded-xl border border-line-strong bg-raised px-3 py-2 text-[15px] text-ink shadow-soft placeholder:text-subtle ' +
   'transition-[border-color,box-shadow] focus:border-accent focus:outline-none ' +
-  'focus:ring-3 focus:ring-accent/15 aria-[invalid=true]:border-danger disabled:opacity-60';
+  'focus:ring-4 focus:ring-accent/15 aria-[invalid=true]:border-danger disabled:opacity-60';
 
 export function Input({ className, ...props }: ComponentProps<'input'>) {
-  return <input className={cn(INPUT_CLASS, 'h-10', className)} {...props} />;
+  return <input className={cn(INPUT_CLASS, 'h-11', className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
@@ -148,7 +148,7 @@ export function Avatar({
 /* ------------------------------------------------------------------ surfaces */
 
 export function Card({ className, ...props }: ComponentProps<'div'>) {
-  return <div className={cn('rounded-xl border border-line bg-raised', className)} {...props} />;
+  return <div className={cn('rounded-2xl border border-line bg-raised', className)} {...props} />;
 }
 
 const BADGE_TONES = {
@@ -170,7 +170,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap ring-1 ring-inset [&>svg]:size-3',
+        'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-medium whitespace-nowrap ring-1 ring-inset [&>svg]:size-3',
         BADGE_TONES[tone],
         className,
       )}
@@ -183,41 +183,6 @@ export function Badge({
 /** Loading placeholder. Purely visual: screen readers get the page's own status. */
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('shimmer rounded-md', className)} aria-hidden />;
-}
-
-export const CHIP_CLASS =
-  'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-medium transition-colors';
-
-export function Chip({
-  children,
-  className,
-  active,
-}: {
-  children: ReactNode;
-  className?: string;
-  active?: boolean;
-}) {
-  return (
-    <span
-      className={cn(
-        CHIP_CLASS,
-        active
-          ? 'border-accent/30 bg-accent-soft text-accent'
-          : 'border-line bg-raised text-muted hover:border-line-strong hover:text-ink',
-        className,
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-export function TopicChip({ slug, name, active }: { slug: string; name: string; active?: boolean }) {
-  return (
-    <Link href={`/topic/${slug}`}>
-      <Chip active={active}>{name}</Chip>
-    </Link>
-  );
 }
 
 /**
@@ -238,10 +203,10 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn('mb-8 flex flex-wrap items-end justify-between gap-4', className)}>
+    <header className={cn('mb-10 flex flex-wrap items-end justify-between gap-x-6 gap-y-4', className)}>
       <div className="min-w-0">
-        <h1 className="text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.75rem]">{title}</h1>
-        {description ? <p className="mt-1 text-[15px] text-muted">{description}</p> : null}
+        <h1 className="headline text-[2.1rem] text-ink sm:text-[2.5rem]">{title}</h1>
+        {description ? <p className="mt-2 text-[15.5px] leading-relaxed text-pretty text-muted">{description}</p> : null}
       </div>
       {action}
       {children}
@@ -249,38 +214,33 @@ export function PageHeader({
   );
 }
 
+/**
+ * Nothing to show yet: one serif line, at most one sentence, maybe a way on.
+ * No box around it — an empty list is a quiet moment, not an error.
+ */
 export function EmptyState({
-  icon,
   title,
   description,
   action,
   className,
 }: {
-  icon?: ReactNode;
   title: string;
   description?: ReactNode;
   action?: ReactNode;
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        'flex flex-col items-center justify-center rounded-xl border border-dashed border-line-strong px-6 py-14 text-center',
-        className,
-      )}
-    >
-      {icon ? (
-        <div className="mb-4 flex size-11 items-center justify-center rounded-full border border-line bg-sunken text-muted [&>svg]:size-5">
-          {icon}
-        </div>
+    <div className={cn('animate-rise px-4 py-14 text-center sm:py-20', className)}>
+      <h2 className="headline wrap-anywhere text-[1.6rem] text-ink sm:text-[1.85rem]">{title}</h2>
+      {description ? (
+        <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-pretty text-muted">{description}</p>
       ) : null}
-      <h3 className="text-[15px] font-semibold text-ink">{title}</h3>
-      {description ? <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted">{description}</p> : null}
-      {action ? <div className="mt-6">{action}</div> : null}
+      {action ? <div className="mt-8 flex flex-wrap justify-center gap-2.5">{action}</div> : null}
     </div>
   );
 }
 
+/** A serif section title; `action` sits at the far end of the line. */
 export function SectionHeading({
   children,
   action,
@@ -291,12 +251,46 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cn('mb-4 flex items-center justify-between gap-4', className)}>
-      <h2 className="text-[13px] font-semibold text-ink">{children}</h2>
+    <div className={cn('mb-5 flex items-baseline justify-between gap-4', className)}>
+      <h2 className="headline text-[1.25rem] text-ink">{children}</h2>
       {action}
     </div>
   );
 }
+
+/** Topic links as soft pills, the same shape as the onboarding picker. */
+export function TopicPills({
+  topics,
+  size = 'md',
+  className,
+}: {
+  topics: { id?: string; slug: string; name: string }[];
+  size?: 'sm' | 'md';
+  className?: string;
+}) {
+  return (
+    <ul className={cn('flex flex-wrap', size === 'sm' ? 'gap-1.5' : 'gap-2', className)}>
+      {topics.map((topic) => (
+        <li key={topic.id ?? topic.slug}>
+          <Link
+            href={`/topic/${topic.slug}`}
+            className={cn(
+              'inline-flex items-center rounded-full border border-transparent bg-sunken font-medium text-ink',
+              'transition-[background-color,border-color] duration-200 hover:border-line-strong hover:bg-raised',
+              size === 'sm' ? 'h-8 px-3 text-[13px]' : 'h-10 px-4 text-[14.5px]',
+            )}
+          >
+            {topic.name}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Underlined, sentence-style text link. */
+export const TEXT_LINK =
+  'font-medium text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink';
 
 export function FormError({ children }: { children?: ReactNode }) {
   if (!children) return null;
@@ -316,7 +310,7 @@ export function Divider({ className }: { className?: string }) {
 
 /** A shared frame for dropdown menus and popovers. */
 export const MENU_CLASS =
-  'animate-pop-in z-50 overflow-hidden rounded-xl border border-line bg-raised p-1 shadow-lift';
+  'animate-pop-in z-50 overflow-hidden rounded-2xl border border-line bg-raised p-1.5 shadow-lift';
 
 export const MENU_ITEM_CLASS =
-  'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-muted transition-colors hover:bg-hover hover:text-ink [&>svg]:size-4 [&>svg]:shrink-0';
+  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-hover hover:text-ink [&>svg]:size-4 [&>svg]:shrink-0';
