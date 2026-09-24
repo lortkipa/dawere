@@ -38,6 +38,23 @@ type Sort = 'new' | 'old' | 'top';
  */
 const INDENT_ALWAYS = 3;
 const INDENT_WIDE = 6;
+
+/**
+ * How a reply hangs off its parent: indented with a curved branch on every
+ * screen, on wide screens only, or flush with no branch at all.
+ */
+type Branch = 'always' | 'wide' | null;
+
+function branchAt(depth: number): Branch {
+  if (depth === 0 || depth > INDENT_WIDE) return null;
+  return depth <= INDENT_ALWAYS ? 'always' : 'wide';
+}
+
+/* Thread geometry. A small avatar is 32px and sits 6px into its row, so the
+   parent's line runs down x = 16px and a reply's avatar centre is 34px below
+   the top of its <li> (12px gap + 22px). Lines are 2px, hence the 15px offsets. */
+const BRANCH_INDENT = { always: 'pl-8 sm:pl-11', wide: 'sm:pl-11' } as const;
+const BRANCH_VISIBLE = { always: '', wide: 'hidden sm:block' } as const;
 /** Deeper threads start folded; a reader opens them on purpose. */
 const OPEN_DEPTH = 4;
 
@@ -273,11 +290,14 @@ function Comment({
   comment,
   depth,
   parent,
+  last = false,
 }: {
   comment: CommentNode;
   depth: number;
   /** The comment this one answers, for the "↳ name" line once indentation stops. */
   parent: CommentNode | null;
+  /** The last reply under its parent: the parent's line ends in this reply's curve. */
+  last?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -340,33 +360,83 @@ function Comment({
           : []),
       ];
 
-  // Indentation for this comment's replies: always, on wide screens only, or none.
-  const childDepth = depth + 1;
-  const indent =
-    childDepth <= INDENT_ALWAYS
-      ? 'ml-4 pl-3 sm:pl-5'
-      : childDepth <= INDENT_WIDE
-        ? 'sm:ml-4 sm:pl-5'
-        : '';
+  const branch = branchAt(depth);
+  const childBranch = branchAt(depth + 1);
+  const threadOpen = comment.replies.length > 0 && expanded;
   // Once a reply is no longer indented under its parent, it names whom it answers.
   const showReplyTo = parent && !parent.deleted && depth > INDENT_ALWAYS;
   const replyToWideOnly = depth <= INDENT_WIDE;
 
   return (
-    <li id={`comment-${comment.id}`} ref={ref} className="min-w-0 scroll-mt-24">
+    <li
+      id={`comment-${comment.id}`}
+      ref={ref}
+      className={cn('relative min-w-0 scroll-mt-24', depth > 0 && 'pt-3', branch && BRANCH_INDENT[branch])}
+    >
+      {branch ? (
+        <>
+          {/* The parent's line bends into this reply's avatar… */}
+          <span
+            aria-hidden
+            className={cn(
+              'pointer-events-none absolute top-0 left-[15px] h-[35px] w-[13px] rounded-bl-[10px] border-b-2 border-l-2 border-(--thread-line) sm:w-[25px] sm:rounded-bl-[14px]',
+              BRANCH_VISIBLE[branch],
+            )}
+          />
+          {/* …and carries on past it to the next reply. */}
+          {last ? null : (
+            <span
+              aria-hidden
+              className={cn(
+                'pointer-events-none absolute inset-y-0 left-[15px] w-0.5 bg-(--thread-line)',
+                BRANCH_VISIBLE[branch],
+              )}
+            />
+          )}
+        </>
+      ) : null}
+
+      {/* The thread line doubles as a fold button, as on most forums. It comes
+          first so its hover can brighten the line in the siblings below. */}
+      {threadOpen && childBranch ? (
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="პასუხების დამალვა"
+          title="პასუხების დამალვა"
+          className={cn(
+            'peer/fold absolute bottom-0 z-10 w-3 rounded-full',
+            depth > 0 ? 'top-[50px]' : 'top-[38px]',
+            // Offset by this comment's own indentation.
+            branch === 'always' ? 'left-[42px] sm:left-[54px]' : branch === 'wide' ? 'left-[10px] sm:left-[54px]' : 'left-[10px]',
+            BRANCH_VISIBLE[childBranch],
+          )}
+        />
+      ) : null}
+
       <div
         className={cn(
           '-mx-2 flex min-w-0 gap-3 rounded-lg px-2 py-1 transition-colors duration-700',
+          'peer-hover/fold:[--thread-line:var(--text-subtle)]',
           focused && 'bg-accent-soft',
         )}
       >
-        {comment.deleted ? (
-          <span className="mt-0.5 size-8 shrink-0 rounded-full border border-dashed border-line-strong" aria-hidden />
-        ) : (
-          <Link href={`/u/${comment.author.username}`} className="mt-0.5 shrink-0">
-            <Avatar name={comment.author.name} src={comment.author.avatarUrl} size="sm" />
-          </Link>
-        )}
+        <div className="flex shrink-0 flex-col items-center">
+          {comment.deleted ? (
+            <span className="mt-0.5 size-8 shrink-0 rounded-full border border-dashed border-line-strong" aria-hidden />
+          ) : (
+            <Link href={`/u/${comment.author.username}`} className="mt-0.5 shrink-0">
+              <Avatar name={comment.author.name} src={comment.author.avatarUrl} size="sm" />
+            </Link>
+          )}
+          {/* From under the avatar down to the first reply's curve. */}
+          {threadOpen && childBranch ? (
+            <span
+              aria-hidden
+              className={cn('-mb-1 w-0.5 flex-1 bg-(--thread-line)', BRANCH_VISIBLE[childBranch])}
+            />
+          ) : null}
+        </div>
 
         <div className="min-w-0 flex-1">
           {comment.deleted ? (
@@ -472,29 +542,18 @@ function Comment({
         </div>
       </div>
 
-      {comment.replies.length > 0 && expanded ? (
-        <div className={cn('relative mt-2', indent)}>
-          {/* The thread line doubles as a fold button, as on most forums. */}
-          {indent ? (
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="პასუხების დამალვა"
-              title="პასუხების დამალვა"
-              className={cn(
-                'group absolute inset-y-0 left-0 w-3 -translate-x-1/2',
-                childDepth > INDENT_ALWAYS && 'hidden sm:block',
-              )}
-            >
-              <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-line transition-colors group-hover:bg-line-strong group-hover:w-0.5" />
-            </button>
-          ) : null}
-          <ul className="min-w-0 space-y-3">
-            {comment.replies.map((reply) => (
-              <Comment key={reply.id} comment={reply} depth={childDepth} parent={comment} />
-            ))}
-          </ul>
-        </div>
+      {threadOpen ? (
+        <ul className="min-w-0 peer-hover/fold:[--thread-line:var(--text-subtle)]">
+          {comment.replies.map((reply, index) => (
+            <Comment
+              key={reply.id}
+              comment={reply}
+              depth={depth + 1}
+              parent={comment}
+              last={index === comment.replies.length - 1}
+            />
+          ))}
+        </ul>
       ) : null}
 
       {/* Mounted on demand: a long thread should not carry a dialog per comment. */}
@@ -593,7 +652,7 @@ export function Comments({
 
   return (
     <Thread.Provider value={context}>
-      <section id="comments" className="min-w-0 scroll-mt-24">
+      <section id="comments" className="min-w-0 scroll-mt-24 [--thread-line:var(--border-strong)]">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
             კომენტარები
