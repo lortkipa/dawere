@@ -7,13 +7,19 @@ import { Skeleton } from '@/components/ui';
  */
 export default function Loading() {
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-6 pb-16 sm:px-6 sm:pt-10" aria-busy="true">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-5 pt-8 pb-24 sm:px-6 sm:pt-12" aria-busy="true">
       <span className="sr-only" role="status">
         იტვირთება…
       </span>
-      <Skeleton className="h-12 rounded-xl" />
-      <Skeleton className="mt-6 mb-8 h-10 w-2/3" />
-      <FeedSkeleton rows={3} />
+      <Skeleton className="h-14 rounded-full" />
+      <div className="mt-5 flex gap-1.5">
+        {['w-16', 'w-22', 'w-20', 'w-16'].map((width, index) => (
+          <Skeleton key={index} className={`h-9 rounded-full ${width}`} />
+        ))}
+      </div>
+      <div className="mt-12">
+        <FeedSkeleton rows={3} />
+      </div>
     </main>
   );
 }

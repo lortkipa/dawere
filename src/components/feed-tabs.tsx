@@ -54,7 +54,7 @@ export function Segmented({
   className?: string;
 }) {
   return (
-    <nav aria-label={label} className={cn('inline-flex rounded-lg bg-sunken p-0.5 ring-1 ring-line ring-inset', className)}>
+    <nav aria-label={label} className={cn('inline-flex rounded-full bg-sunken p-1', className)}>
       {options.map((option) => {
         const isActive = option.key === active;
         return (
@@ -64,7 +64,7 @@ export function Segmented({
             aria-current={isActive ? 'true' : undefined}
             scroll={false}
             className={cn(
-              'rounded-md px-3 py-1 text-[13px] font-medium whitespace-nowrap transition-colors',
+              'rounded-full px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors',
               isActive ? 'bg-raised text-ink shadow-soft ring-1 ring-line' : 'text-muted hover:text-ink',
             )}
           >

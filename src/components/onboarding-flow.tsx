@@ -1,157 +1,148 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
-import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { completeOnboardingAction } from '@/app/actions/onboarding';
-import { Button, FormError, Input } from '@/components/ui';
+import { FormError } from '@/components/ui';
 import { DISCOVERY_OPTIONS, ROLE_OPTIONS } from '@/lib/onboarding-options';
-import { topicEmoji } from '@/lib/topic-art';
 import { cn } from '@/lib/utils';
 
-type Topic = { id: string; slug: string; name: string; description: string };
+type Topic = { id: string; slug: string; name: string };
 
 const MINIMUM_TOPICS = 3;
+const STEPS = 3;
 
 /* ------------------------------------------------------------------ chrome */
 
-function Stepper({ step, total }: { step: number; total: number }) {
+/** Three short bars; the current one is drawn longer. */
+function Progress({ step }: { step: number }) {
   return (
-    <div aria-hidden>
-      <p className="text-[13px] font-medium text-subtle tabular-nums">
-        ნაბიჯი {step} / {total}
-      </p>
-      <div className="mt-2.5 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}>
-        {Array.from({ length: total }).map((_, index) => (
-          <span
-            key={index}
-            className={cn('h-1 rounded-full transition-colors duration-300', index < step ? 'bg-ink' : 'bg-line')}
-          />
-        ))}
-      </div>
+    <div className="mb-8 flex items-center gap-1.5">
+      <span className="sr-only">
+        ნაბიჯი {step} / {STEPS}
+      </span>
+      {Array.from({ length: STEPS }, (_, index) => (
+        <span
+          key={index}
+          aria-hidden
+          className={cn(
+            'h-1 rounded-full transition-[width,background-color] duration-500 ease-out',
+            index === step - 1 ? 'w-10' : 'w-5',
+            index < step ? 'bg-ink' : 'bg-line-strong',
+          )}
+        />
+      ))}
     </div>
   );
 }
 
-function StepHeader({ title, note }: { title: string; note?: string }) {
+function StepHeading({ title, note, focus }: { title: string; note?: string; focus: boolean }) {
+  const ref = useRef<HTMLHeadingElement>(null);
+  // Each step replaces the last in place; moving focus to its heading tells
+  // screen readers that the page changed under them. Not on first load.
+  useEffect(() => {
+    if (focus) ref.current?.focus({ preventScroll: true });
+  }, [focus]);
+
   return (
     <div className="mb-8">
-      <h1 className="text-2xl leading-tight font-semibold tracking-tight text-ink sm:text-[1.75rem]">{title}</h1>
-      {note ? <p className="mt-2 text-[15px] text-muted">{note}</p> : null}
+      <h1 ref={ref} tabIndex={-1} className="headline text-[2.25rem] text-ink outline-none sm:text-[2.6rem]">
+        {title}
+      </h1>
+      {note ? <p className="mt-3 text-[15px] leading-relaxed text-muted">{note}</p> : null}
     </div>
   );
 }
 
-function SubmitButton({ children }: { children: React.ReactNode }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" size="lg" disabled={pending}>
-      {pending ? <Loader2 className="animate-spin" /> : null}
-      {children}
-    </Button>
-  );
-}
+const PRIMARY =
+  'inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-[15px] font-semibold ' +
+  'text-primary-contrast transition-[background-color,opacity,transform] duration-150 hover:bg-primary-hover ' +
+  'active:scale-[0.985] disabled:pointer-events-none disabled:opacity-45';
 
-function SkipButton({ children, ...props }: React.ComponentProps<typeof Button>) {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="button" size="lg" variant="ghost" disabled={pending} {...props}>
-      {children}
-    </Button>
-  );
-}
+const QUIET_LINK = 'text-[15px] font-medium text-muted transition-colors hover:text-ink disabled:opacity-50';
 
-/* -------------------------------------------------------------------- cards */
-
-function OptionCard({
-  active,
-  onClick,
-  emoji,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  emoji: string;
-  label: string;
-}) {
+function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'flex items-center gap-3 rounded-xl border p-4 text-left transition-colors',
-        active
-          ? 'border-accent bg-accent-soft ring-1 ring-accent'
-          : 'border-line bg-raised hover:border-line-strong hover:bg-hover',
-      )}
+      aria-label="უკან"
+      className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-line-strong bg-raised text-muted shadow-soft transition-colors hover:bg-hover hover:text-ink"
     >
-      <span className="text-xl leading-none" aria-hidden>
-        {emoji}
-      </span>
-      <span className="min-w-0 flex-1 text-sm font-medium text-ink">{label}</span>
-      {active ? (
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent text-accent-contrast">
-          <Check className="size-3" strokeWidth={3} />
-        </span>
-      ) : null}
+      <ArrowLeft className="size-[18px]" />
     </button>
   );
 }
+
+function Actions({ onBack, children, below }: { onBack?: () => void; children: ReactNode; below?: ReactNode }) {
+  return (
+    <div className="mt-10">
+      <div className="flex gap-2.5">
+        {onBack ? <BackButton onClick={onBack} /> : null}
+        {children}
+      </div>
+      {below ? <div className="mt-6 text-center">{below}</div> : null}
+    </div>
+  );
+}
+
+function FinishButton() {
+  const { pending, data } = useFormStatus();
+  const skipping = data?.get('skip') === 'role';
+  return (
+    <button type="submit" disabled={pending} className={PRIMARY}>
+      {pending && !skipping ? <Loader2 className="size-[18px] animate-spin" /> : null}
+      დასრულება
+    </button>
+  );
+}
+
+/** A skip on the last step is a submit of its own; see the server action. */
+function SkipSubmit() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" name="skip" value="role" disabled={pending} className={QUIET_LINK}>
+      გამოტოვება
+    </button>
+  );
+}
+
+/* ----------------------------------------------------------------- choices */
 
 /**
- * Topics are the long list, so they wrap as pills rather than stacking as
- * cards: the whole editorial set fits on one screen, and no count of topics
- * leaves a lonely card on the last row.
+ * Topics and sources are short labels, so they wrap as pills: the whole set
+ * fits on one screen. Selecting fills the pill without changing its width,
+ * so nothing reflows under the pointer.
  */
-function TopicPill({
-  active,
-  onClick,
-  emoji,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  emoji: string;
-  label: string;
-}) {
+function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-[15px] font-medium transition-colors',
+        'inline-flex h-11 items-center rounded-full border px-[1.15rem] text-[15px] font-medium',
+        'transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97]',
         active
-          ? 'border-accent bg-accent-soft text-accent ring-1 ring-accent'
-          : 'border-line bg-raised text-ink hover:border-line-strong hover:bg-hover',
+          ? 'border-primary bg-primary text-primary-contrast'
+          : 'border-transparent bg-sunken text-ink hover:border-line-strong hover:bg-raised',
       )}
     >
-      {active ? (
-        <span className="flex size-[18px] items-center justify-center rounded-full bg-accent text-accent-contrast">
-          <Check className="size-3" strokeWidth={3} />
-        </span>
-      ) : (
-        <span className="text-lg leading-none" aria-hidden>
-          {emoji}
-        </span>
-      )}
-      {label}
+      {children}
     </button>
   );
 }
 
-/** The three role choices get a taller card: emoji, label, one line of hint. */
-function RoleCard({
+/** The role question has a line of explanation per answer, so it gets rows. */
+function RoleRow({
   active,
   onClick,
-  emoji,
   label,
   hint,
 }: {
   active: boolean;
   onClick: () => void;
-  emoji: string;
   label: string;
   hint: string;
 }) {
@@ -161,22 +152,29 @@ function RoleCard({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'relative flex h-full flex-col items-start rounded-xl border p-5 text-left transition-colors',
-        active
-          ? 'border-accent bg-accent-soft ring-1 ring-accent'
-          : 'border-line bg-raised hover:border-line-strong hover:bg-hover',
+        'flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left sm:px-6 sm:py-5',
+        'transition-[background-color,border-color,box-shadow] duration-300',
+        active ? 'border-line-strong bg-raised shadow-lift' : 'border-transparent bg-sunken hover:border-line',
       )}
     >
-      {active ? (
-        <span className="absolute top-4 right-4 flex size-5 items-center justify-center rounded-full bg-accent text-accent-contrast">
-          <Check className="size-3" strokeWidth={3} />
-        </span>
-      ) : null}
-      <span className="text-2xl leading-none" aria-hidden>
-        {emoji}
+      <span className="min-w-0 flex-1">
+        <span className="block text-[16.5px] leading-snug font-medium text-ink">{label}</span>
+        <span className="mt-0.5 block text-[14px] leading-relaxed text-muted">{hint}</span>
       </span>
-      <span className="mt-4 text-[15px] font-semibold text-ink">{label}</span>
-      <span className="mt-1 text-[13px] leading-relaxed text-muted">{hint}</span>
+      <span
+        aria-hidden
+        className={cn(
+          'flex size-5 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors duration-200',
+          active ? 'border-primary bg-primary' : 'border-line-strong bg-surface',
+        )}
+      >
+        <span
+          className={cn(
+            'size-2 rounded-full bg-primary-contrast transition-transform duration-200',
+            active ? 'scale-100' : 'scale-0',
+          )}
+        />
+      </span>
     </button>
   );
 }
@@ -187,12 +185,18 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
   const [state, formAction] = useActionState(completeOnboardingAction, { ok: false });
 
   const [step, setStep] = useState(1);
+  const [moved, setMoved] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [source, setSource] = useState('');
   const [note, setNote] = useState('');
   const [role, setRole] = useState('');
 
-  const enough = selected.size >= MINIMUM_TOPICS;
+  const missing = MINIMUM_TOPICS - selected.size;
+
+  function go(to: number) {
+    setMoved(true);
+    setStep(to);
+  }
 
   function toggleTopic(slug: string) {
     setSelected((current) => {
@@ -203,8 +207,9 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
     });
   }
 
+  // `data-step` also lets the landscape beside the form follow along.
   return (
-    <form action={formAction}>
+    <form action={formAction} data-step={step}>
       {/* Everything answered so far travels with the single final submit. */}
       {[...selected].map((slug) => (
         <input key={slug} type="hidden" name="topic" value={slug} />
@@ -213,136 +218,117 @@ export function OnboardingFlow({ topics, firstName }: { topics: Topic[]; firstNa
       <input type="hidden" name="discoveryNote" value={source === 'other' ? note : ''} />
       <input type="hidden" name="role" value={role} />
 
-      <div className="mb-10">
-        <Stepper step={step} total={3} />
-      </div>
+      <Progress step={step} />
 
-      <FormError>{state.error}</FormError>
+      {state.error ? (
+        <div className="mb-6">
+          <FormError>{state.error}</FormError>
+        </div>
+      ) : null}
 
       {/* ------------------------------------------------- 1 · interests */}
       {step === 1 ? (
-        <section>
-          <StepHeader
-            title={`გამარჯობა, ${firstName}. რა გაინტერესებს?`}
-            note={`აირჩიე მინიმუმ ${MINIMUM_TOPICS} თემა.`}
-          />
+        <section key="topics" className="animate-rise">
+          <StepHeading focus={moved} title={`რა გაინტერესებს, ${firstName}?`} note={`აირჩიე მინიმუმ ${MINIMUM_TOPICS} თემა.`} />
 
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2">
             {topics.map((topic) => (
-              <TopicPill
-                key={topic.id}
-                active={selected.has(topic.slug)}
-                onClick={() => toggleTopic(topic.slug)}
-                emoji={topicEmoji(topic.slug)}
-                label={topic.name}
-              />
+              <Pill key={topic.id} active={selected.has(topic.slug)} onClick={() => toggleTopic(topic.slug)}>
+                {topic.name}
+              </Pill>
             ))}
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
-            <span className="text-[13px] text-subtle">
-              {enough ? `არჩეულია ${selected.size}` : `აირჩიე კიდევ ${MINIMUM_TOPICS - selected.size}`}
-            </span>
-            <Button type="button" size="lg" disabled={!enough} onClick={() => setStep(2)}>
-              გაგრძელება
-              <ArrowRight />
-            </Button>
-          </div>
+          <Actions>
+            <button type="button" className={PRIMARY} disabled={missing > 0} onClick={() => go(2)}>
+              {missing > 0 ? `აირჩიე კიდევ ${missing}` : 'გაგრძელება'}
+            </button>
+          </Actions>
         </section>
       ) : null}
 
       {/* ----------------------------------------------- 2 · how they came */}
       {step === 2 ? (
-        <section>
-          <StepHeader title="საიდან შეგვნიშნე?" note="ერთი პასუხი დაგვეხმარება." />
+        <section key="source" className="animate-rise">
+          <StepHeading focus={moved} title="საიდან გაიგე Dawere-ს შესახებ?" />
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex flex-wrap gap-2">
             {DISCOVERY_OPTIONS.map((option) => (
-              <OptionCard
+              <Pill
                 key={option.key}
                 active={source === option.key}
                 onClick={() => setSource(source === option.key ? '' : option.key)}
-                emoji={option.emoji}
-                label={option.label}
-              />
+              >
+                {option.label}
+              </Pill>
             ))}
           </div>
 
           {source === 'other' ? (
-            <div className="mt-4">
-              <Input
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                onKeyDown={(event) => {
-                  // Enter here means "next", not "submit half an answer".
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    setStep(3);
-                  }
-                }}
-                maxLength={120}
-                autoFocus
-                placeholder="მოგვიყევი, საიდან…"
-                aria-label="საიდან შეგვნიშნე"
-              />
-            </div>
+            <input
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              onKeyDown={(event) => {
+                // Enter here means "next", not "submit half an answer".
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  go(3);
+                }
+              }}
+              maxLength={120}
+              autoFocus
+              placeholder="მოგვიყევი, საიდან"
+              aria-label="საიდან გაიგე Dawere-ს შესახებ"
+              className={cn(
+                'animate-pop-in mt-4 h-12 w-full rounded-xl border border-line-strong bg-raised px-3.5 text-[15px] text-ink shadow-soft',
+                'transition-[border-color,box-shadow] placeholder:text-subtle focus:border-accent focus:ring-4 focus:ring-accent/15 focus:outline-none',
+              )}
+            />
           ) : null}
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
-            <Button type="button" size="lg" variant="ghost" onClick={() => setStep(1)}>
-              <ArrowLeft />
-              უკან
-            </Button>
-            <div className="flex items-center gap-2">
-              <SkipButton
+          <Actions
+            onBack={() => go(1)}
+            below={
+              <button
+                type="button"
+                className={QUIET_LINK}
                 onClick={() => {
                   setSource('');
                   setNote('');
-                  setStep(3);
+                  go(3);
                 }}
               >
                 გამოტოვება
-              </SkipButton>
-              <Button type="button" size="lg" disabled={!source} onClick={() => setStep(3)}>
-                გაგრძელება
-                <ArrowRight />
-              </Button>
-            </div>
-          </div>
+              </button>
+            }
+          >
+            <button type="button" className={PRIMARY} disabled={!source} onClick={() => go(3)}>
+              გაგრძელება
+            </button>
+          </Actions>
         </section>
       ) : null}
 
       {/* ---------------------------------------------------- 3 · who they are */}
       {step === 3 ? (
-        <section>
-          <StepHeader title="მკითხველი ხარ თუ ავტორი?" note="ორივეს არჩევაც შეიძლება." />
+        <section key="role" className="animate-rise">
+          <StepHeading focus={moved} title="მკითხველი ხარ თუ ავტორი?" />
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-2.5">
             {ROLE_OPTIONS.map((option) => (
-              <RoleCard
+              <RoleRow
                 key={option.key}
                 active={role === option.key}
                 onClick={() => setRole(role === option.key ? '' : option.key)}
-                emoji={option.emoji}
                 label={option.label}
                 hint={option.hint}
               />
             ))}
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
-            <Button type="button" size="lg" variant="ghost" onClick={() => setStep(2)}>
-              <ArrowLeft />
-              უკან
-            </Button>
-            <div className="flex items-center gap-2">
-              {/* A skip is a real submit: the answer is simply left empty. */}
-              <Button type="submit" size="lg" variant="ghost" name="skip" value="role">
-                გამოტოვება
-              </Button>
-              <SubmitButton>დასრულება</SubmitButton>
-            </div>
-          </div>
+          <Actions onBack={() => go(2)} below={<SkipSubmit />}>
+            <FinishButton />
+          </Actions>
         </section>
       ) : null}
     </form>

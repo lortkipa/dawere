@@ -1,15 +1,15 @@
+import type { CSSProperties, ReactNode } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { after } from 'next/server';
-import { ArrowRight, SearchX } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 import { searchEverything, type PersonHit, type SearchSort } from '@/lib/search';
 import { recordSearchSignal } from '@/lib/interests';
 import { featuredTopics, latestFeed } from '@/lib/feed';
-import { Avatar, Card, Chip, EmptyState, PageHeader, SectionHeading } from '@/components/ui';
+import { Avatar } from '@/components/ui';
 import { FollowButton } from '@/components/engage-buttons';
 import { HighlightText } from '@/components/highlight-text';
-import { Pagination, Segmented, Tabs } from '@/components/feed-tabs';
+import { Pagination, Segmented } from '@/components/feed-tabs';
 import { PostCard } from '@/components/post-card';
 import { SearchField } from '@/components/search-field';
 import { cn, formatCount, pageParam } from '@/lib/utils';
@@ -49,17 +49,17 @@ function searchHref(query: string, { tab = 'all', sort = 'relevance' }: { tab?: 
 
 type TopicLink = { id: string; slug: string; name: string };
 
-function TopicGrid({ topics }: { topics: TopicLink[] }) {
+/** Topic links as soft pills, the same shape as the onboarding picker. */
+function TopicPills({ topics, className }: { topics: TopicLink[]; className?: string }) {
   return (
-    <ul className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-3">
+    <ul className={cn('flex flex-wrap gap-2', className)}>
       {topics.map((topic) => (
         <li key={topic.id}>
           <Link
             href={`/topic/${topic.slug}`}
-            className="group flex h-full items-center justify-between gap-2 rounded-lg border border-line bg-raised px-3.5 py-3 text-sm font-medium text-ink transition-colors hover:border-line-strong hover:bg-hover"
+            className="inline-flex h-10 items-center rounded-full border border-transparent bg-sunken px-4 text-[14.5px] font-medium text-ink transition-[background-color,border-color] duration-200 hover:border-line-strong hover:bg-raised"
           >
-            <span className="min-w-0">{topic.name}</span>
-            <ArrowRight className="size-3.5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
+            {topic.name}
           </Link>
         </li>
       ))}
@@ -67,14 +67,22 @@ function TopicGrid({ topics }: { topics: TopicLink[] }) {
   );
 }
 
-function TopicChips({ topics, className }: { topics: TopicLink[]; className?: string }) {
+/** Serif section title; `action` sits at the far end of the line. */
+function SectionTitle({ children, action, center }: { children: ReactNode; action?: ReactNode; center?: boolean }) {
   return (
-    <div className={cn('flex flex-wrap gap-2', className)}>
-      {topics.map((topic) => (
-        <Link key={topic.id} href={`/topic/${topic.slug}`}>
-          <Chip>{topic.name}</Chip>
-        </Link>
-      ))}
+    <div className={cn('mb-6 flex flex-wrap items-center gap-x-4 gap-y-3', center ? 'justify-center' : 'justify-between')}>
+      <h2 className="headline text-[1.6rem] text-ink sm:text-[1.75rem]">{children}</h2>
+      {action}
+    </div>
+  );
+}
+
+/** A quiet message in place of results: one serif line, one sentence, maybe a way on. */
+function Nothing({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className="animate-rise py-8 text-center sm:py-12">
+      <h2 className="headline wrap-anywhere text-[1.6rem] text-ink sm:text-[1.9rem]">{title}</h2>
+      {children}
     </div>
   );
 }
@@ -89,39 +97,54 @@ function PeopleList({
   withBio: boolean;
 }) {
   return (
-    <Card>
-      <ul className="divide-y divide-line">
-        {people.map((person) => (
-          <li key={person.id} className="flex items-center gap-3 px-4 py-3">
-            <Link href={`/u/${person.username}`} className="shrink-0">
-              <Avatar name={person.name} src={person.avatarUrl} size="md" />
+    <ul className="divide-y divide-line">
+      {people.map((person) => (
+        <li key={person.id} className="flex items-center gap-3.5 py-4 first:pt-0 last:pb-0">
+          <Link href={`/u/${person.username}`} className="shrink-0">
+            <Avatar name={person.name} src={person.avatarUrl} size="md" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <Link href={`/u/${person.username}`} className="text-[15.5px] font-medium text-ink hover:underline">
+              {person.name}
             </Link>
-            <div className="min-w-0 flex-1">
-              <Link
-                href={`/u/${person.username}`}
-                className="text-[15px] font-medium text-ink hover:underline"
-              >
-                {person.name}
-              </Link>
-              <p className="text-[13px] text-subtle">
-                @{person.username} ·{' '}
-                <span className="whitespace-nowrap">{formatCount(person.followerCount)} გამომწერი</span>
-              </p>
-              {withBio && person.bio ? (
-                <p className="mt-1.5 line-clamp-2 text-sm text-muted">{person.bio}</p>
-              ) : null}
-            </div>
-            {viewerId === person.id ? null : (
-              <FollowButton
-                authorId={person.id}
-                initialFollowing={person.followedByMe}
-                signedIn={Boolean(viewerId)}
-              />
-            )}
-          </li>
-        ))}
-      </ul>
-    </Card>
+            <p className="text-[13px] text-subtle">
+              @{person.username} ·{' '}
+              <span className="whitespace-nowrap">{formatCount(person.followerCount)} გამომწერი</span>
+            </p>
+            {withBio && person.bio ? <p className="mt-1.5 line-clamp-2 text-sm text-muted">{person.bio}</p> : null}
+          </div>
+          {viewerId === person.id ? null : (
+            <FollowButton authorId={person.id} initialFollowing={person.followedByMe} signedIn={Boolean(viewerId)} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Result kinds as a row of pills; each is a link, so every tab has a URL. */
+function ResultTabs({ query, tab, sort }: { query: string; tab: Tab; sort: SearchSort }) {
+  return (
+    <nav aria-label="შედეგების ტიპი" className="no-scrollbar fade-x -mx-5 mt-5 overflow-x-auto px-5 sm:mx-0 sm:px-0 sm:[mask-image:none]">
+      <div className="flex w-max gap-1.5">
+        {TABS.map((t) => {
+          const active = t.key === tab;
+          return (
+            <Link
+              key={t.key}
+              href={searchHref(query, { tab: t.key, sort })}
+              aria-current={active ? 'page' : undefined}
+              className={cn(
+                'inline-flex h-9 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors',
+                active ? 'bg-primary text-primary-contrast' : 'text-muted hover:bg-hover hover:text-ink',
+              )}
+            >
+              {t.label}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -134,6 +157,8 @@ function SortControl({ query, tab, sort }: { query: string; tab: Tab; sort: Sear
     />
   );
 }
+
+const TEXT_LINK = 'font-medium text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink';
 
 const EXPLORE_PAGE_SIZE = 8;
 
@@ -150,20 +175,30 @@ async function Explore({ page }: { page: number }) {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-16 sm:px-6 sm:pt-12">
-      <PageHeader title="აღმოაჩინე" description="იპოვე ტექსტები, ავტორები და თემები." className="mb-6" />
-      <SearchField autoFocus={page === 1} />
+    <main className="mx-auto w-full max-w-2xl flex-1 px-5 pt-14 pb-24 sm:px-6 sm:pt-24">
+      <div className="text-center">
+        <h1 className="headline animate-rise text-[clamp(2.4rem,5.5vw,3.6rem)] text-ink">აღმოაჩინე</h1>
+        <SearchField
+          autoFocus={page === 1}
+          className="animate-rise mt-8 text-left sm:mt-10"
+          style={{ '--rise-delay': '90ms' } as CSSProperties}
+        />
+      </div>
 
       {page === 1 && topics.length > 0 ? (
-        <section className="mt-12">
-          <SectionHeading>თემები</SectionHeading>
-          <TopicGrid topics={topics} />
+        <section aria-labelledby="explore-topics" className="animate-rise mt-16 sm:mt-20" style={{ '--rise-delay': '180ms' } as CSSProperties}>
+          <SectionTitle center>
+            <span id="explore-topics">თემები</span>
+          </SectionTitle>
+          <TopicPills topics={topics} className="justify-center" />
         </section>
       ) : null}
 
       {latest.posts.length > 0 ? (
-        <section className="mt-12">
-          <SectionHeading>უახლესი ტექსტები</SectionHeading>
+        <section aria-labelledby="explore-latest" className={page === 1 ? 'mt-20 sm:mt-24' : 'mt-14'}>
+          <SectionTitle center>
+            <span id="explore-latest">უახლესი ტექსტები</span>
+          </SectionTitle>
           <div>
             {latest.posts.map((post) => (
               <PostCard key={post.id} post={post} signedIn={Boolean(user)} />
@@ -174,16 +209,15 @@ async function Explore({ page }: { page: number }) {
           </div>
         </section>
       ) : page > 1 ? (
-        <EmptyState
-          className="mt-14"
-          icon={<SearchX />}
-          title="ამ გვერდზე ტექსტები აღარ არის"
-          action={
-            <Link href="/search" className="text-sm font-medium text-accent hover:underline">
-              დასაწყისში დაბრუნება
-            </Link>
-          }
-        />
+        <div className="mt-10">
+          <Nothing title="ამ გვერდზე ტექსტები აღარ არის">
+            <p className="mt-4 text-[15px] text-muted">
+              <Link href="/search" className={TEXT_LINK}>
+                დასაწყისში დაბრუნება
+              </Link>
+            </p>
+          </Nothing>
+        </div>
       ) : null}
     </main>
   );
@@ -223,40 +257,32 @@ export default async function SearchPage(props: PageProps<'/search'>) {
     ((tab === 'posts' && !showPosts) || (tab === 'people' && !showPeople) || (tab === 'topics' && !showTopics));
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-6 pb-16 sm:px-6 sm:pt-10">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-5 pt-8 pb-24 sm:px-6 sm:pt-12">
       <SearchField key={query} defaultValue={query} tab={tab} />
+      <ResultTabs query={query} tab={tab} sort={sort} />
 
-      <Tabs
-        className="mt-6"
-        active={tab}
-        tabs={TABS.map((t) => ({ ...t, href: searchHref(query, { tab: t.key, sort }) }))}
-      />
-
-      <div className="mt-8 space-y-12">
+      <div className="mt-10 space-y-16 sm:mt-12">
         {nothing ? (
-          <EmptyState
-            icon={<SearchX />}
-            title={`„${query}“ ვერაფერს დაემთხვა`}
-            description={
-              results.didYouMean ? (
+          <Nothing title={`„${query}“ ვერაფერს დაემთხვა`}>
+            <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-muted">
+              {results.didYouMean ? (
                 <>
                   იქნებ იგულისხმე{' '}
-                  <Link href={searchHref(results.didYouMean)} className="font-medium text-accent hover:underline">
+                  <Link href={searchHref(results.didYouMean)} className={TEXT_LINK}>
                     {results.didYouMean}
                   </Link>
                   ?
                 </>
               ) : (
                 'სცადე სხვა სიტყვა ან დაათვალიერე თემები.'
-              )
-            }
-            action={<TopicChips topics={await featuredTopics(8, { includeEmpty: true })} className="justify-center" />}
-          />
+              )}
+            </p>
+            <TopicPills topics={await featuredTopics(8, { includeEmpty: true })} className="mt-8 justify-center" />
+          </Nothing>
         ) : null}
 
         {tabIsEmpty ? (
-          <EmptyState
-            icon={<SearchX />}
+          <Nothing
             title={
               tab === 'people'
                 ? 'ამ ძიებით ავტორი არ მოიძებნა'
@@ -264,31 +290,32 @@ export default async function SearchPage(props: PageProps<'/search'>) {
                   ? 'ამ ძიებით თემა არ მოიძებნა'
                   : 'ამ ძიებით სტატია არ მოიძებნა'
             }
-            description={
-              <Link href={searchHref(query)} className="font-medium text-accent hover:underline">
+          >
+            <p className="mt-4 text-[15px] text-muted">
+              <Link href={searchHref(query)} className={TEXT_LINK}>
                 ყველა შედეგის ნახვა
               </Link>
-            }
-          />
+            </p>
+          </Nothing>
         ) : null}
 
         {showPeople ? (
           <section>
             {tab === 'all' ? (
-              <SectionHeading
+              <SectionTitle
                 action={
                   results.people.length > PEOPLE_PREVIEW ? (
                     <Link
                       href={searchHref(query, { tab: 'people' })}
-                      className="text-[12px] font-medium text-muted transition-colors hover:text-ink"
+                      className="text-sm font-medium text-muted transition-colors hover:text-ink"
                     >
-                      ყველა
+                      ყველა ავტორი
                     </Link>
                   ) : null
                 }
               >
                 ავტორები
-              </SectionHeading>
+              </SectionTitle>
             ) : null}
             <PeopleList people={people} viewerId={viewerId} withBio={tab === 'people'} />
           </section>
@@ -296,25 +323,16 @@ export default async function SearchPage(props: PageProps<'/search'>) {
 
         {showTopics ? (
           <section>
-            {tab === 'all' ? (
-              <>
-                <SectionHeading>თემები</SectionHeading>
-                <TopicChips topics={results.topics} />
-              </>
-            ) : (
-              <TopicGrid topics={results.topics} />
-            )}
+            {tab === 'all' ? <SectionTitle>თემები</SectionTitle> : null}
+            <TopicPills topics={results.topics} />
           </section>
         ) : null}
 
         {showPosts ? (
           <section>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-[13px] font-semibold text-ink">
-                {formatCount(results.totalPosts)} სტატია
-              </h2>
-              <SortControl query={query} tab={tab} sort={sort} />
-            </div>
+            <SectionTitle action={<SortControl query={query} tab={tab} sort={sort} />}>
+              {formatCount(results.totalPosts)} სტატია
+            </SectionTitle>
 
             <div>
               {results.posts.map((post) => (

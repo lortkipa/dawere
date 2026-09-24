@@ -694,6 +694,20 @@ dialog::backdrop {
   50% { opacity: 0.85; translate: 12px 0; }
 }
 
+/* Onboarding: the sun climbs a little with each answered step (the form
+   carries data-step). The mirrored copy in the lake moves the opposite way. */
+.onboarding .landscape-lake .ls-sun {
+  transition: translate 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onboarding:has([data-step='2']) .landscape-lake .ls-sun {
+  translate: 0 -36px;
+}
+
+.onboarding:has([data-step='3']) .landscape-lake .ls-sun {
+  translate: 0 -72px;
+}
+
 /* Paper grain over the panel, so its long gradients never band. */
 .grain::after {
   content: '';
@@ -796,7 +810,8 @@ body:has(.landing) .site-header {
     transform: none;
   }
 
-  .faq-item::details-content {
+  .faq-item::details-content,
+  .onboarding .landscape-lake .ls-sun {
     transition: none;
   }
 

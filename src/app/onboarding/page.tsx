@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { topics } from '@/db/schema';
 import { requireUser } from '@/lib/auth';
 import { OnboardingFlow } from '@/components/onboarding-flow';
-import { Logo } from '@/components/logo';
+import { SceneShell } from '@/components/scene-shell';
 
 export const metadata: Metadata = { title: 'დაწყება' };
 
@@ -16,21 +15,15 @@ export default async function OnboardingPage() {
   if (user.onboardedAt) redirect('/settings#interests');
 
   const featured = await db
-    .select({ id: topics.id, slug: topics.slug, name: topics.name, description: topics.description })
+    .select({ id: topics.id, slug: topics.slug, name: topics.name })
     .from(topics)
     .where(eq(topics.isFeatured, true))
     .orderBy(desc(topics.postCount), topics.name);
 
+  // Same frame as sign-up, which sends people straight here.
   return (
-    <div className="flex min-h-dvh flex-1 flex-col">
-      <header className="flex h-16 items-center border-b border-line px-4 sm:px-6">
-        <Link href="/" className="inline-flex" aria-label="Dawere — მთავარი">
-          <Logo />
-        </Link>
-      </header>
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
-        <OnboardingFlow topics={featured} firstName={user.name.split(' ')[0]} />
-      </main>
-    </div>
+    <SceneShell wide className="onboarding">
+      <OnboardingFlow topics={featured} firstName={user.name.split(' ')[0]} />
+    </SceneShell>
   );
 }

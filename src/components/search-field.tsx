@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,12 +18,14 @@ export function SearchField({
   tab,
   autoFocus,
   className,
+  style,
 }: {
   defaultValue?: string;
   /** Kept across a new search, so refining a query stays on the same tab. */
   tab?: string;
   autoFocus?: boolean;
   className?: string;
+  style?: CSSProperties;
 }) {
   const router = useRouter();
   const [value, setValue] = useState(defaultValue);
@@ -58,10 +60,10 @@ export function SearchField({
   }
 
   return (
-    <form action="/search" role="search" onSubmit={onSubmit} className={cn('relative', className)}>
+    <form action="/search" role="search" onSubmit={onSubmit} className={cn('relative', className)} style={style}>
       {keepTab ? <input type="hidden" name="tab" value={keepTab} /> : null}
 
-      <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-subtle" />
+      <Search className="pointer-events-none absolute top-1/2 left-5 size-5 -translate-y-1/2 text-subtle" />
       <input
         ref={inputRef}
         type="search"
@@ -75,13 +77,14 @@ export function SearchField({
         placeholder="სტატია, ავტორი ან თემა"
         aria-label="ძიება"
         className={cn(
-          'h-12 w-full rounded-xl border border-line-strong bg-raised pl-11 text-base',
-          value ? 'pr-24' : 'pr-14',
-          'text-ink shadow-soft transition-[border-color,box-shadow] placeholder:text-subtle focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/15 [&::-webkit-search-cancel-button]:appearance-none',
+          'h-14 w-full rounded-full border border-line-strong bg-raised pl-13 text-base text-ink shadow-soft',
+          value ? 'pr-24' : 'pr-15',
+          'transition-[border-color,box-shadow] placeholder:text-subtle focus:border-accent focus:ring-4 focus:ring-accent/15 focus:outline-none',
+          '[&::-webkit-search-cancel-button]:appearance-none',
         )}
       />
 
-      <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
+      <div className="absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1">
         {value && !pending ? (
           <button
             type="button"
@@ -90,7 +93,7 @@ export function SearchField({
               inputRef.current?.focus();
             }}
             aria-label="გასუფთავება"
-            className="flex size-9 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-hover hover:text-ink"
+            className="flex size-10 items-center justify-center rounded-full text-subtle transition-colors hover:bg-hover hover:text-ink"
           >
             <X className="size-4" />
           </button>
@@ -100,13 +103,13 @@ export function SearchField({
           aria-label="ძიება"
           disabled={pending}
           className={cn(
-            'flex size-9 items-center justify-center rounded-lg transition-colors',
+            'flex size-10 items-center justify-center rounded-full transition-colors',
             value.trim()
               ? 'bg-primary text-primary-contrast hover:bg-primary-hover'
-              : 'bg-sunken text-subtle',
+              : 'bg-sunken text-subtle hover:text-ink',
           )}
         >
-          {pending ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+          {pending ? <Loader2 className="size-[18px] animate-spin" /> : <ArrowRight className="size-[18px]" />}
         </button>
       </div>
     </form>
