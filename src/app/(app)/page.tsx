@@ -1,7 +1,6 @@
 import { Compass, Feather, PenLine, Sparkles } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 import {
-  featuredTopics,
   followingFeed,
   forYouFeed,
   latestFeed,
@@ -28,16 +27,11 @@ const TABS: { key: Exclude<FeedKind, 'trending'>; label: string }[] = [
   { key: 'latest', label: 'უახლესი' },
 ];
 
-/** Signed-out visitors get the cover page. */
-async function SignedOutHome({ farewell }: { farewell: boolean }) {
-  const topics = await featuredTopics(30, { includeEmpty: true });
-  return <Landing topics={topics} farewell={farewell} />;
-}
-
 export default async function HomePage(props: PageProps<'/'>) {
   const user = await getCurrentUser();
   const searchParams = await props.searchParams;
-  if (!user) return <SignedOutHome farewell={searchParams.goodbye === '1'} />;
+  // Signed-out visitors get the cover page.
+  if (!user) return <Landing farewell={searchParams.goodbye === '1'} />;
 
   const requested = typeof searchParams.tab === 'string' ? searchParams.tab : null;
   const tab = TABS.find((t) => t.key === requested)?.key ?? 'for-you';

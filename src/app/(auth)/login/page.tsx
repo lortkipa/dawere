@@ -1,3 +1,4 @@
+import { ViewTransition } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { signInAction } from '@/app/actions/auth';
@@ -13,22 +14,27 @@ export default async function LoginPage(props: PageProps<'/login'>) {
 
   return (
     <>
-      <h1 className="text-2xl leading-tight font-semibold tracking-tight">კეთილი იყოს შენი დაბრუნება</h1>
-      <p className="mt-1.5 mb-7 text-[15px] text-muted">შედი და განაგრძე კითხვა იქიდან, სადაც გაჩერდი.</p>
+      <ViewTransition name="auth-title" share="auth-morph" default="none">
+        <h1 className="headline text-[2.25rem] text-ink sm:text-[2.6rem]">კეთილი იყოს შენი დაბრუნება</h1>
+      </ViewTransition>
 
-      <AuthForm
-        mode="signin"
-        action={signInAction}
-        next={destination || undefined}
-        forgotHref={SUPPORT_EMAIL ? supportMailto('პაროლის აღდგენა') : undefined}
-      />
+      <div className="mt-9">
+        <AuthForm
+          mode="signin"
+          action={signInAction}
+          next={destination || undefined}
+          forgotHref={SUPPORT_EMAIL ? supportMailto('პაროლის აღდგენა') : undefined}
+        />
+      </div>
 
-      <p className="mt-7 border-t border-line pt-6 text-center text-sm text-muted">
-        ანგარიში არ გაქვს?{' '}
-        <Link href="/signup" className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-ink">
-          შექმენი უფასოდ
-        </Link>
-      </p>
+      <ViewTransition name="auth-switch" share="auth-morph" default="none">
+        <p className="mt-8 text-[15px] text-muted">
+          ანგარიში არ გაქვს?{' '}
+          <Link href="/signup" className="font-semibold text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-ink">
+            შექმენი
+          </Link>
+        </p>
+      </ViewTransition>
     </>
   );
 }

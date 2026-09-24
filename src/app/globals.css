@@ -419,14 +419,6 @@ select:autofill {
     mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
   }
 
-  /* Faint square grid behind the landing hero, fading out from the centre. */
-  .hero-grid {
-    background-image:
-      linear-gradient(to right, var(--border) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 30%, transparent 75%);
-  }
 }
 
 @keyframes shimmer {
@@ -492,12 +484,308 @@ dialog::backdrop {
   backdrop-filter: blur(2px);
 }
 
+/* ================================================================== landing
+   The signed-out cover page and the auth screens: calm paper, serif display
+   type, and one landscape (src/components/landscape.tsx). */
+
+@layer components {
+  /* Display headings: the serif face, set tight and balanced. */
+  .headline {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    line-height: 1.14;
+    text-wrap: balance;
+  }
+}
+
+/* ------------------------------------------------------------- landscape
+   Dawn in the light theme, a moonlit night in the dark one. `a` is a ridge's
+   lit crest, `b` the haze it dissolves into further down. */
+.landscape {
+  --ls-sky-1: var(--surface);
+  --ls-sky-2: #f0eff9;
+  --ls-sky-3: #f7ecec;
+  --ls-sky-4: #fae3d9;
+  --ls-glow: #ffc3a4;
+  --ls-halo: 1;
+  --ls-sun-1: #fffdf9;
+  --ls-sun-2: #ffe3cf;
+  --ls-snow: #fbf9fd;
+  --ls-cloud: #ffffff;
+  --ls-mist: #ffffff;
+  --ls-mist-opacity: 0.9;
+  --ls-r0-a: #d0cadb;
+  --ls-r0-b: #f3e9ee;
+  --ls-r1-a: #b8b4cc;
+  --ls-r1-b: #eee6ee;
+  --ls-r2-a: #a09ebd;
+  --ls-r2-b: #e9e2ed;
+  --ls-r3-a: #8888ad;
+  --ls-r3-b: #e2ddeb;
+  --ls-r4-a: #70739d;
+  --ls-r4-b: #dcd8e9;
+  --ls-r5-a: #585d8e;
+  --ls-r5-b: #d5d2e6;
+  --ls-ground: var(--surface);
+  --ls-water-1: #eee8f0;
+  --ls-water-2: #d9d6e8;
+  --ls-glint: #ffffff;
+  --ls-sun-glint: #fff4ea;
+  --ls-shore: rgb(88 93 142 / 0.28);
+  --ls-star: #ffffff;
+  --ls-stars: 0;
+}
+
+.dark .landscape {
+  --ls-sky-2: #0f0f22;
+  --ls-sky-3: #17163a;
+  --ls-sky-4: #221f4d;
+  --ls-glow: #8a80f5;
+  --ls-halo: 0.5;
+  --ls-sun-1: #f7f5ff;
+  --ls-sun-2: #d8d3fa;
+  --ls-snow: #a7a2dd;
+  --ls-cloud: #8f88d8;
+  --ls-mist: #a29bef;
+  --ls-mist-opacity: 0.2;
+  --ls-r0-a: #3a3770;
+  --ls-r0-b: #262450;
+  --ls-r1-a: #2c2a58;
+  --ls-r1-b: #1e1c44;
+  --ls-r2-a: #22204a;
+  --ls-r2-b: #171636;
+  --ls-r3-a: #1a1940;
+  --ls-r3-b: #12112c;
+  --ls-r4-a: #141332;
+  --ls-r4-b: #0e0d22;
+  --ls-r5-a: #100f28;
+  --ls-r5-b: #0b0b1a;
+  --ls-water-1: #1a1840;
+  --ls-water-2: #0b0b18;
+  --ls-glint: #b8b2f5;
+  --ls-sun-glint: #e6e2ff;
+  --ls-shore: rgb(184 178 245 / 0.2);
+  --ls-stars: 1;
+}
+
+/* The lake stands in its own panel rather than on the page, so it gets the
+   whole dawn sky: cool at the top, warm at the horizon. */
+.landscape-lake {
+  --ls-sky-1: #d2d4ee;
+  --ls-sky-2: #e7e3f3;
+  --ls-sky-3: #f6e7e7;
+  --ls-sky-4: #fbdccc;
+  --ls-water-1: #f0e2e3;
+  --ls-water-2: #c9cbe4;
+}
+
+.dark .landscape-lake {
+  --ls-sky-1: #07071a;
+  --ls-sky-2: #0e0e27;
+  --ls-sky-3: #17163b;
+  --ls-sky-4: #221f4d;
+  --ls-water-1: #1a1840;
+  --ls-water-2: #08081a;
+}
+
+.landscape .ls-sun > :first-child {
+  opacity: var(--ls-halo);
+}
+
+.landscape .ls-drift {
+  opacity: var(--ls-mist-opacity);
+}
+
+.landscape .ls-stars {
+  fill: var(--ls-star);
+  opacity: var(--ls-stars);
+  transition: opacity 0.6s ease;
+}
+
+.landscape .ls-ripple {
+  opacity: 0.4;
+}
+
+.dark .landscape .ls-clouds {
+  opacity: 0.16;
+}
+
+.landscape .ls-wind {
+  opacity: 0.25;
+}
+
+.landscape .ls-shore {
+  fill: var(--ls-shore);
+}
+
+.landscape :is(path, stop, rect, circle, ellipse) {
+  transition: stop-color 0.5s ease, fill 0.5s ease;
+}
+
+/* Pointer parallax: <ParallaxScene> sets --px/--py (−1…1); nearer ridges
+   travel further. */
+.landscape-lake .ls-layer {
+  transform: translate3d(calc(var(--px, 0) * var(--depth) * -22px), calc(var(--py, 0) * var(--depth) * -8px), 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The range surfaces from the back to the front. */
+  .landscape .ls-layer {
+    animation: ls-rise 1.8s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 110ms + 150ms);
+  }
+
+  /* On the landing the far ridges lag behind the page as it scrolls. */
+  @supports (animation-timeline: scroll()) {
+    .landscape-panorama .ls-layer {
+      animation:
+        ls-rise 1.8s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+        ls-parallax linear both;
+      animation-delay: calc(var(--i, 0) * 110ms + 150ms), 0s;
+      animation-timeline: auto, scroll(root);
+      animation-range: normal, 0 100vh;
+    }
+  }
+
+  .landscape .ls-drift {
+    animation: ls-drift var(--drift, 60s) ease-in-out infinite alternate;
+  }
+
+  /* Stars only show at night, so they only twinkle then. */
+  .dark .landscape .ls-twinkle {
+    animation: ls-twinkle 5s ease-in-out infinite;
+  }
+
+  .landscape .ls-ripple {
+    animation: ls-glint 8s ease-in-out infinite;
+  }
+
+  .landscape .ls-wind {
+    animation-name: ls-wind;
+    animation-duration: 11s;
+  }
+}
+
+@keyframes ls-rise {
+  from { opacity: 0; translate: 0 28px; }
+}
+
+@keyframes ls-parallax {
+  to { transform: translateY(calc((1 - var(--depth)) * 150px)); }
+}
+
+@keyframes ls-drift {
+  from { transform: translateX(-60px); }
+  to { transform: translateX(60px); }
+}
+
+@keyframes ls-wind {
+  0%, 100% { opacity: 0.08; translate: -20px 0; }
+  50% { opacity: 0.4; translate: 20px 0; }
+}
+
+@keyframes ls-twinkle {
+  50% { opacity: 0.08; }
+}
+
+@keyframes ls-glint {
+  0%, 100% { opacity: 0.15; translate: -12px 0; }
+  50% { opacity: 0.85; translate: 12px 0; }
+}
+
+/* Paper grain over the panel, so its long gradients never band. */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The header sits on the hero's sky; its rule appears once the page moves. */
+body:has(.landing) .site-header {
+  border-bottom-color: transparent;
+}
+
+@supports (animation-timeline: scroll()) {
+  body:has(.landing) .site-header {
+    animation: header-rule linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 96px;
+  }
+}
+
+@keyframes header-rule {
+  to { border-bottom-color: var(--border); }
+}
+
+/* -------------------------------------------------------------------- faq
+   Native <details>, opened with a height transition where the browser can
+   animate to `auto`. */
+.faq-item {
+  interpolate-size: allow-keywords;
+}
+
+.faq-item::details-content {
+  block-size: 0;
+  overflow: clip;
+  opacity: 0;
+  transition:
+    block-size 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s ease,
+    content-visibility 0.36s allow-discrete;
+}
+
+.faq-item[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------- auth form */
+@keyframes shake {
+  10%, 90% { translate: -1px 0; }
+  20%, 80% { translate: 2px 0; }
+  30%, 50%, 70% { translate: -4px 0; }
+  40%, 60% { translate: 4px 0; }
+}
+
+.animate-shake {
+  animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Switching between sign-in and sign-up: the fields that both forms share
+   glide to their new place, the rest cross-fades. */
+::view-transition-group(.auth-morph) {
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-new(.auth-enter) {
+  animation: auth-enter 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+::view-transition-old(.auth-exit) {
+  animation: auth-exit 0.16s ease-in both;
+}
+
+@keyframes auth-enter {
+  from { opacity: 0; transform: translateY(-6px); filter: blur(4px); }
+}
+
+@keyframes auth-exit {
+  to { opacity: 0; transform: translateY(-4px); filter: blur(4px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-rise,
   .animate-toast-in,
   .animate-heart-pop,
   .animate-caret,
   .animate-pop-in,
+  .animate-shake,
   dialog[open],
   .shimmer {
     animation: none;
@@ -506,5 +794,16 @@ dialog::backdrop {
   .animate-rise {
     opacity: 1;
     transform: none;
+  }
+
+  .faq-item::details-content {
+    transition: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

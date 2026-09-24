@@ -10,7 +10,7 @@ import { ButtonLink, buttonClass } from '@/components/ui';
 /** Visitors' header: the wordmark, one way to browse, and the way in. */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-xl">
+    <header className="site-header sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link href="/" aria-label="Dawere — მთავარი" className="mr-2 shrink-0">
           <Logo />
