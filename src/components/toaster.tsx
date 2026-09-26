@@ -52,7 +52,7 @@ export function Toaster() {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed right-[var(--ask-inset,0px)] bottom-20 left-0 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6"
+      className="toaster pointer-events-none fixed right-[var(--ask-inset,0px)] bottom-20 left-0 z-[60] flex flex-col items-center gap-2 px-4 md:bottom-6"
     >
       {items.map((item) => {
         const Icon = ICONS[item.tone];

@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
-  ArrowLeft,
   Check,
   ExternalLink,
   EyeOff,
@@ -30,7 +29,6 @@ import {
 import { Badge, Button, FormError, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { toast } from '@/components/toaster';
-import { Logo } from '@/components/logo';
 import { uploadImage } from '@/lib/upload-client';
 import { cn, minutesForLength } from '@/lib/utils';
 
@@ -267,97 +265,8 @@ export function PostEditor({
   const minutes = minutesForLength(textLength);
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      {/* ---------------------------------------------------------- top bar */}
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-xl">
-        <div className="flex h-14 items-center gap-2 px-3 sm:gap-3 sm:px-5">
-          <Link
-            href="/dashboard"
-            aria-label="პანელზე დაბრუნება"
-            className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
-          >
-            <ArrowLeft className="size-[18px]" />
-          </Link>
-          <Link href="/" className="hidden sm:block" aria-label="Dawere — მთავარი">
-            <Logo className="text-[18px]" />
-          </Link>
-
-          <div className="flex min-w-0 items-center gap-2.5 text-[13px] sm:ml-1 sm:border-l sm:border-line sm:pl-4">
-            <Badge tone={published ? 'accent' : 'neutral'}>{published ? 'გამოქვეყნებული' : 'მონახაზი'}</Badge>
-            <SaveIndicator state={saveState} onRetry={() => void save()} />
-          </div>
-
-          <div className="ml-auto flex items-center gap-1.5">
-            {published ? (
-              <Link
-                href={`/p/${slug}`}
-                className="hidden h-9 items-center gap-1.5 rounded-full px-3.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
-              >
-                <ExternalLink className="size-4" />
-                ნახვა
-              </Link>
-            ) : null}
-
-            <div ref={menuRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((v) => !v)}
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                aria-label="სხვა მოქმედებები"
-                className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
-              >
-                <MoreHorizontal className="size-[18px]" />
-              </button>
-              {menuOpen ? (
-                <div
-                  role="menu"
-                  className={cn(MENU_CLASS, 'absolute top-full right-0 mt-1.5 w-60')}
-                >
-                  {published ? (
-                    <MenuItem icon={ExternalLink} href={`/p/${slug}`} className="sm:hidden">
-                      სტატიის ნახვა
-                    </MenuItem>
-                  ) : null}
-                  {pendingChanges ? (
-                    <MenuItem
-                      icon={Undo2}
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setConfirm('discard');
-                      }}
-                    >
-                      ცვლილებების გაუქმება
-                    </MenuItem>
-                  ) : null}
-                  {published ? (
-                    <MenuItem icon={EyeOff} onClick={onUnpublish}>
-                      მონახაზებში გადატანა
-                    </MenuItem>
-                  ) : null}
-                  <MenuItem
-                    icon={Trash2}
-                    danger
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setConfirm('delete');
-                    }}
-                  >
-                    სტატიის წაშლა
-                  </MenuItem>
-                </div>
-              ) : null}
-            </div>
-
-            <Button onClick={onPublish} disabled={pending || (published && !pendingChanges && !edited)}>
-              {pending ? <Loader2 className="animate-spin" /> : null}
-              {published ? 'განახლება' : 'გამოქვეყნება'}
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 pt-10 pb-24 sm:px-6 sm:pt-16">
+    <>
+      <main className="mx-auto flex w-full max-w-[44rem] flex-1 flex-col px-4 pt-8 pb-8 sm:px-6 sm:pt-14">
         {published && pendingChanges ? (
           <div className="mb-8 flex flex-wrap items-center gap-3 rounded-2xl border border-warning-border bg-warning-soft px-5 py-3.5 text-sm text-warning-text">
             <AlertCircle className="size-4 shrink-0" />
@@ -464,10 +373,86 @@ export function PostEditor({
           />
         </div>
 
-        <p className="mt-10 border-t border-line pt-4 text-[12px] text-subtle">
+        <p className="mt-10 mb-8 border-t border-line pt-4 text-[12px] text-subtle">
           {textLength.toLocaleString('en-US').replace(/,/g, ' ')} სიმბოლო · დაახლოებით {minutes} წთ კითხვა
           <span className="hidden sm:inline"> · Ctrl+S ინახავს დაუყოვნებლივ</span>
         </p>
+
+        {/* ------------------------------------------------------------ dock */}
+        {/* The sidebar keeps its place, so the article's own actions travel
+            with the writer instead: a bar that rides the foot of the column
+            and settles under the text once it is scrolled to the end. */}
+        <div className="publish-dock sticky bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 mt-auto md:bottom-4">
+          <div className="flex items-center gap-2 rounded-full border border-line bg-raised/85 p-1.5 shadow-lift backdrop-blur-xl sm:gap-3 sm:pl-4">
+            <Badge tone={published ? 'accent' : 'neutral'}>{published ? 'გამოქვეყნებული' : 'მონახაზი'}</Badge>
+            <SaveIndicator state={saveState} onRetry={() => void save()} />
+
+            <div className="ml-auto flex items-center gap-1">
+              {published ? (
+                <Link
+                  href={`/p/${slug}`}
+                  className="hidden h-9 items-center gap-1.5 rounded-full px-3.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
+                >
+                  <ExternalLink className="size-4" />
+                  ნახვა
+                </Link>
+              ) : null}
+
+              <div ref={menuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label="სხვა მოქმედებები"
+                  className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
+                >
+                  <MoreHorizontal className="size-[18px]" />
+                </button>
+                {menuOpen ? (
+                  <div role="menu" className={cn(MENU_CLASS, 'absolute right-0 bottom-full mb-2 w-60')}>
+                    {published ? (
+                      <MenuItem icon={ExternalLink} href={`/p/${slug}`} className="sm:hidden">
+                        სტატიის ნახვა
+                      </MenuItem>
+                    ) : null}
+                    {pendingChanges ? (
+                      <MenuItem
+                        icon={Undo2}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setConfirm('discard');
+                        }}
+                      >
+                        ცვლილებების გაუქმება
+                      </MenuItem>
+                    ) : null}
+                    {published ? (
+                      <MenuItem icon={EyeOff} onClick={onUnpublish}>
+                        მონახაზებში გადატანა
+                      </MenuItem>
+                    ) : null}
+                    <MenuItem
+                      icon={Trash2}
+                      danger
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setConfirm('delete');
+                      }}
+                    >
+                      სტატიის წაშლა
+                    </MenuItem>
+                  </div>
+                ) : null}
+              </div>
+
+              <Button onClick={onPublish} disabled={pending || (published && !pendingChanges && !edited)}>
+                {pending ? <Loader2 className="animate-spin" /> : null}
+                {published ? 'განახლება' : 'გამოქვეყნება'}
+              </Button>
+            </div>
+          </div>
+        </div>
       </main>
 
       <ConfirmDialog
@@ -488,7 +473,7 @@ export function PostEditor({
         onConfirm={onDiscard}
         onClose={() => setConfirm(null)}
       />
-    </div>
+    </>
   );
 }
 
@@ -527,7 +512,7 @@ function MenuItem({
 function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
   if (state === 'saving') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-subtle">
+      <span className="inline-flex items-center gap-1.5 text-[13px] text-subtle">
         <Loader2 className="size-3.5 animate-spin" />
         <span className="hidden sm:inline">ინახება…</span>
       </span>
@@ -535,7 +520,7 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
   }
   if (state === 'saved') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-subtle">
+      <span className="inline-flex items-center gap-1.5 text-[13px] text-subtle">
         <Check className="size-3.5" />
         <span className="hidden sm:inline">შენახულია</span>
       </span>
@@ -546,7 +531,7 @@ function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => vo
       <button
         type="button"
         onClick={onRetry}
-        className="inline-flex items-center gap-1.5 font-medium text-danger hover:underline"
+        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-danger hover:underline"
       >
         <AlertCircle className="size-3.5" />
         ხელახლა ცდა

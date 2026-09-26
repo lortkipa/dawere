@@ -236,8 +236,9 @@ export function RichTextEditor({
 
   return (
     <div>
-      {/* One row that scrolls sideways on phones; wraps from sm up. */}
-      <div className="sticky top-14 z-20 -mx-4 mb-8 border-y border-line bg-surface/90 py-1 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border sm:bg-raised/90 sm:px-1.5 sm:shadow-soft">
+      {/* One row that scrolls sideways on phones; wraps from sm up. It clears
+          the mobile top bar, and from md up the shell has no bar to clear. */}
+      <div className="sticky top-14 z-20 -mx-4 mb-8 border-y border-line bg-surface/90 py-1 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border sm:bg-raised/90 sm:px-1.5 sm:shadow-soft md:top-0">
         <div className="no-scrollbar relative flex items-center gap-0.5 overflow-x-auto px-4 sm:flex-wrap sm:overflow-visible sm:px-0">
           <ToolButton
             label="დაბრუნება"
