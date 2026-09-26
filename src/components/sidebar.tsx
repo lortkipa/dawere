@@ -1,30 +1,29 @@
 import Link from 'next/link';
-import { featuredTopics, publishedPostCount, suggestedAuthors, trendingFeed } from '@/lib/feed';
+import { Pencil } from 'lucide-react';
+import { suggestedAuthors, trendingInTopics } from '@/lib/feed';
+import { topInterests } from '@/lib/interests';
 import { Avatar, SectionHeading, TopicPills } from '@/components/ui';
 import { FollowButton } from '@/components/engage-buttons';
 
 /**
- * Below this many live posts a "what people are reading" list only repeats
- * the feed beside it, so it stays hidden until there is something to rank.
+ * Right-hand rail, built from the reader's topics: what is moving in them, who
+ * writes about them, and the topics themselves with a way to change them.
+ * `exclude` is the feed page beside the rail, which it should not repeat.
  */
-const TRENDING_MIN_POSTS = 12;
-
-/** Right-hand rail. Every block is independent, so one empty block is fine. */
-export async function Sidebar({ userId }: { userId: string | null }) {
-  const [topics, authors, trending, published] = await Promise.all([
-    featuredTopics(12, { includeEmpty: true }),
+export async function Sidebar({ userId, exclude }: { userId: string; exclude: string[] }) {
+  const [trending, authors, interests] = await Promise.all([
+    trendingInTopics(userId, 4, exclude),
     suggestedAuthors(userId, 3),
-    trendingFeed(userId, 4, 0),
-    publishedPostCount(),
+    topInterests(userId, 8),
   ]);
 
   return (
     <aside className="space-y-11">
-      {published >= TRENDING_MIN_POSTS && trending.posts.length > 0 ? (
+      {trending.length > 0 ? (
         <section>
-          <SectionHeading>ახლა კითხულობენ</SectionHeading>
+          <SectionHeading>პოპულარული შენს თემებში</SectionHeading>
           <ol className="space-y-4">
-            {trending.posts.map((post, index) => (
+            {trending.map((post, index) => (
               <li key={post.id} className="group flex gap-3">
                 <span className="w-5 shrink-0 font-serif text-[15px] leading-snug font-semibold text-subtle tabular-nums">
                   {index + 1}
@@ -65,29 +64,38 @@ export async function Sidebar({ userId }: { userId: string | null }) {
                   >
                     {author.name}
                   </Link>
-                  <p className="truncate text-[12px] text-subtle">{author.bio || `${author.post_count} სტატია`}</p>
+                  <p className="truncate text-[12px] text-subtle">{author.topics.join(' · ')}</p>
                 </div>
-                <FollowButton authorId={author.id} initialFollowing={false} signedIn={Boolean(userId)} compact />
+                <FollowButton authorId={author.id} initialFollowing={false} signedIn compact />
               </li>
             ))}
           </ul>
         </section>
       ) : null}
 
-      {topics.length > 0 ? (
-        <section>
-          <SectionHeading
-            action={
-              <Link href="/search" className="text-[12px] font-medium text-muted hover:text-ink">
-                ყველა
-              </Link>
-            }
-          >
-            თემები
-          </SectionHeading>
-          <TopicPills topics={topics} size="sm" />
-        </section>
-      ) : null}
+      <section>
+        <SectionHeading
+          action={
+            <Link
+              href="/settings#interests"
+              className="inline-flex items-center gap-1 text-[12px] font-medium text-muted hover:text-ink [&>svg]:size-3"
+            >
+              <Pencil />
+              რედაქტირება
+            </Link>
+          }
+        >
+          შენი თემები
+        </SectionHeading>
+        {interests.length > 0 ? (
+          <>
+            <TopicPills topics={interests} size="sm" />
+            <p className="mt-3 text-[12px] leading-relaxed text-subtle">„შენთვის“ ნაკადი ამ თემებით ლაგდება.</p>
+          </>
+        ) : (
+          <p className="text-[13px] leading-relaxed text-muted">აირჩიე თემები და „შენთვის“ ნაკადი მათ მოერგება.</p>
+        )}
+      </section>
     </aside>
   );
 }

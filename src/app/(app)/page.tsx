@@ -18,10 +18,10 @@ const PAGE_SIZE = 10;
 
 /**
  * No "popular" tab: with a young catalogue, popularity only reshuffles the
- * same handful of posts. trendingFeed still powers the sidebar once there is
- * enough to rank.
+ * same handful of posts. The sidebar ranks what is moving within the reader's
+ * own topics instead.
  */
-const TABS: { key: Exclude<FeedKind, 'trending'>; label: string }[] = [
+const TABS: { key: FeedKind; label: string }[] = [
   { key: 'for-you', label: 'შენთვის' },
   { key: 'following', label: 'გამოწერილები' },
   { key: 'latest', label: 'უახლესი' },
@@ -125,7 +125,7 @@ export default async function HomePage(props: PageProps<'/'>) {
         {/* Not sticky: the rail can outgrow the viewport, and a sticky element
             taller than the screen hides its own bottom half. */}
         <div className="hidden pt-9 pb-16 xl:block">
-          <Sidebar userId={user.id} />
+          <Sidebar userId={user.id} exclude={feed.posts.map((post) => post.id)} />
         </div>
       </div>
     </main>

@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { POST_CARD_COLUMNS, postCardJoins, runPostCardQuery, type PostCard } from './posts';
 
-export type FeedKind = 'for-you' | 'latest' | 'trending' | 'following';
+export type FeedKind = 'for-you' | 'latest' | 'following';
 
 export type FeedPage = { posts: PostCard[]; hasMore: boolean };
 
@@ -93,23 +93,30 @@ export async function latestFeed(viewerId: string | null, limit = 12, offset = 0
   );
 }
 
-/** What is moving right now: engagement weighted hard against freshness. */
-export async function trendingFeed(viewerId: string | null, limit = 12, offset = 0): Promise<FeedPage> {
-  return paginate(
-    (take, skip) =>
-      runPostCardQuery(sql`
-        select ${POST_CARD_COLUMNS},
-          (${ENGAGEMENT} * 1.0 + 5.0 * ${FRESHNESS}) as rank
-        from posts p
-        ${postCardJoins(viewerId)}
-        where p.status = 'published'
-          and p.published_at > now() - interval '60 days'
-        order by rank desc, p.published_at desc
-        limit ${take} offset ${skip}
-      `),
-    limit,
-    offset,
-  );
+/**
+ * What is moving right now — engagement weighted hard against freshness — among
+ * posts tagged with at least one of the reader's topics (the same threshold
+ * settings uses). `exclude` lets the rail skip the feed page it sits beside.
+ */
+export async function trendingInTopics(viewerId: string, limit = 4, exclude: string[] = []): Promise<PostCard[]> {
+  return runPostCardQuery(sql`
+    select ${POST_CARD_COLUMNS},
+      (${ENGAGEMENT} * 1.0 + 5.0 * ${FRESHNESS}) as rank
+    from posts p
+    ${postCardJoins(viewerId)}
+    where p.status = 'published'
+      and p.author_id <> ${viewerId}::uuid
+      and p.published_at > now() - interval '60 days'
+      and exists (
+        select 1
+        from post_topics pt
+        join topic_affinity ta on ta.topic_id = pt.topic_id
+        where pt.post_id = p.id and ta.user_id = ${viewerId}::uuid and ta.score > 0.5
+      )
+      ${exclude.length > 0 ? sql`and p.id <> all(${sql.param(exclude)}::uuid[])` : sql``}
+    order by rank desc, p.published_at desc
+    limit ${limit}
+  `);
 }
 
 export async function followingFeed(viewerId: string, limit = 12, offset = 0): Promise<FeedPage> {
@@ -229,37 +236,56 @@ export async function featuredTopics(limit = 12, { includeEmpty = false } = {}) 
   `);
 }
 
-export async function suggestedAuthors(viewerId: string | null, limit = 5) {
+/**
+ * Authors the reader does not follow yet who publish in the reader's topics.
+ * Each shared topic counts by how much the reader cares about it, damped by how
+ * often the author writes there, so one prolific author cannot win on volume.
+ * `topics` names the shared topics behind the suggestion, strongest first.
+ */
+export async function suggestedAuthors(viewerId: string, limit = 3) {
   return db.execute<{
     id: string;
     name: string;
     username: string;
     avatar_url: string | null;
-    bio: string;
-    post_count: number;
-    follower_count: number;
+    topics: string[];
   }>(sql`
-    select u.id, u.name, u.username, u.avatar_url, u.bio,
-           count(distinct p.id)::int as post_count,
-           count(distinct f.follower_id)::int as follower_count
-    from users u
-    join posts p on p.author_id = u.id and p.status = 'published'
-    left join follows f on f.following_id = u.id
-    where u.id <> coalesce(${viewerId}::uuid, '00000000-0000-0000-0000-000000000000'::uuid)
-      and not exists (
-        select 1 from follows me
-        where me.follower_id = ${viewerId}::uuid and me.following_id = u.id
-      )
-    group by u.id
-    order by follower_count desc, post_count desc
+    with mine as (
+      select topic_id,
+             score * exp(-extract(epoch from (now() - updated_at)) / ${DECAY_SECONDS}) as weight
+      from topic_affinity
+      where user_id = ${viewerId}::uuid and score > 0.5
+    ),
+    written as (
+      select p.author_id, pt.topic_id, count(*)::int as posts
+      from posts p
+      join post_topics pt on pt.post_id = p.id
+      join mine on mine.topic_id = pt.topic_id
+      where p.status = 'published' and p.author_id <> ${viewerId}::uuid
+      group by p.author_id, pt.topic_id
+    ),
+    matched as (
+      select w.author_id,
+             sum(mine.weight * ln(1 + w.posts)) as match,
+             (array_agg(t.name order by mine.weight desc, w.posts desc))[1:2] as topics
+      from written w
+      join mine on mine.topic_id = w.topic_id
+      join topics t on t.id = w.topic_id
+      group by w.author_id
+    )
+    select u.id, u.name, u.username, u.avatar_url, m.topics
+    from matched m
+    join users u on u.id = m.author_id and u.suspended_at is null
+    where not exists (
+      select 1 from follows f
+      where f.follower_id = ${viewerId}::uuid and f.following_id = u.id
+    )
+    order by m.match desc, u.created_at
     limit ${limit}
   `);
 }
 
-/**
- * How many posts are live. Early on, some rails only repeat the feed and are
- * hidden. Memoised per request: the page and its sidebar both ask.
- */
+/** How many posts are live. Memoised per request. */
 export const publishedPostCount = cache(async (): Promise<number> => {
   const [row] = await db.execute<{ count: number }>(
     sql`select count(*)::int as count from posts where status = 'published'`,
