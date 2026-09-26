@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
-  Check,
   ExternalLink,
   EyeOff,
   ImagePlus,
   Loader2,
   MoreHorizontal,
   RotateCcw,
+  Save,
   Trash2,
   Undo2,
   X,
@@ -26,13 +26,11 @@ import {
   unpublishPostAction,
   type SaveResult,
 } from '@/app/actions/posts';
-import { Badge, Button, FormError, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
+import { Button, FormError, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { toast } from '@/components/toaster';
 import { uploadImage } from '@/lib/upload-client';
 import { cn, minutesForLength } from '@/lib/utils';
-
-const AUTOSAVE_DELAY = 1200;
 
 type Draft = {
   title: string;
@@ -42,7 +40,7 @@ type Draft = {
   topics: string[];
 };
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+type SaveState = 'idle' | 'dirty' | 'saving' | 'error';
 
 /** A textarea that grows with its content, including on first render. */
 function useAutoHeight(value: string) {
@@ -95,7 +93,7 @@ export function PostEditor({
   // re-registering on every keystroke.
   const latest = useRef(draft);
   const dirty = useRef(false);
-  const inFlight = useRef<Promise<void> | null>(null);
+  const inFlight = useRef<Promise<boolean> | null>(null);
 
   useEffect(() => {
     latest.current = draft;
@@ -105,10 +103,11 @@ export function PostEditor({
    * Saves are serialised: a save started while another is running waits for
    * it, so an older snapshot can never land after a newer one. A failed save
    * leaves the draft dirty, so the next attempt still carries the changes.
+   * Resolves to whether this call actually stored something.
    */
   const save = useCallback(async () => {
     while (inFlight.current) await inFlight.current;
-    if (!dirty.current) return;
+    if (!dirty.current) return false;
     dirty.current = false;
     setSaveState('saving');
 
@@ -120,7 +119,7 @@ export function PostEditor({
         result = { ok: false, error: 'კავშირი ვერ დამყარდა. ცვლილებები ჯერ არ შენახულა.' };
       }
       if (result.ok) {
-        setSaveState('saved');
+        setSaveState(dirty.current ? 'dirty' : 'idle');
         setError(undefined);
         if (published) setPendingChanges(true);
       } else {
@@ -128,54 +127,47 @@ export function PostEditor({
         setSaveState('error');
         setError(result.error);
       }
+      return result.ok;
     })();
 
     inFlight.current = run;
     try {
-      await run;
+      return await run;
     } finally {
       inFlight.current = null;
     }
   }, [postId, published]);
 
+  const saveNow = useCallback(async () => {
+    if (await save()) toast('შენახულია');
+  }, [save]);
+
   function update(patch: Partial<Draft>) {
     dirty.current = true;
     setEdited(true);
-    setSaveState('idle');
+    setSaveState('dirty');
     setDraft((current) => ({ ...current, ...patch }));
   }
 
+  // Nothing is saved behind the writer's back: a warning when leaving with
+  // unsaved changes, and Ctrl/Cmd+S alongside the save button.
   useEffect(() => {
-    if (!dirty.current) return;
-    const timer = setTimeout(() => void save(), AUTOSAVE_DELAY);
-    return () => clearTimeout(timer);
-  }, [draft, save]);
-
-  // A last-chance save when the tab goes away, a warning if that cannot finish,
-  // and Ctrl/Cmd+S for people who save by reflex.
-  useEffect(() => {
-    function onHide() {
-      if (document.visibilityState === 'hidden' && dirty.current) void save();
-    }
     function onBeforeUnload(event: BeforeUnloadEvent) {
       if (dirty.current || inFlight.current) event.preventDefault();
     }
     function onKey(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
         event.preventDefault();
-        if (dirty.current) void save();
-        else setSaveState('saved');
+        void saveNow();
       }
     }
-    document.addEventListener('visibilitychange', onHide);
     window.addEventListener('beforeunload', onBeforeUnload);
     document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('visibilitychange', onHide);
       window.removeEventListener('beforeunload', onBeforeUnload);
       document.removeEventListener('keydown', onKey);
     };
-  }, [save]);
+  }, [saveNow]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -263,6 +255,7 @@ export function PostEditor({
   }
 
   const minutes = minutesForLength(textLength);
+  const characters = textLength.toLocaleString('en-US').replace(/,/g, ' ');
 
   return (
     <>
@@ -374,85 +367,93 @@ export function PostEditor({
         </div>
 
         <p className="mt-10 mb-8 border-t border-line pt-4 text-[12px] text-subtle">
-          {textLength.toLocaleString('en-US').replace(/,/g, ' ')} სიმბოლო · დაახლოებით {minutes} წთ კითხვა
-          <span className="hidden sm:inline"> · Ctrl+S ინახავს დაუყოვნებლივ</span>
+          {characters} სიმბოლო · დაახლოებით {minutes} წთ კითხვა
+          <span className="hidden sm:inline"> · Ctrl+S ინახავს მონახაზს</span>
         </p>
 
         {/* ------------------------------------------------------------ dock */}
-        {/* The sidebar keeps its place, so the article's own actions travel
-            with the writer instead: a bar that rides the foot of the column
-            and settles under the text once it is scrolled to the end. */}
-        <div className="publish-dock sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-auto flex justify-end md:bottom-4">
-          {/* Full width on phones, where the controls fill the row anyway;
-              from sm it shrinks to its contents and leaves the text visible. */}
-          <div className="flex w-full items-center gap-2 rounded-full border border-line bg-raised/85 p-1.5 shadow-lift backdrop-blur-xl sm:w-auto sm:gap-3 sm:pl-4">
-            <Badge tone={published ? 'accent' : 'neutral'}>{published ? 'გამოქვეყნებული' : 'მონახაზი'}</Badge>
-            <SaveIndicator state={saveState} onRetry={() => void save()} />
+        {/* The article's own actions travel with the writer: a bar that rides
+            the foot of the column and settles under the text once it is
+            scrolled to the end. */}
+        <div className="publish-dock sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-30 mt-auto">
+          <div className="flex w-full items-center gap-1 rounded-full border border-line bg-raised/85 p-1.5 shadow-lift backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => setConfirm('delete')}
+              aria-label="სტატიის წაშლა"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted transition-colors hover:bg-danger-soft hover:text-danger sm:px-4"
+            >
+              <Trash2 className="size-4" />
+              <span className="hidden sm:inline">წაშლა</span>
+            </button>
 
-            <div className="ml-auto flex items-center gap-1">
-              {published ? (
-                <Link
-                  href={`/p/${slug}`}
-                  className="hidden h-9 items-center gap-1.5 rounded-full px-3.5 text-sm text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
-                >
-                  <ExternalLink className="size-4" />
-                  ნახვა
-                </Link>
-              ) : null}
-
-              <div ref={menuRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={menuOpen}
-                  aria-label="სხვა მოქმედებები"
-                  className="flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink"
-                >
-                  <MoreHorizontal className="size-[18px]" />
-                </button>
-                {menuOpen ? (
-                  <div role="menu" className={cn(MENU_CLASS, 'absolute right-0 bottom-full mb-2 w-60')}>
-                    {published ? (
+            {/* A draft has nothing else to offer beyond delete, save and publish. */}
+            {published ? (
+              <>
+                <div ref={menuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                    aria-label="სხვა მოქმედებები"
+                    className={cn(
+                      'flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink',
+                      menuOpen && 'bg-hover text-ink',
+                    )}
+                  >
+                    <MoreHorizontal className="size-[18px]" />
+                  </button>
+                  {menuOpen ? (
+                    <div role="menu" className={cn(MENU_CLASS, 'absolute bottom-full left-0 mb-3 w-60')}>
                       <MenuItem icon={ExternalLink} href={`/p/${slug}`} className="sm:hidden">
                         სტატიის ნახვა
                       </MenuItem>
-                    ) : null}
-                    {pendingChanges ? (
-                      <MenuItem
-                        icon={Undo2}
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setConfirm('discard');
-                        }}
-                      >
-                        ცვლილებების გაუქმება
-                      </MenuItem>
-                    ) : null}
-                    {published ? (
+                      {pendingChanges ? (
+                        <MenuItem
+                          icon={Undo2}
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setConfirm('discard');
+                          }}
+                        >
+                          ცვლილებების გაუქმება
+                        </MenuItem>
+                      ) : null}
                       <MenuItem icon={EyeOff} onClick={onUnpublish}>
                         მონახაზებში გადატანა
                       </MenuItem>
-                    ) : null}
-                    <MenuItem
-                      icon={Trash2}
-                      danger
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setConfirm('delete');
-                      }}
-                    >
-                      სტატიის წაშლა
-                    </MenuItem>
-                  </div>
-                ) : null}
-              </div>
+                    </div>
+                  ) : null}
+                </div>
 
-              <Button onClick={onPublish} disabled={pending || (published && !pendingChanges && !edited)}>
-                {pending ? <Loader2 className="animate-spin" /> : null}
-                {published ? 'განახლება' : 'გამოქვეყნება'}
-              </Button>
-            </div>
+                <Link
+                  href={`/p/${slug}`}
+                  aria-label="სტატიის ნახვა"
+                  title="სტატიის ნახვა"
+                  className="hidden size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-hover hover:text-ink sm:inline-flex"
+                >
+                  <ExternalLink className="size-[18px]" />
+                </Link>
+              </>
+            ) : null}
+
+            <SaveButton
+              state={saveState}
+              published={published}
+              disabled={pending}
+              onSave={() => void saveNow()}
+              className="ml-auto"
+            />
+
+            <Button
+              onClick={onPublish}
+              disabled={pending || (published && !pendingChanges && !edited)}
+              className="flex-1 sm:flex-none sm:px-6"
+            >
+              {pending ? <Loader2 className="animate-spin" /> : null}
+              {published ? 'განახლება' : 'გამოქვეყნება'}
+            </Button>
           </div>
         </div>
       </main>
@@ -511,34 +512,52 @@ function MenuItem({
   );
 }
 
-function SaveIndicator({ state, onRetry }: { state: SaveState; onRetry: () => void }) {
-  if (state === 'saving') {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-[13px] text-subtle">
-        <Loader2 className="size-3.5 animate-spin" />
-        <span className="hidden sm:inline">ინახება…</span>
-      </span>
-    );
-  }
-  if (state === 'saved') {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-[13px] text-subtle">
-        <Check className="size-3.5" />
-        <span className="hidden sm:inline">შენახულია</span>
-      </span>
-    );
-  }
-  if (state === 'error') {
-    return (
-      <button
-        type="button"
-        onClick={onRetry}
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-danger hover:underline"
-      >
-        <AlertCircle className="size-3.5" />
-        ხელახლა ცდა
-      </button>
-    );
-  }
-  return null;
+function SaveButton({
+  state,
+  published,
+  disabled,
+  onSave,
+  className,
+}: {
+  state: SaveState;
+  /** On a live post a save keeps the edits private until "update". */
+  published: boolean;
+  disabled: boolean;
+  onSave: () => void;
+  className?: string;
+}) {
+  const saveLabel = published ? 'ცვლილებების შენახვა' : 'მონახაზის შენახვა';
+  const { icon: Icon, label, short } = {
+    idle: { icon: Save, label: saveLabel, short: 'შენახვა' },
+    dirty: { icon: Save, label: saveLabel, short: 'შენახვა' },
+    saving: { icon: Loader2, label: 'ინახება…', short: 'ინახება…' },
+    error: { icon: AlertCircle, label: 'ხელახლა ცდა', short: 'ხელახლა' },
+  }[state];
+  const actionable = state === 'dirty' || state === 'error';
+
+  return (
+    <button
+      type="button"
+      onClick={onSave}
+      disabled={disabled || !actionable}
+      aria-label={label}
+      title={actionable ? 'Ctrl+S' : undefined}
+      className={cn(
+        'inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors',
+        'disabled:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0',
+        {
+          idle: 'bg-sunken text-subtle',
+          dirty: 'bg-accent-soft text-accent hover:bg-accent hover:text-accent-contrast',
+          saving: 'bg-accent-soft text-accent',
+          error: 'bg-danger-soft text-danger hover:bg-danger hover:text-danger-contrast',
+        }[state],
+        disabled && 'opacity-45',
+        className,
+      )}
+    >
+      <Icon className={cn(state === 'saving' && 'animate-spin')} />
+      <span className="sm:hidden">{short}</span>
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
 }

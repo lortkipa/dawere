@@ -48,7 +48,7 @@ export function openSearch() {
   window.dispatchEvent(new Event(OPEN_EVENT));
 }
 
-/** The button that opens search: a field-shaped one for the sidebar, or an icon. */
+/** The button that opens search: a field-shaped one where there is room, or an icon. */
 export function SearchTrigger({ variant = 'icon', className }: { variant?: 'field' | 'icon'; className?: string }) {
   if (variant === 'field') {
     return (

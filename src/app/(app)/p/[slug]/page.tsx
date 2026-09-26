@@ -8,7 +8,7 @@ import { getComments, getPostBySlug } from '@/lib/posts';
 import { relatedPosts } from '@/lib/feed';
 import { DEFAULT_SHARE_IMAGE, SITE_URL } from '@/lib/site';
 import { withHeadingIds } from '@/lib/toc';
-import { cn, excerpt, formatCount, formatDate } from '@/lib/utils';
+import { excerpt, formatCount, formatDate } from '@/lib/utils';
 import { Avatar, ButtonLink, TopicPills } from '@/components/ui';
 import { BookmarkButton, CommentCountLink, FollowButton, LikeButton } from '@/components/engage-buttons';
 import { FlashToast, ReadingProgress, ShareButton, TableOfContents } from '@/components/article-chrome';
@@ -219,13 +219,8 @@ export default async function PostPage(props: PageProps<'/p/[slug]'>) {
 
             {/* ------------------------------------------------- action bar */}
             {post.status === 'published' ? (
-              <div
-                className={cn(
-                  // Labels show when the bar has room for them (@min-[30rem] inside).
-                  '@container sticky z-20 mt-12 flex justify-center',
-                  signedIn ? 'bottom-20 md:bottom-6' : 'bottom-6',
-                )}
-              >
+              // Labels show when the bar has room for them (@min-[30rem] inside).
+              <div className="@container sticky bottom-6 z-20 mt-12 flex justify-center">
                 <div className="flex items-center gap-0.5 rounded-full border border-line bg-raised/90 p-1 shadow-lift backdrop-blur-xl">
                   <LikeButton
                     postId={post.id}

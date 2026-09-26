@@ -30,9 +30,7 @@ const MIN_PAGE = 480;
 const WIDTH_KEY = 'dawere-ask-width';
 
 function clampWidth(width: number) {
-  // The page starts after the sidebar when there is one.
-  const pageLeft = document.querySelector('main')?.getBoundingClientRect().left ?? 0;
-  const room = window.innerWidth - pageLeft - MIN_PAGE;
+  const room = window.innerWidth - MIN_PAGE;
   return Math.round(Math.max(MIN_WIDTH, Math.min(width, MAX_WIDTH, room)));
 }
 

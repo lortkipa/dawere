@@ -44,7 +44,7 @@ export default async function SettingsPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-12">
-        <nav aria-label="პარამეტრების განყოფილებები" className="sticky top-14 z-10 -mx-4 bg-surface/85 px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 lg:top-8 lg:mx-0 lg:self-start lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <nav aria-label="პარამეტრების განყოფილებები" className="sticky top-16 z-10 -mx-4 bg-surface/85 px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:top-24 lg:mx-0 lg:self-start lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <ul className="no-scrollbar flex gap-1 overflow-x-auto lg:flex-col">
             {SECTIONS.map((section) => (
               <li key={section.id}>

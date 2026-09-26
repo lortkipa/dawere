@@ -102,7 +102,7 @@ export default async function HomePage(props: PageProps<'/'>) {
         <div className="mx-auto w-full max-w-2xl min-w-0 pb-16 xl:mx-0 xl:max-w-none">
           <Tabs
             label="ნაკადი"
-            className="sticky top-14 z-20 -mx-4 bg-surface/85 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:top-0 md:pt-8 md:pb-4 lg:-mx-10 lg:px-10 xl:mr-0"
+            className="sticky top-16 z-20 -mx-4 mt-2 bg-surface/85 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:mt-4 sm:px-6 lg:-mx-10 lg:px-10 xl:mr-0"
             active={tab}
             tabs={TABS.map((t) => ({ ...t, href: t.key === 'for-you' ? '/' : `/?tab=${t.key}` }))}
           />
@@ -124,7 +124,7 @@ export default async function HomePage(props: PageProps<'/'>) {
 
         {/* Not sticky: the rail can outgrow the viewport, and a sticky element
             taller than the screen hides its own bottom half. */}
-        <div className="hidden pt-10 pb-16 xl:block">
+        <div className="hidden pt-9 pb-16 xl:block">
           <Sidebar userId={user.id} />
         </div>
       </div>

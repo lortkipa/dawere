@@ -106,24 +106,7 @@ export function formatUnread(count: number) {
   return count > 99 ? '99+' : String(count);
 }
 
-/** The count beside "notifications" in the sidebar: a corner badge on the icon rail, a pill when labelled. */
-export function UnreadBadge({ initial, className }: { initial: number; className?: string }) {
-  const count = useUnread(initial);
-  if (count <= 0) return null;
-  return (
-    <span
-      className={cn(
-        'flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[11px] leading-none font-semibold text-accent-contrast tabular-nums',
-        className,
-      )}
-    >
-      {formatUnread(count)}
-      <span className="sr-only"> წაუკითხავი</span>
-    </span>
-  );
-}
-
-/** The phone top bar has no sidebar, so the bell sits beside search. */
+/** The header's way to notifications, with the unread count on its corner. */
 export function NotificationBell({ initial, className }: { initial: number; className?: string }) {
   const pathname = usePathname();
   const count = useUnread(initial);

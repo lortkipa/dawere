@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, ChevronsUpDown, LogOut, Settings, ShieldCheck, User } from 'lucide-react';
+import { BarChart3, Bookmark, ChevronsUpDown, LogOut, Settings, ShieldCheck, User } from 'lucide-react';
 import { Avatar, MENU_CLASS, MENU_ITEM_CLASS } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { signOutAction } from '@/app/actions/auth';
 
 /**
- * The account menu. In the sidebar it sits at the bottom and opens upward (the
- * sidebar already lists the main destinations); in the phone top bar it is just
- * the avatar and opens downward.
+ * The account menu. In the site header it is just the avatar, opens downward
+ * and holds the destinations the header has no room for; in the admin sidebar
+ * it sits at the bottom and opens upward.
  */
 export function UserMenu({
   name,
@@ -50,7 +50,12 @@ export function UserMenu({
 
   const links = [
     { href: `/u/${username}`, label: 'პროფილი', icon: User },
-    ...(variant === 'avatar' ? [{ href: '/dashboard', label: 'პანელი', icon: BarChart3 }] : []),
+    ...(variant === 'avatar'
+      ? [
+          { href: '/bookmarks', label: 'შენახულები', icon: Bookmark },
+          { href: '/dashboard', label: 'პანელი', icon: BarChart3 },
+        ]
+      : []),
     { href: '/settings', label: 'პარამეტრები', icon: Settings },
     ...(isAdmin ? [{ href: '/admin', label: 'ადმინისტრირება', icon: ShieldCheck }] : []),
   ];
