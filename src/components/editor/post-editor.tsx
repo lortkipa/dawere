@@ -382,8 +382,10 @@ export function PostEditor({
         {/* The sidebar keeps its place, so the article's own actions travel
             with the writer instead: a bar that rides the foot of the column
             and settles under the text once it is scrolled to the end. */}
-        <div className="publish-dock sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-auto md:bottom-4">
-          <div className="flex items-center gap-2 rounded-full border border-line bg-raised/85 p-1.5 shadow-lift backdrop-blur-xl sm:gap-3 sm:pl-4">
+        <div className="publish-dock sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 mt-auto flex justify-end md:bottom-4">
+          {/* Full width on phones, where the controls fill the row anyway;
+              from sm it shrinks to its contents and leaves the text visible. */}
+          <div className="flex w-full items-center gap-2 rounded-full border border-line bg-raised/85 p-1.5 shadow-lift backdrop-blur-xl sm:w-auto sm:gap-3 sm:pl-4">
             <Badge tone={published ? 'accent' : 'neutral'}>{published ? 'გამოქვეყნებული' : 'მონახაზი'}</Badge>
             <SaveIndicator state={saveState} onRetry={() => void save()} />
 
