@@ -525,7 +525,7 @@ dialog.ask-sheet::backdrop {
 /* The editor's publish dock (post-editor.tsx) floats over the foot of the
    writing column, right where toasts appear, so they step above it. */
 body:has(.publish-dock) .toaster {
-  bottom: 8.5rem;
+  bottom: 9rem;
 }
 
 @media (width >= 48rem) {
