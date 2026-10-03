@@ -1,0 +1,11 @@
+node_modules
+.next
+uploads
+data
+backups
+.env*
+.git
+.claude
+npm-debug.log*
+*.tsbuildinfo
+next-env.d.ts

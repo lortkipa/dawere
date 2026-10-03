@@ -1,0 +1,6 @@
+# For local development: exposes Postgres so `npm run dev` on this machine can reach it.
+#   docker compose -f compose.yaml -f compose.dev.yaml up -d db
+services:
+  db:
+    ports:
+      - "5432:5432"
