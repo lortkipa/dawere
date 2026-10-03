@@ -17,12 +17,17 @@ docker compose up -d --build
 
 The site is at http://localhost:3000 (or `http://<nas-ip>:3000`; change the port with `APP_PORT`). Database migrations run automatically every time the app starts.
 
+Run these from the project folder:
+
 | Task | Command |
 | --- | --- |
+| Start | `docker compose up -d` |
+| Stop | `docker compose down` (data is kept) |
+| Restart the app | `docker compose restart app` |
+| Check what's running | `docker compose ps` |
+| Show app logs (live, Ctrl+C to exit) | `docker compose logs -f app` |
+| Show logs of everything | `docker compose logs -f` |
 | Update to the latest code | `git pull && docker compose up -d --build` |
-| Show app logs | `docker compose logs -f app` |
-| Stop everything | `docker compose down` (data is kept) |
-| Start again | `docker compose up -d` |
 
 ### Where the data lives
 
