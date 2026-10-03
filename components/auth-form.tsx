@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
+import { verifyCode } from "@/app/auth/actions";
 import { FacebookIcon, GoogleIcon } from "./brand-icons";
 import { Button } from "./button";
+import { headingClasses } from "./heading";
+import { TextInput } from "./text-input";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Until the backend exists, this is the only code that passes.
-const testCode = "123456";
-const codeLength = testCode.length;
+const codeLength = 6;
 const emptyCode = Array<string>(codeLength).fill("");
 const resendCooldown = 60;
-
-const headingClasses =
-  "text-center text-[clamp(1.75rem,4vw,2.25rem)] leading-tight font-bold tracking-[-0.015em] text-balance";
 
 export function AuthForm() {
   const [step, setStep] = useState<"email" | "code">("email");
@@ -32,20 +30,13 @@ export function AuthForm() {
 
   if (step === "code") {
     return (
-      <CodeStep
-        email={email.trim()}
-        onBack={() => setStep("email")}
-        onVerified={() => {
-          setStep("email");
-          setEmail("");
-        }}
-      />
+      <CodeStep email={email.trim()} onBack={() => setStep("email")} />
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <h1 className={`mb-5 ${headingClasses}`}>შესვლა ან რეგისტრაცია</h1>
+      <h1 className={`mb-5 text-center ${headingClasses}`}>შესვლა ან რეგისტრაცია</h1>
 
       {/* OAuth links to /auth/google and /auth/facebook once the backend exists. */}
       <Button variant="outline" size="lg" className="w-full gap-3">
@@ -68,7 +59,7 @@ export function AuthForm() {
           <label htmlFor="email" className="text-sm font-medium">
             ელფოსტა
           </label>
-          <input
+          <TextInput
             id="email"
             type="email"
             name="email"
@@ -80,11 +71,8 @@ export function AuthForm() {
               setEmail(event.target.value);
               setError("");
             }}
-            aria-invalid={error ? true : undefined}
+            invalid={Boolean(error)}
             aria-describedby={error ? "email-error" : undefined}
-            className={`h-12 rounded-lg border bg-white px-4 text-base outline-offset-0 transition-colors placeholder:text-[#9a9a98] focus:border-ink ${
-              error ? "border-[#d93025]" : "border-line"
-            }`}
           />
           {error && (
             <p id="email-error" className="text-sm text-[#d93025]">
@@ -112,17 +100,10 @@ export function AuthForm() {
   );
 }
 
-function CodeStep({
-  email,
-  onBack,
-  onVerified,
-}: {
-  email: string;
-  onBack: () => void;
-  onVerified: () => void;
-}) {
+function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   const [digits, setDigits] = useState(emptyCode);
   const [invalid, setInvalid] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [sends, setSends] = useState(1);
   const [secondsLeft, setSecondsLeft] = useState(resendCooldown);
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
@@ -143,11 +124,11 @@ function CodeStep({
     focusBox(index + typed.length);
 
     if (next.every(Boolean)) {
-      if (next.join("") === testCode) {
-        onVerified();
-      } else {
-        setInvalid(true);
-      }
+      // On success the action redirects, so only a failure comes back.
+      startTransition(async () => {
+        const result = await verifyCode(email, next.join(""));
+        if (result?.error) setInvalid(true);
+      });
     }
   }
 
@@ -167,6 +148,11 @@ function CodeStep({
       focusBox(index + 1);
     }
   }
+
+  // The boxes lose focus while disabled, so hand it back after a wrong code.
+  useEffect(() => {
+    if (invalid && !pending) boxes.current[codeLength - 1]?.focus();
+  }, [invalid, pending]);
 
   // Counts against a deadline so a backgrounded phone tab doesn't slow the timer.
   useEffect(() => {
@@ -203,7 +189,7 @@ function CodeStep({
         </svg>
       </span>
 
-      <h1 className={headingClasses}>შეამოწმე ელფოსტა</h1>
+      <h1 className={`text-center ${headingClasses}`}>შეამოწმე ელფოსტა</h1>
       <p className="mt-3 text-[15px] leading-relaxed text-muted">
         კოდი გამოგიგზავნეთ მისამართზე
         <span className="block font-medium break-all text-ink">{email}</span>
@@ -224,6 +210,7 @@ function CodeStep({
                 boxes.current[index] = element;
               }}
               autoFocus={index === 0}
+              disabled={pending}
               autoComplete={index === 0 ? "one-time-code" : "off"}
               inputMode="numeric"
               aria-label={`${index + 1}-ე ციფრი`}
@@ -248,7 +235,7 @@ function CodeStep({
                 fill(index, event.clipboardData.getData("text"));
               }}
               onKeyDown={(event) => handleKeyDown(index, event)}
-              className={`h-14 w-full min-w-0 flex-1 rounded-xl border text-center text-xl font-medium outline-none transition-colors placeholder:text-[#c4c4c2] focus:bg-white ${
+              className={`h-14 w-full min-w-0 flex-1 rounded-xl border text-center text-xl font-medium outline-none transition-colors placeholder:text-[#c4c4c2] focus:bg-white disabled:opacity-60 ${
                 invalid
                   ? "border-[#d93025] bg-white"
                   : "border-transparent bg-surface focus:border-ink"

@@ -21,7 +21,7 @@ type ButtonProps = ComponentProps<"button"> & {
 
 // Renders a <Link> when given an href; otherwise a plain button.
 export function Button({ variant = "primary", size = "md", className = "", href, ...props }: ButtonProps) {
-  const classes = `inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`;
+  const classes = `inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-lg font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 ${variants[variant]} ${sizes[size]} ${className}`;
 
   if (href) {
     return (

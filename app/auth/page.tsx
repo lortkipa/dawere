@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
 import { Glow } from "@/components/glow";
 import { Header } from "@/components/header";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "შესვლა — dawere",
 };
 
-export default function AuthPage() {
+export default async function AuthPage() {
+  const user = await getCurrentUser();
+  if (user) redirect(user.onboardedAt ? "/" : "/onboarding");
+
   return (
     <div className="flex min-h-dvh flex-col">
       <Header bare />
