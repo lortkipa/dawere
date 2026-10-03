@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "./button";
 import { Logo } from "./logo";
 
-export function Header() {
+export function Header({ bare = false }: { bare?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -22,10 +22,14 @@ export function Header() {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Button variant="ghost">შესვლა</Button>
-          <Button>დაიწყე წერა</Button>
-        </div>
+        {!bare && (
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" href="/auth">
+              შესვლა
+            </Button>
+            <Button href="/auth">დაიწყე წერა</Button>
+          </div>
+        )}
       </div>
     </header>
   );

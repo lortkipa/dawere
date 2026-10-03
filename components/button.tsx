@@ -1,8 +1,10 @@
+import Link from "next/link";
 import type { ComponentProps } from "react";
 
 const variants = {
   primary: "bg-accent text-white shadow-sm hover:bg-accent-hover",
   secondary: "bg-accent-soft text-ink hover:bg-[#e2e5fd]",
+  outline: "border border-line bg-white text-ink hover:bg-surface",
   ghost: "text-ink hover:bg-surface",
 };
 
@@ -14,15 +16,20 @@ const sizes = {
 type ButtonProps = ComponentProps<"button"> & {
   variant?: keyof typeof variants;
   size?: keyof typeof sizes;
+  href?: string;
 };
 
-// Inert for now; becomes a <Link> once the auth and reading pages exist.
-export function Button({ variant = "primary", size = "md", className = "", ...props }: ButtonProps) {
-  return (
-    <button
-      type="button"
-      className={`inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    />
-  );
+// Renders a <Link> when given an href; otherwise a plain button.
+export function Button({ variant = "primary", size = "md", className = "", href, ...props }: ButtonProps) {
+  const classes = `inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-lg font-medium transition-colors ${variants[variant]} ${sizes[size]} ${className}`;
+
+  if (href) {
+    return (
+      <Link href={href} className={classes}>
+        {props.children}
+      </Link>
+    );
+  }
+
+  return <button type="button" className={classes} {...props} />;
 }
