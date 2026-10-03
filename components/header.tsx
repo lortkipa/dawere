@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { Button } from "./button";
 import { Logo } from "./logo";
+import { UserMenu, type MenuUser } from "./user-menu";
 
-export function Header({ bare = false }: { bare?: boolean }) {
+export function Header({ bare = false, user }: { bare?: boolean; user?: MenuUser }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -22,7 +23,8 @@ export function Header({ bare = false }: { bare?: boolean }) {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
-        {!bare && (
+        {!bare && user && <UserMenu user={user} />}
+        {!bare && !user && (
           <div className="flex items-center gap-1 sm:gap-2">
             <Button variant="ghost" href="/auth">
               შესვლა

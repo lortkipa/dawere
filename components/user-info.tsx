@@ -1,4 +1,3 @@
-import { logout } from "@/app/auth/actions";
 import type { User } from "@/lib/db/schema";
 import { referrals, topics } from "@/lib/onboarding-options";
 
@@ -24,9 +23,6 @@ export function UserInfo({ user }: { user: User }) {
           {user.referralOther && ` — ${user.referralOther}`}
         </dd>
       </dl>
-      <form action={logout}>
-        <button type="submit">გასვლა</button>
-      </form>
     </main>
   );
 }

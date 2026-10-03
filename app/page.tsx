@@ -10,7 +10,14 @@ import { getCurrentUser } from "@/lib/session";
 export default async function Home() {
   const user = await getCurrentUser();
   if (user && !user.onboardedAt) redirect("/onboarding");
-  if (user) return <UserInfo user={user} />;
+  if (user) {
+    return (
+      <>
+        <Header user={{ name: user.name, email: user.email }} />
+        <UserInfo user={user} />
+      </>
+    );
+  }
 
   return (
     <>
