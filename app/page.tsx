@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { Bento } from "@/components/bento";
 import { ClosingCta } from "@/components/closing-cta";
+import { Feed } from "@/components/feed";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
-import { UserInfo } from "@/components/user-info";
+import { fakePosts } from "@/lib/fake-feed";
 import { getCurrentUser } from "@/lib/session";
 
 export default async function Home() {
@@ -14,7 +15,9 @@ export default async function Home() {
     return (
       <>
         <Header user={{ name: user.name, email: user.email }} />
-        <UserInfo user={user} />
+        <main>
+          <Feed posts={fakePosts} />
+        </main>
       </>
     );
   }

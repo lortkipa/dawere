@@ -1,0 +1,68 @@
+"use client";
+
+import { useEffect, type ReactNode, type RefObject } from "react";
+
+export const menuClass = "absolute right-0 top-full z-20 mt-2 rounded-xl border border-line bg-white p-1.5 shadow-lg";
+
+const itemBase =
+  "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-[15px] transition-colors";
+
+export const itemClass = `${itemBase} text-ink hover:bg-surface`;
+
+// For leaving or reporting: red text and icon, with a faint red hover.
+export const dangerItemClass = `${itemBase} text-red-600 hover:bg-red-50 [&_svg]:text-red-500`;
+
+// Closes an open menu on a pointer press outside `ref` or on Escape.
+export function useDismiss(open: boolean, ref: RefObject<HTMLElement | null>, close: () => void) {
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: PointerEvent) => {
+      if (!ref.current?.contains(event.target as Node)) close();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, ref, close]);
+}
+
+export function MenuItem({
+  icon,
+  danger = false,
+  onClick,
+  children,
+}: {
+  icon: ReactNode;
+  danger?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button type="button" role="menuitem" onClick={onClick} className={danger ? dangerItemClass : itemClass}>
+      {icon}
+      {children}
+    </button>
+  );
+}
+
+export function Icon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-[18px] shrink-0 text-muted"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}

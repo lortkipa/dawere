@@ -1,35 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState } from "react";
 import { logout } from "@/app/auth/actions";
 import { Avatar } from "./avatar";
+import { dangerItemClass, Icon, MenuItem, menuClass, useDismiss } from "./menu";
 
 export type MenuUser = { name: string | null; email: string };
-
-const itemClass =
-  "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-[15px] text-ink transition-colors hover:bg-surface";
 
 export function UserMenu({ user }: { user: MenuUser }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  const close = () => setOpen(false);
+  const close = useCallback(() => setOpen(false), []);
+  useDismiss(open, ref, close);
 
   return (
     <div ref={ref} className="relative">
@@ -45,10 +27,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
       </button>
 
       {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-line bg-white p-1.5 shadow-lg"
-        >
+        <div role="menu" className={`${menuClass} w-64`}>
           <div className="px-3 py-2">
             {user.name && <p className="truncate font-medium text-ink">{user.name}</p>}
             <p className="truncate text-sm text-muted">{user.email}</p>
@@ -68,7 +47,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
 
           <div className="my-1 border-t border-line" />
           <form action={logout}>
-            <button type="submit" role="menuitem" className={itemClass}>
+            <button type="submit" role="menuitem" className={dangerItemClass}>
               <LogoutIcon />
               გასვლა
             </button>
@@ -76,32 +55,6 @@ export function UserMenu({ user }: { user: MenuUser }) {
         </div>
       )}
     </div>
-  );
-}
-
-function MenuItem({ icon, onClick, children }: { icon: ReactNode; onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" role="menuitem" onClick={onClick} className={itemClass}>
-      {icon}
-      {children}
-    </button>
-  );
-}
-
-function Icon({ children }: { children: ReactNode }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="size-[18px] shrink-0 text-muted"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {children}
-    </svg>
   );
 }
 
