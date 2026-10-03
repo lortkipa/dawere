@@ -11,6 +11,8 @@ export const users = pgTable("users", {
     .default(sql`substr(md5(random()::text), 1, 10)`),
   name: text(),
   bio: text(),
+  // File name under UPLOAD_DIR/avatars; a new upload always gets a new name.
+  avatar: text(),
   topics: text().array(),
   referral: text(),
   // What the user typed when they picked "other" as the referral.

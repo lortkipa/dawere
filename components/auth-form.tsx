@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
 import { verifyCode } from "@/app/auth/actions";
+import { emailPattern } from "@/lib/profile-rules";
 import { FacebookIcon, GoogleIcon } from "./brand-icons";
 import { Button } from "./button";
 import { headingClasses } from "./heading";
 import { TextInput } from "./text-input";
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const codeLength = 6;
 const emptyCode = Array<string>(codeLength).fill("");

@@ -7,11 +7,13 @@ import { Profile } from "@/components/profile";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
+import { menuUser } from "@/lib/user-view";
 
 type Props = { params: Promise<{ handle: string }> };
 
 // A folder named `@…` would be a parallel-route slot, so `/@handle` is caught by this
-// dynamic segment and anything without the `@` is a 404.
+// dynamic segment and anything without the `@` is a 404. Handles are stored lowercase, so
+// `/@Niko` finds `@niko`.
 const getProfile = cache(async (segment: string) => {
   const decoded = decodeURIComponent(segment);
   if (!decoded.startsWith("@")) return null;
@@ -19,7 +21,7 @@ const getProfile = cache(async (segment: string) => {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.handle, decoded.slice(1)))
+    .where(eq(users.handle, decoded.slice(1).toLowerCase()))
     .limit(1);
 
   // Users who haven't finished onboarding have no name to show yet.
@@ -41,10 +43,10 @@ export default async function ProfilePage({ params }: Props) {
 
   return (
     <>
-      <Header user={viewer ? { name: viewer.name, email: viewer.email, handle: viewer.handle } : undefined} />
+      <Header user={viewer ? menuUser(viewer) : undefined} />
       <main>
         <Profile
-          user={{ name: profile.name ?? "", bio: profile.bio }}
+          user={{ name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
           isOwner={viewer?.id === profile.id}
           signedIn={Boolean(viewer)}
         />

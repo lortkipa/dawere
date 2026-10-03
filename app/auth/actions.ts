@@ -3,15 +3,14 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
+import { emailPattern, normalizeEmail } from "@/lib/profile-rules";
 import { createSession, deleteSession } from "@/lib/session";
-
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Until email sending exists, this is the only code that passes.
 const testCode = "123456";
 
 export async function verifyCode(email: string, code: string): Promise<{ error: string }> {
-  const normalized = email.trim().toLowerCase();
+  const normalized = normalizeEmail(email);
   if (!emailPattern.test(normalized) || code !== testCode) {
     return { error: "კოდი არასწორია" };
   }

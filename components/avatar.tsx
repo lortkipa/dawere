@@ -1,4 +1,4 @@
-// Gray silhouette until profile editing lets users upload a photo.
+// The uploaded photo, or a gray silhouette for users without one.
 export function Avatar({ src, className = "size-9" }: { src?: string; className?: string }) {
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element

@@ -14,6 +14,8 @@ npm run dev      # http://localhost:3000
 
 Email codes aren't sent yet: `123456` always signs in.
 
+Uploaded photos are saved under `UPLOAD_DIR` (default `./uploads`). In production, set it to an absolute path outside the build folder.
+
 Production (self-hosted):
 
 ```bash

@@ -2,10 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import { logout } from "@/app/auth/actions";
+import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { dangerItemClass, Icon, MenuItem, menuClass, useDismiss } from "./menu";
 
-export type MenuUser = { name: string | null; email: string; handle: string };
+export type MenuUser = { name: string | null; email: string; handle: string; avatar: string | null };
 
 export function UserMenu({ user }: { user: MenuUser }) {
   const [open, setOpen] = useState(false);
@@ -23,7 +24,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
         onClick={() => setOpen((value) => !value)}
         className="flex cursor-pointer rounded-full"
       >
-        <Avatar />
+        <Avatar src={avatarUrl(user.avatar)} />
       </button>
 
       {open && (
@@ -37,10 +38,10 @@ export function UserMenu({ user }: { user: MenuUser }) {
           <MenuItem icon={<ProfileIcon />} href={`/@${user.handle}`} onClick={close}>
             პროფილი
           </MenuItem>
-          {/* Settings and help pages don't exist yet; these only close the menu. */}
-          <MenuItem icon={<SettingsIcon />} onClick={close}>
+          <MenuItem icon={<SettingsIcon />} href="/settings" onClick={close}>
             პარამეტრები
           </MenuItem>
+          {/* The help page doesn't exist yet; this only closes the menu. */}
           <MenuItem icon={<HelpIcon />} onClick={close}>
             დახმარება
           </MenuItem>

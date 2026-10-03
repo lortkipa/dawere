@@ -35,5 +35,5 @@ export const referrals: Option[] = [
 ];
 
 export const minTopics = 3;
-export const maxNameLength = 50;
+export const maxNameLength = 40;
 export const maxReferralOtherLength = 100;

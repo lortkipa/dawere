@@ -7,6 +7,7 @@ import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { fakePosts } from "@/lib/fake-feed";
 import { getCurrentUser } from "@/lib/session";
+import { menuUser } from "@/lib/user-view";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -14,7 +15,7 @@ export default async function Home() {
   if (user) {
     return (
       <>
-        <Header user={{ name: user.name, email: user.email, handle: user.handle }} />
+        <Header user={menuUser(user)} />
         <main>
           <Feed posts={fakePosts} />
         </main>

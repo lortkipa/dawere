@@ -3,6 +3,7 @@ import { Button } from "@/components/button";
 import { EmptyIllustration } from "@/components/empty-illustration";
 import { Header } from "@/components/header";
 import { getCurrentUser } from "@/lib/session";
+import { menuUser } from "@/lib/user-view";
 
 export const metadata: Metadata = { title: "გვერდი ვერ მოიძებნა — dawere" };
 
@@ -12,9 +13,7 @@ export default async function NotFound() {
 
   return (
     <>
-      <Header
-        user={viewer?.onboardedAt ? { name: viewer.name, email: viewer.email, handle: viewer.handle } : undefined}
-      />
+      <Header user={viewer?.onboardedAt ? menuUser(viewer) : undefined} />
       <main className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
         <div className="flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
           <EmptyIllustration className="w-44 sm:w-52" />

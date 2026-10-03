@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { EmptyIllustration } from "./empty-illustration";
 
-type ProfileUser = { name: string; bio: string | null };
+type ProfileUser = { name: string; bio: string | null; avatar: string | null };
 
 // There are no posts, follows or editor yet: the list is always empty, following lives in
 // client state only (like the feed) and the write buttons do nothing.
@@ -25,7 +26,7 @@ export function Profile({
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
       <section className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
-          <Avatar className="size-16 sm:size-20" />
+          <Avatar src={avatarUrl(user.avatar)} className="size-16 sm:size-20" />
           <div className="min-w-0 flex-1 sm:pt-1">
             <h1 title={user.name} className="truncate text-xl font-extrabold leading-tight text-ink">
               {user.name}
