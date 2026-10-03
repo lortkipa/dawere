@@ -1,9 +1,16 @@
+import { sql } from "drizzle-orm";
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),
   email: text().notNull().unique(),
+  // Random until users can pick their own. A volatile default also backfills existing rows.
+  handle: text()
+    .notNull()
+    .unique()
+    .default(sql`substr(md5(random()::text), 1, 10)`),
   name: text(),
+  bio: text(),
   topics: text().array(),
   referral: text(),
   // What the user typed when they picked "other" as the referral.

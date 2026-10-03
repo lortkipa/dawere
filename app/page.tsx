@@ -14,7 +14,7 @@ export default async function Home() {
   if (user) {
     return (
       <>
-        <Header user={{ name: user.name, email: user.email }} />
+        <Header user={{ name: user.name, email: user.email, handle: user.handle }} />
         <main>
           <Feed posts={fakePosts} />
         </main>

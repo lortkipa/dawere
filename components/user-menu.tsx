@@ -5,7 +5,7 @@ import { logout } from "@/app/auth/actions";
 import { Avatar } from "./avatar";
 import { dangerItemClass, Icon, MenuItem, menuClass, useDismiss } from "./menu";
 
-export type MenuUser = { name: string | null; email: string };
+export type MenuUser = { name: string | null; email: string; handle: string };
 
 export function UserMenu({ user }: { user: MenuUser }) {
   const [open, setOpen] = useState(false);
@@ -34,10 +34,10 @@ export function UserMenu({ user }: { user: MenuUser }) {
           </div>
           <div className="my-1 border-t border-line" />
 
-          {/* Profile, settings and help pages don't exist yet; these only close the menu. */}
-          <MenuItem icon={<ProfileIcon />} onClick={close}>
+          <MenuItem icon={<ProfileIcon />} href={`/@${user.handle}`} onClick={close}>
             პროფილი
           </MenuItem>
+          {/* Settings and help pages don't exist yet; these only close the menu. */}
           <MenuItem icon={<SettingsIcon />} onClick={close}>
             პარამეტრები
           </MenuItem>

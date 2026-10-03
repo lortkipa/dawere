@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, type ReactNode, type RefObject } from "react";
 
 export const menuClass = "absolute right-0 top-full z-20 mt-2 rounded-xl border border-line bg-white p-1.5 shadow-lg";
@@ -31,17 +32,29 @@ export function useDismiss(open: boolean, ref: RefObject<HTMLElement | null>, cl
   }, [open, ref, close]);
 }
 
+// Renders a <Link> when given an href; otherwise a button.
 export function MenuItem({
   icon,
   danger = false,
+  href,
   onClick,
   children,
 }: {
   icon: ReactNode;
   danger?: boolean;
+  href?: string;
   onClick: () => void;
   children: ReactNode;
 }) {
+  if (href) {
+    return (
+      <Link href={href} role="menuitem" onClick={onClick} className={danger ? dangerItemClass : itemClass}>
+        {icon}
+        {children}
+      </Link>
+    );
+  }
+
   return (
     <button type="button" role="menuitem" onClick={onClick} className={danger ? dangerItemClass : itemClass}>
       {icon}
