@@ -1,0 +1,61 @@
+# Settings come from .env (copy .env.example). Data lives in ./data and ./backups.
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dawere
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: dawere
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dawere -d dawere"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://dawere:${POSTGRES_PASSWORD}@db/dawere
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+    volumes:
+      - ./data/uploads:/data/uploads
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  # Dumps the database once a day into ./backups and keeps the newest 14.
+  backup:
+    image: postgres:17
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: dawere
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: dawere
+    volumes:
+      - ./backups:/backups
+    entrypoint:
+      - sh
+      - -c
+      - |
+        while true; do
+          file=/backups/dawere-$$(date +%Y-%m-%d_%H%M).sql.gz
+          if pg_dump | gzip > "$$file.tmp"; then
+            mv "$$file.tmp" "$$file"
+            echo "Backup written: $$file"
+          else
+            rm -f "$$file.tmp"
+            echo "Backup failed"
+          fi
+          ls -1t /backups/dawere-*.sql.gz | tail -n +15 | xargs -r rm --
+          sleep 86400
+        done
