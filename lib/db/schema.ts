@@ -15,6 +15,15 @@ export const users = pgTable("users", {
   // File name under UPLOAD_DIR/avatars; a new upload always gets a new name.
   avatar: text(),
   topics: text().array(),
+  // When the reader last picked topics by hand; automatic removals wait a while after that.
+  topicsEditedAt: timestamp({ withTimezone: true }),
+  // When lib/interests.ts last changed the topics, so it changes them at most once a day.
+  topicsTunedAt: timestamp({ withTimezone: true }),
+  // Topics the reader removed by hand, which are never added back automatically.
+  dismissedTopics: text()
+    .array()
+    .notNull()
+    .default(sql`'{}'`),
   referral: text(),
   // What the user typed when they picked "other" as the referral.
   referralOther: text(),

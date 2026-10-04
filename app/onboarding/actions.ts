@@ -39,6 +39,7 @@ export async function completeOnboarding(answers: Answers, next?: string | null)
     .set({
       name,
       topics: chosen,
+      topicsEditedAt: new Date(),
       referral: answers.referral,
       referralOther: referralOther || null,
       onboardedAt: new Date(),

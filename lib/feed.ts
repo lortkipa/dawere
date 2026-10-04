@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { and, desc, eq, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { postFavorites, posts, users, type User } from "./db/schema";
+import { getInterests, isLearnedWeights, learnedWeights, tuneTopics } from "./interests";
 import { avatarUrl, formatRelative } from "./user-view";
 
 // The home feed and profiles both load in pages this size; see useWindowedList.
@@ -45,6 +46,15 @@ const postId = /^[0-9a-f]{12}$/;
 const visitSeed = /^[0-9a-f]{16}$/;
 // How Postgres prints a timestamptz: "2026-10-04 09:15:02.123456+04".
 const pgTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}(:\d{2})?$/;
+
+function floatArray(values: number[]) {
+  return values.length
+    ? sql`array[${sql.join(
+        values.map((value) => sql`${value}`),
+        sql`, `,
+      )}]::float8[]`
+    : sql`'{}'::float8[]`;
+}
 
 function textArray(values: string[]) {
   return values.length
@@ -125,6 +135,9 @@ function toFeedPost(row: CardRow, now: Date): FeedPost {
 // few posts that means their topics first and then everything else; with many, fresh posts in
 // their topics lead without old ones sticking to the top.
 //
+// On top of that, tags the reader has been reading lately (lib/interests.ts) add up to 3 more,
+// half their learned weight. The first page also lets lib/interests.ts adjust the topics.
+//
 // Posts the reader already scrolled past count a quarter, opened ones a twentieth, so each visit
 // leads with what they haven't seen; on a small site the seen ones still follow. A ±20% shuffle,
 // seeded per visit, keeps close scores from always coming out in the same order.
@@ -137,10 +150,9 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
   if (cursor && !after) return { items: [], next: null };
   let asOf = new Date();
   let seed = randomBytes(8).toString("hex");
+  let learned: Record<string, number>;
+  let topics = viewer.topics ?? [];
   let keyset: SQL | undefined;
-
-  const followed = sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewer.id} and f.following_id = ${posts.userId})`;
-  const inTopics = sql`${posts.tags} && ${textArray(viewer.topics ?? [])}`;
 
   if (after) {
     const date = new Date(String(after.asOf));
@@ -148,13 +160,23 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
       Number.isNaN(date.getTime()) ||
       !visitSeed.test(String(after.seed)) ||
       typeof after.score !== "number" ||
-      !postId.test(String(after.id))
+      !postId.test(String(after.id)) ||
+      !isLearnedWeights(after.learned)
     ) {
       return { items: [], next: null };
     }
     asOf = date;
     seed = String(after.seed);
+    learned = after.learned;
+  } else {
+    const interests = await getInterests(viewer.id, asOf);
+    topics = await tuneTopics(viewer, interests, asOf);
+    learned = learnedWeights(interests);
   }
+
+  const followed = sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewer.id} and f.following_id = ${posts.userId})`;
+  const inTopics = sql`${posts.tags} && ${textArray(topics)}`;
+  const learnedBoost = sql`least(3, coalesce((select sum(l.weight) from unnest(${textArray(Object.keys(learned))}, ${floatArray(Object.values(learned))}) as l(tag, weight) where l.tag = any(${posts.tags})), 0) / 2)`;
 
   const at = sql`${asOf.toISOString()}::timestamptz`;
   const ageInDays = sql`extract(epoch from (${at} - ${posts.createdAt})) / 86400`;
@@ -162,7 +184,7 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
   // 0.8–1.2, from the first 32 bits of md5(id + seed).
   const shuffle = sql`(0.8 + 0.4 * ('x' || substr(md5(${posts.id} || ${seed}), 1, 8))::bit(32)::bigint / 4294967296.0)`;
   // float8, so the score survives the trip through the cursor exactly.
-  const score = sql<number>`((1 + 3 * (${inTopics})::int + 5 * (${followed})::int) / (${ageInDays} + 1) * ${seenFactor} * ${shuffle})::float8`;
+  const score = sql<number>`((1 + 3 * (${inTopics})::int + ${learnedBoost} + 5 * (${followed})::int) / (${ageInDays} + 1) * ${seenFactor} * ${shuffle})::float8`;
 
   if (after) {
     keyset = or(
@@ -186,7 +208,7 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
     items: page.map((row) => toFeedPost(row, now)),
     next:
       rows.length > feedPageSize && last
-        ? encodeCursor({ asOf: asOf.toISOString(), seed, score: last.score, id: last.id })
+        ? encodeCursor({ asOf: asOf.toISOString(), seed, learned, score: last.score, id: last.id })
         : null,
   };
 }

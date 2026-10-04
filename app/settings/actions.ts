@@ -103,7 +103,13 @@ export async function updateTopics(slugs: string[]): Promise<Result> {
   const valid = chosen.length >= minTopics && chosen.every((slug) => topics.some((topic) => topic.slug === slug));
   if (!valid) return { error: genericError };
 
-  await db.update(users).set({ topics: chosen }).where(eq(users.id, user.id));
+  // Topics taken out by hand stay out of the automatic adjustments in lib/interests.ts.
+  const removed = (user.topics ?? []).filter((slug) => !chosen.includes(slug));
+  const dismissedTopics = [...new Set([...user.dismissedTopics, ...removed])].filter((slug) => !chosen.includes(slug));
+  await db
+    .update(users)
+    .set({ topics: chosen, dismissedTopics, topicsEditedAt: new Date() })
+    .where(eq(users.id, user.id));
   refresh();
 }
 
