@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { check, index, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
 
 export const users = pgTable("users", {
@@ -51,6 +51,25 @@ export const posts = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.userId, table.createdAt.desc())],
+);
+
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followingId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.followerId, table.followingId] }),
+    // Counts a profile's followers.
+    index().on(table.followingId),
+    check("follows_not_self", sql`${table.followerId} <> ${table.followingId}`),
+  ],
 );
 
 export type User = typeof users.$inferSelect;

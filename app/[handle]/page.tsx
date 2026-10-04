@@ -5,6 +5,7 @@ import { cache } from "react";
 import { Header } from "@/components/header";
 import { Profile } from "@/components/profile";
 import { db } from "@/lib/db";
+import { followerCount, isFollowing } from "@/lib/follows";
 import { posts, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
 import { formatDate, menuUser } from "@/lib/user-view";
@@ -46,13 +47,18 @@ export default async function ProfilePage({ params }: Props) {
     .from(posts)
     .where(eq(posts.userId, profile.id))
     .orderBy(desc(posts.createdAt));
+  const isOwner = viewer?.id === profile.id;
+  const [followers, followed] = await Promise.all([
+    followerCount(profile.id),
+    viewer && !isOwner ? isFollowing(viewer.id, profile.id) : false,
+  ]);
 
   return (
     <>
       <Header user={viewer ? menuUser(viewer) : undefined} />
       <main>
         <Profile
-          user={{ name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
+          user={{ id: profile.id, name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
           posts={list.map((post) => ({
             href: `/@${profile.handle}/${post.id}`,
             title: post.title,
@@ -60,7 +66,9 @@ export default async function ProfilePage({ params }: Props) {
             cover: post.cover,
             date: formatDate(post.createdAt),
           }))}
-          isOwner={viewer?.id === profile.id}
+          followers={followers}
+          followed={followed}
+          isOwner={isOwner}
           signedIn={Boolean(viewer)}
         />
       </main>

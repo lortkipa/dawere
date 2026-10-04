@@ -1,30 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { avatarUrl, imageUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { EmptyIllustration } from "./empty-illustration";
-import { FollowButton } from "./follow-button";
+import { FollowButton, useFollow } from "./follow-button";
 
-type ProfileUser = { name: string; bio: string | null; avatar: string | null };
+type ProfileUser = { id: string; name: string; bio: string | null; avatar: string | null };
 export type ProfilePost = { href: string; title: string; description: string; cover: string | null; date: string };
 
-// Follows don't exist yet: the follower count only reflects this visit (see FollowButton).
 export function Profile({
   user,
   posts,
+  followers: storedFollowers,
+  followed: storedFollowed,
   isOwner,
   signedIn,
 }: {
   user: ProfileUser;
   posts: ProfilePost[];
+  followers: number;
+  followed: boolean;
   isOwner: boolean;
   signedIn: boolean;
 }) {
-  const [followed, setFollowed] = useState(false);
-  const followers = followed ? 1 : 0;
+  const [followed, toggleFollow] = useFollow(user.id, storedFollowed);
+  // Moves with the button right away instead of waiting for the refresh.
+  const followers = storedFollowers + Number(followed) - Number(storedFollowed);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
@@ -48,7 +51,12 @@ export function Profile({
             დაწერე
           </Button>
         ) : (
-          <FollowButton signedIn={signedIn} onChange={setFollowed} className="w-full sm:w-auto sm:min-w-32" />
+          <FollowButton
+            signedIn={signedIn}
+            followed={followed}
+            onToggle={toggleFollow}
+            className="w-full sm:w-auto sm:min-w-32"
+          />
         )}
       </section>
 

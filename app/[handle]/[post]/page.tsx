@@ -6,6 +6,7 @@ import { cache } from "react";
 import { Header } from "@/components/header";
 import { PostByline } from "@/components/post-byline";
 import { db } from "@/lib/db";
+import { isFollowing } from "@/lib/follows";
 import { posts, users } from "@/lib/db/schema";
 import { postExtensions } from "@/lib/post-schema";
 import { getCurrentUser } from "@/lib/session";
@@ -42,6 +43,8 @@ export default async function PostPage({ params }: Props) {
 
   const viewer = await getCurrentUser();
   if (viewer && !viewer.onboardedAt) redirect("/onboarding");
+  const canFollow = viewer?.id !== author.id;
+  const followed = viewer && canFollow ? await isFollowing(viewer.id, author.id) : false;
 
   return (
     <>
@@ -63,7 +66,9 @@ export default async function PostPage({ params }: Props) {
             avatar={avatarUrl(author.avatar)}
             date={formatDate(post.createdAt)}
             dateTime={post.createdAt.toISOString()}
-            canFollow={viewer?.id !== author.id}
+            authorId={author.id}
+            followed={followed}
+            canFollow={canFollow}
             signedIn={Boolean(viewer)}
           />
 

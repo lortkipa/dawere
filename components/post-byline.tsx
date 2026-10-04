@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { Avatar } from "./avatar";
-import { FollowButton } from "./follow-button";
+import { FollowButton, useFollow } from "./follow-button";
 import { FollowedIcon } from "./followed-icon";
 
 // Name over date, so on a phone the name gets the whole width next to the follow button.
-// Following lives in client state only, like everywhere else for now.
 export function PostByline({
   href,
   name,
   avatar,
   date,
   dateTime,
+  authorId,
+  followed: initialFollowed,
   canFollow,
   signedIn,
 }: {
@@ -22,10 +22,12 @@ export function PostByline({
   avatar?: string;
   date: string;
   dateTime: string;
+  authorId: string;
+  followed: boolean;
   canFollow: boolean;
   signedIn: boolean;
 }) {
-  const [followed, setFollowed] = useState(false);
+  const [followed, toggleFollow] = useFollow(authorId, initialFollowed);
 
   return (
     <div className="mt-6 flex items-center gap-3 border-b border-line pb-6">
@@ -44,7 +46,15 @@ export function PostByline({
           {date}
         </time>
       </div>
-      {canFollow && <FollowButton signedIn={signedIn} size="sm" onChange={setFollowed} className="shrink-0" />}
+      {canFollow && (
+        <FollowButton
+          signedIn={signedIn}
+          followed={followed}
+          onToggle={toggleFollow}
+          size="sm"
+          className="shrink-0"
+        />
+      )}
     </div>
   );
 }
