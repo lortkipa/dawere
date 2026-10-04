@@ -3,10 +3,9 @@ import { randomBytes } from "node:crypto";
 import { and, desc, eq, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { posts, users, type User } from "./db/schema";
-import { avatarUrl, formatDate, formatRelative } from "./user-view";
+import { avatarUrl, formatRelative } from "./user-view";
 
-export const pageSize = 10;
-// The home feed loads in bigger pages; see useWindowedList.
+// The home feed and profiles both load in pages this size; see useWindowedList.
 export const feedPageSize = 25;
 
 export type Page<T> = { items: T[]; next: string | null };
@@ -24,15 +23,6 @@ export type FeedPost = {
   liked: boolean;
   comments: number;
   followed: boolean;
-};
-
-export type ProfilePost = {
-  id: string;
-  href: string;
-  title: string;
-  description: string;
-  cover: string | null;
-  date: string;
 };
 
 // Cursors are opaque to the browser: base64url JSON, checked field by field on the way back.
@@ -67,6 +57,62 @@ function textArray(values: string[]) {
 // Live comments only, the same rule as the count on the post page.
 const commentCount = sql<number>`(select count(*) from comments c where c.post_id = ${posts.id} and c.body is not null and c.user_id is not null)::int`;
 const likeCount = sql<number>`(select count(*) from post_likes pl where pl.post_id = ${posts.id})::int`;
+
+// What a post card shows, the same on the home feed and on profiles.
+function cardFields(viewerId: string | null) {
+  return {
+    id: posts.id,
+    title: posts.title,
+    description: posts.description,
+    cover: posts.cover,
+    createdAt: posts.createdAt,
+    authorId: users.id,
+    name: users.name,
+    handle: users.handle,
+    avatar: users.avatar,
+    likes: likeCount,
+    liked: viewerId
+      ? sql<boolean>`exists (select 1 from post_likes pl where pl.post_id = ${posts.id} and pl.user_id = ${viewerId})`
+      : sql<boolean>`false`,
+    comments: commentCount,
+    followed: viewerId
+      ? sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewerId} and f.following_id = ${posts.userId})`
+      : sql<boolean>`false`,
+  };
+}
+
+type CardRow = {
+  id: string;
+  title: string;
+  description: string;
+  cover: string | null;
+  createdAt: Date;
+  authorId: string;
+  name: string | null;
+  handle: string;
+  avatar: string | null;
+  likes: number;
+  liked: boolean;
+  comments: number;
+  followed: boolean;
+};
+
+function toFeedPost(row: CardRow, now: Date): FeedPost {
+  return {
+    id: row.id,
+    href: `/@${row.handle}/${row.id}`,
+    title: row.title,
+    description: row.description,
+    cover: row.cover,
+    date: formatRelative(row.createdAt, now),
+    dateTime: row.createdAt.toISOString(),
+    author: { id: row.authorId, name: row.name ?? "", handle: row.handle, avatar: avatarUrl(row.avatar) },
+    likes: row.likes,
+    liked: row.liked,
+    comments: row.comments,
+    followed: row.followed,
+  };
+}
 
 // Every post except the reader's own, in one list. Nothing is filtered out: a post in one of the
 // reader's topics counts as 4× fresher, one by an author they follow as 6×, both as 9×. With
@@ -120,22 +166,7 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
   }
 
   const rows = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      description: posts.description,
-      cover: posts.cover,
-      createdAt: posts.createdAt,
-      authorId: users.id,
-      name: users.name,
-      handle: users.handle,
-      avatar: users.avatar,
-      likes: likeCount,
-      liked: sql<boolean>`exists (select 1 from post_likes pl where pl.post_id = ${posts.id} and pl.user_id = ${viewer.id})`,
-      comments: commentCount,
-      followed,
-      score,
-    })
+    .select({ ...cardFields(viewer.id), score })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
     .where(and(ne(posts.userId, viewer.id), lte(posts.createdAt, asOf), keyset))
@@ -146,20 +177,7 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
   const last = page.at(-1);
   const now = new Date();
   return {
-    items: page.map((row) => ({
-      id: row.id,
-      href: `/@${row.handle}/${row.id}`,
-      title: row.title,
-      description: row.description,
-      cover: row.cover,
-      date: formatRelative(row.createdAt, now),
-      dateTime: row.createdAt.toISOString(),
-      author: { id: row.authorId, name: row.name ?? "", handle: row.handle, avatar: avatarUrl(row.avatar) },
-      likes: row.likes,
-      liked: row.liked,
-      comments: row.comments,
-      followed: row.followed,
-    })),
+    items: page.map((row) => toFeedPost(row, now)),
     next:
       rows.length > feedPageSize && last
         ? encodeCursor({ asOf: asOf.toISOString(), seed, score: last.score, id: last.id })
@@ -167,8 +185,13 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
   };
 }
 
-// An author's posts, newest first.
-export async function getProfilePage(authorId: string, cursor: string | null): Promise<Page<ProfilePost>> {
+// An author's posts, newest first, as the same cards as the home feed. Signed-out readers have
+// no likes or follows.
+export async function getProfilePage(
+  viewer: User | null,
+  authorId: string,
+  cursor: string | null,
+): Promise<Page<FeedPost>> {
   const after = decodeCursor(cursor);
   if (cursor && !after) return { items: [], next: null };
   let keyset: SQL | undefined;
@@ -186,32 +209,18 @@ export async function getProfilePage(authorId: string, cursor: string | null): P
   }
 
   const rows = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      description: posts.description,
-      cover: posts.cover,
-      createdAt: posts.createdAt,
-      exactCreatedAt: sql<string>`${posts.createdAt}::text`,
-      handle: users.handle,
-    })
+    .select({ ...cardFields(viewer?.id ?? null), exactCreatedAt: sql<string>`${posts.createdAt}::text` })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
     .where(and(eq(posts.userId, authorId), keyset))
     .orderBy(desc(posts.createdAt), desc(posts.id))
-    .limit(pageSize + 1);
+    .limit(feedPageSize + 1);
 
-  const page = rows.slice(0, pageSize);
+  const page = rows.slice(0, feedPageSize);
   const last = page.at(-1);
+  const now = new Date();
   return {
-    items: page.map((row) => ({
-      id: row.id,
-      href: `/@${row.handle}/${row.id}`,
-      title: row.title,
-      description: row.description,
-      cover: row.cover,
-      date: formatDate(row.createdAt),
-    })),
-    next: rows.length > pageSize && last ? encodeCursor({ createdAt: last.exactCreatedAt, id: last.id }) : null,
+    items: page.map((row) => toFeedPost(row, now)),
+    next: rows.length > feedPageSize && last ? encodeCursor({ createdAt: last.exactCreatedAt, id: last.id }) : null,
   };
 }

@@ -52,23 +52,3 @@ export function FeedSkeleton({ count = 3 }: { count?: number }) {
     </Loading>
   );
 }
-
-// Mirrors a row of a profile's post list.
-export function ProfilePostsSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <Loading>
-      {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="flex gap-4 border-b border-line py-6 last:border-b-0 sm:gap-6">
-          <div className="min-w-0 flex-1">
-            <Bone className={`h-5 sm:h-6 ${titleWidths[index % 3]}`} />
-            <Bone className={`mt-2 h-5 sm:h-6 ${secondLineWidths[index % 3]}`} />
-            <Bone className="mt-3 h-4 w-full" />
-            <Bone className="mt-2 h-4 w-2/3" />
-            <Bone className="mt-4 h-3.5 w-24" />
-          </div>
-          <Bone className="aspect-[4/3] w-24 shrink-0 self-start rounded-lg sm:w-36" />
-        </div>
-      ))}
-    </Loading>
-  );
-}

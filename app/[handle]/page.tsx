@@ -3,11 +3,12 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache, Suspense } from "react";
 import { Header } from "@/components/header";
+import { Button } from "@/components/button";
+import { EmptyState, PostList } from "@/components/feed";
 import { Profile } from "@/components/profile";
-import { ProfilePosts } from "@/components/profile-posts";
-import { ProfilePostsSkeleton } from "@/components/skeleton";
+import { FeedSkeleton } from "@/components/skeleton";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { type User, users } from "@/lib/db/schema";
 import { getProfilePage } from "@/lib/feed";
 import { followerCount, isFollowing } from "@/lib/follows";
 import { getCurrentUser } from "@/lib/session";
@@ -59,8 +60,8 @@ export default async function ProfilePage({ params }: Props) {
           user={{ id: profile.id, name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
           posts={
             // Keyed, so moving to another profile starts a fresh list.
-            <Suspense key={profile.id} fallback={<ProfilePostsSkeleton />}>
-              <PostList authorId={profile.id} isOwner={isOwner} />
+            <Suspense key={profile.id} fallback={<FeedSkeleton />}>
+              <ProfilePosts viewer={viewer} authorId={profile.id} isOwner={isOwner} />
             </Suspense>
           }
           followers={followers}
@@ -73,6 +74,24 @@ export default async function ProfilePage({ params }: Props) {
   );
 }
 
-async function PostList({ authorId, isOwner }: { authorId: string; isOwner: boolean }) {
-  return <ProfilePosts authorId={authorId} first={await getProfilePage(authorId, null)} isOwner={isOwner} />;
+// The same cards as the home feed.
+async function ProfilePosts({ viewer, authorId, isOwner }: { viewer: User | null; authorId: string; isOwner: boolean }) {
+  return (
+    <PostList
+      first={await getProfilePage(viewer, authorId, null)}
+      endpoint={`/api/posts?author=${authorId}`}
+      viewerId={viewer?.id}
+      empty={
+        isOwner ? (
+          <EmptyState title="ჯერ არაფერი დაგიწერია" text="შენი ბლოგები აქ გამოჩნდება.">
+            <Button href="/write" variant="outline" className="mt-6">
+              დაიწყე წერა
+            </Button>
+          </EmptyState>
+        ) : (
+          <EmptyState title="ჯერ ბლოგები არ არის" text="როცა ავტორი რამეს გამოაქვეყნებს, აქ გამოჩნდება." />
+        )
+      }
+    />
+  );
 }

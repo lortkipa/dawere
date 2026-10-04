@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import { setFollow } from "@/app/follow/actions";
 import { setPostLike } from "@/app/likes/actions";
 import type { FeedPost, Page } from "@/lib/feed";
@@ -22,6 +22,37 @@ const feedClass = "mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6";
 // Posts per page, as feedPageSize in lib/feed.ts. Pages far from the screen leave the page.
 const step = 25;
 
+// The home feed: every post but the reader's own.
+export function Feed({ first, viewerId }: { first: Page<FeedPost>; viewerId: string }) {
+  return (
+    <div className={feedClass}>
+      <PostList
+        first={first}
+        endpoint="/api/feed"
+        viewerId={viewerId}
+        empty={
+          <EmptyState title="ჯერ ბლოგები არ არის" text="როცა ვინმე რამეს გამოაქვეყნებს, აქ გამოჩნდება.">
+            <Button href="/write" variant="outline" className="mt-6">
+              დაწერე პირველი ბლოგი
+            </Button>
+          </EmptyState>
+        }
+      />
+    </div>
+  );
+}
+
+export function EmptyState({ title, text, children }: { title: string; text: string; children?: ReactNode }) {
+  return (
+    <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
+      <EmptyIllustration className="w-44 sm:w-52" />
+      <h2 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">{title}</h2>
+      <p className="mt-2 text-muted">{text}</p>
+      {children}
+    </div>
+  );
+}
+
 type Like = { liked: boolean; count: number };
 
 // Shown while the first page loads.
@@ -33,14 +64,27 @@ export function FeedLoading() {
   );
 }
 
+// The list of post cards on the home feed and on profiles. `viewerId` is the signed-in reader, if
+// any; signed-out readers get sign-in links for likes and no menu.
+//
 // Likes and follows change on screen at once and are saved in the background. They live in this
 // component rather than in useOptimistic: pages fetched while scrolling never get fresh server
 // props to fall back to. They aren't kept in the cards either, since cards scrolled far enough
 // away are taken off the page. Saves stay client-only until there is a backend for them.
-export function Feed({ first }: { first: Page<FeedPost> }) {
+export function PostList({
+  first,
+  endpoint,
+  viewerId,
+  empty: emptyState,
+}: {
+  first: Page<FeedPost>;
+  endpoint: string;
+  viewerId?: string;
+  empty: ReactNode;
+}) {
   const { groups, above, below, empty, after, done, failed, retry, list, groupRef, bottom } = useWindowedList(
     first,
-    "/api/feed",
+    endpoint,
     step,
   );
   const seenRef = useSeen();
@@ -69,24 +113,11 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
       return updated;
     });
 
-  if (empty && done) {
-    return (
-      <div className={feedClass}>
-        <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
-          <EmptyIllustration className="w-44 sm:w-52" />
-          <h2 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">ჯერ ბლოგები არ არის</h2>
-          <p className="mt-2 text-muted">როცა ვინმე რამეს გამოაქვეყნებს, აქ გამოჩნდება.</p>
-          <Button href="/write" variant="outline" className="mt-6">
-            დაწერე პირველი ბლოგი
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  if (empty && done) return emptyState;
 
   return (
     // The browser's own scroll anchoring stays off: useWindowedList keeps the position itself.
-    <div className={`${feedClass} [overflow-anchor:none]`}>
+    <div className="[overflow-anchor:none]">
       <div ref={list}>
         <div style={{ height: above }} />
         {groups.map((group) => (
@@ -99,6 +130,8 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
                   key={post.id}
                   post={post}
                   seenRef={seenRef}
+                  signedIn={Boolean(viewerId)}
+                  own={post.author.id === viewerId}
                   followed={followed}
                   onToggleFollow={() => toggleFollow(post.author.id, followed)}
                   like={like}
@@ -130,6 +163,8 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
 
 function PostCard({
   post,
+  signedIn,
+  own,
   followed,
   onToggleFollow,
   like,
@@ -139,6 +174,9 @@ function PostCard({
   seenRef,
 }: {
   post: FeedPost;
+  signedIn: boolean;
+  // The reader's own post: nothing in the menu applies to it.
+  own: boolean;
   followed: boolean;
   onToggleFollow: () => void;
   like: Like;
@@ -160,9 +198,11 @@ function PostCard({
         <time dateTime={post.dateTime} className="shrink-0 text-muted">
           · {post.date}
         </time>
-        <div className="-my-2 -mr-2 ml-auto">
-          <PostMenu followed={followed} onToggleFollow={onToggleFollow} />
-        </div>
+        {signedIn && !own && (
+          <div className="-my-2 -mr-2 ml-auto">
+            <PostMenu followed={followed} onToggleFollow={onToggleFollow} />
+          </div>
+        )}
       </div>
 
       <div className="mt-3 flex gap-6 sm:gap-10">
@@ -175,7 +215,7 @@ function PostCard({
           </Link>
 
           <div className="-ml-2 mt-4 flex items-center gap-1">
-            <LikeButton signedIn liked={like.liked} count={like.count} onToggle={onToggleLike} />
+            <LikeButton signedIn={signedIn} liked={like.liked} count={like.count} onToggle={onToggleLike} />
             <Link
               href={`${post.href}#comments`}
               aria-label={post.comments ? `კომენტარები: ${post.comments}` : "კომენტარები"}

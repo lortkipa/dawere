@@ -42,5 +42,5 @@ export default async function Home() {
 
 // Streams in after the header, with the skeleton in its place until then.
 async function HomeFeed({ user }: { user: User }) {
-  return <Feed first={await getFeedPage(user, null)} />;
+  return <Feed first={await getFeedPage(user, null)} viewerId={user.id} />;
 }
