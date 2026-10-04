@@ -14,10 +14,16 @@ import { FollowedIcon } from "./followed-icon";
 import { actionClass, LikeButton } from "./like-button";
 import { Icon, MenuItem, menuClass, useDismiss } from "./menu";
 import { FeedSkeleton } from "./skeleton";
-import { useInfiniteList } from "./use-infinite-list";
 import { useSeen } from "./use-seen";
+import { useWindowedList } from "./use-windowed-list";
 
 const feedClass = "mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6";
+
+// Posts per page, as feedPageSize in lib/feed.ts. Past `maxShown` the oldest page leaves the page.
+const step = 25;
+const maxShown = 50;
+
+type Like = { liked: boolean; count: number };
 
 // Shown while the first page loads.
 export function FeedLoading() {
@@ -30,18 +36,38 @@ export function FeedLoading() {
 
 // Likes and follows change on screen at once and are saved in the background. They live in this
 // component rather than in useOptimistic: pages fetched while scrolling never get fresh server
-// props to fall back to. Saves stay client-only until there is a backend for them.
+// props to fall back to. They aren't kept in the cards either, since cards scrolled far enough
+// away are taken off the page. Saves stay client-only until there is a backend for them.
 export function Feed({ first }: { first: Page<FeedPost> }) {
-  const { items, done, loading, failed, retry, sentinel } = useInfiniteList(first, "/api/feed");
+  const { items, before, after, done, failed, retry, top, bottom } = useWindowedList(first, "/api/feed", {
+    step,
+    max: maxShown,
+  });
   const seenRef = useSeen();
   // Follows changed during this visit, by author id. They apply to every card by that author.
   const [follows, setFollows] = useState<Map<string, boolean>>(() => new Map());
+  // Likes and saves changed during this visit, by post id.
+  const [likes, setLikes] = useState<Map<string, Like>>(() => new Map());
+  const [saved, setSaved] = useState<Set<string>>(() => new Set());
 
   const toggleFollow = (authorId: string, followed: boolean) => {
     const update = (value: boolean) => setFollows((current) => new Map(current).set(authorId, value));
     update(!followed);
     setFollow(authorId, !followed).catch(() => update(followed));
   };
+
+  const toggleLike = (postId: string, before: Like) => {
+    const update = (value: Like) => setLikes((current) => new Map(current).set(postId, value));
+    update({ liked: !before.liked, count: before.count + (before.liked ? -1 : 1) });
+    setPostLike(postId, !before.liked).catch(() => update(before));
+  };
+
+  const toggleSaved = (postId: string) =>
+    setSaved((current) => {
+      const updated = new Set(current);
+      if (!updated.delete(postId)) updated.add(postId);
+      return updated;
+    });
 
   if (items.length === 0 && done) {
     return (
@@ -59,9 +85,13 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
   }
 
   return (
-    <div className={feedClass}>
+    // The browser's own scroll anchoring stays off: useWindowedList keeps the position itself.
+    <div className={`${feedClass} [overflow-anchor:none]`}>
+      <div ref={top} />
+      {before && <FeedSkeleton count={3} />}
       {items.map((post) => {
         const followed = follows.get(post.author.id) ?? post.followed;
+        const like = likes.get(post.id) ?? { liked: post.liked, count: post.likes };
         return (
           <PostCard
             key={post.id}
@@ -69,12 +99,16 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
             seenRef={seenRef}
             followed={followed}
             onToggleFollow={() => toggleFollow(post.author.id, followed)}
+            like={like}
+            onToggleLike={() => toggleLike(post.id, like)}
+            saved={saved.has(post.id)}
+            onToggleSaved={() => toggleSaved(post.id)}
           />
         );
       })}
 
-      <div ref={sentinel} />
-      {loading && <FeedSkeleton count={2} />}
+      <div ref={bottom} />
+      {after && <FeedSkeleton count={3} />}
       {failed && (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-muted">ვერ ჩაიტვირთა</p>
@@ -92,22 +126,22 @@ function PostCard({
   post,
   followed,
   onToggleFollow,
+  like,
+  onToggleLike,
+  saved,
+  onToggleSaved,
   seenRef,
 }: {
   post: FeedPost;
   followed: boolean;
   onToggleFollow: () => void;
+  like: Like;
+  onToggleLike: () => void;
+  saved: boolean;
+  onToggleSaved: () => void;
   seenRef: (element: HTMLElement | null) => void;
 }) {
-  const [like, setLike] = useState({ liked: post.liked, count: post.likes });
-  const [saved, setSaved] = useState(false);
   const profile = `/@${post.author.handle}`;
-
-  const toggleLike = () => {
-    const before = like;
-    setLike({ liked: !before.liked, count: before.count + (before.liked ? -1 : 1) });
-    setPostLike(post.id, !before.liked).catch(() => setLike(before));
-  };
 
   return (
     <article ref={seenRef} data-post-id={post.id} className="animate-rise border-b border-line py-6">
@@ -135,7 +169,7 @@ function PostCard({
           </Link>
 
           <div className="-ml-2 mt-4 flex items-center gap-1">
-            <LikeButton signedIn liked={like.liked} count={like.count} onToggle={toggleLike} />
+            <LikeButton signedIn liked={like.liked} count={like.count} onToggle={onToggleLike} />
             <Link
               href={`${post.href}#comments`}
               aria-label={post.comments ? `კომენტარები: ${post.comments}` : "კომენტარები"}
@@ -154,7 +188,7 @@ function PostCard({
               </svg>
               {post.comments > 0 && <span className="text-sm tabular-nums">{formatCount(post.comments)}</span>}
             </Link>
-            <ActionButton label="შენახვა" pressed={saved} onClick={() => setSaved((value) => !value)}>
+            <ActionButton label="შენახვა" pressed={saved} onClick={onToggleSaved}>
               <svg
                 viewBox="0 0 24 24"
                 className={`size-5 ${saved ? "fill-yellow-400 text-yellow-500" : "fill-none"}`}

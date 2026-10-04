@@ -18,12 +18,17 @@ function Loading({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Mirrors a feed card: author line, title, description, actions and the cover on the right.
+// Mirrors a feed card: author line, title, description, actions and the cover on the right. The
+// cards rise in one after another while the shimmer sweeps across them.
 export function FeedSkeleton({ count = 3 }: { count?: number }) {
   return (
     <Loading>
       {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="border-b border-line py-6">
+        <div
+          key={index}
+          className="animate-rise border-b border-line py-6"
+          style={{ animationDelay: `${index * 120}ms` }}
+        >
           <div className="flex items-center gap-2">
             <Bone className="size-5 rounded-full" />
             <Bone className="h-3.5 w-28" />

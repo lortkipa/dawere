@@ -6,6 +6,8 @@ import { posts, users, type User } from "./db/schema";
 import { avatarUrl, formatDate, formatRelative } from "./user-view";
 
 export const pageSize = 10;
+// The home feed loads in bigger pages; see useWindowedList.
+export const feedPageSize = 25;
 
 export type Page<T> = { items: T[]; next: string | null };
 
@@ -138,9 +140,9 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
     .innerJoin(users, eq(users.id, posts.userId))
     .where(and(ne(posts.userId, viewer.id), lte(posts.createdAt, asOf), keyset))
     .orderBy(desc(score), desc(posts.id))
-    .limit(pageSize + 1);
+    .limit(feedPageSize + 1);
 
-  const page = rows.slice(0, pageSize);
+  const page = rows.slice(0, feedPageSize);
   const last = page.at(-1);
   const now = new Date();
   return {
@@ -159,7 +161,7 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
       followed: row.followed,
     })),
     next:
-      rows.length > pageSize && last
+      rows.length > feedPageSize && last
         ? encodeCursor({ asOf: asOf.toISOString(), seed, score: last.score, id: last.id })
         : null,
   };

@@ -79,6 +79,12 @@ export function useSeen() {
     return () => {
       elements.current.delete(element);
       observer.current?.unobserve(element);
+      // A card taken off the page before its dwell time is up doesn't count as seen.
+      const id = element.dataset.postId;
+      if (id) {
+        window.clearTimeout(timers.current.get(id));
+        timers.current.delete(id);
+      }
     };
   }, []);
 }
