@@ -36,6 +36,7 @@ All data is stored in plain folders next to this README, so containers can be de
 ```
 data/postgres/        database files (used by Postgres only; don't copy or edit while it runs)
 data/uploads/avatars/ profile photos
+data/uploads/images/  photos in posts
 backups/              daily database dumps, newest 14 kept
 ```
 

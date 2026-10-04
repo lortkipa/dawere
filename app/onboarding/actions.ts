@@ -11,11 +11,12 @@ import {
   referrals,
   topics,
 } from "@/lib/onboarding-options";
+import { safeNext } from "@/lib/return-to";
 import { getCurrentUser } from "@/lib/session";
 
 type Answers = { name: string; topics: string[]; referral: string; referralOther: string };
 
-export async function completeOnboarding(answers: Answers): Promise<{ error: string }> {
+export async function completeOnboarding(answers: Answers, next?: string | null): Promise<{ error: string }> {
   const user = await getCurrentUser();
   if (!user) redirect("/auth");
 
@@ -44,5 +45,5 @@ export async function completeOnboarding(answers: Answers): Promise<{ error: str
     })
     .where(eq(users.id, user.id));
 
-  redirect("/");
+  redirect(safeNext(next) ?? "/");
 }

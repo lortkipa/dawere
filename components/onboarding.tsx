@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { logout } from "@/app/auth/actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
@@ -25,6 +26,8 @@ export function Onboarding() {
   const [referralOther, setReferralOther] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  // The page the person was reading before signing in, to return to at the end.
+  const returnTo = useSearchParams().get("next");
 
   const current = steps[step];
   const isLast = step === steps.length - 1;
@@ -50,12 +53,15 @@ export function Onboarding() {
     setError("");
     // On success the action redirects, so only a failure comes back.
     startTransition(async () => {
-      const result = await completeOnboarding({
-        name,
-        topics: chosenTopics,
-        referral,
-        referralOther,
-      });
+      const result = await completeOnboarding(
+        {
+          name,
+          topics: chosenTopics,
+          referral,
+          referralOther,
+        },
+        returnTo,
+      );
       if (result?.error) setError(result.error);
     });
   }
@@ -68,7 +74,7 @@ export function Onboarding() {
           aria-label="უკან"
           disabled={pending}
           // On the first step, going back signs out and returns to the sign-in page.
-          onClick={() => (step === 0 ? startTransition(() => logout()) : setStep(step - 1))}
+          onClick={() => (step === 0 ? startTransition(() => logout(returnTo)) : setStep(step - 1))}
           className="-ml-2 grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-ink transition-colors hover:bg-surface disabled:opacity-40"
         >
           <svg

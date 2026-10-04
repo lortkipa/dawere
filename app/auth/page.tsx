@@ -3,15 +3,16 @@ import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
 import { Glow } from "@/components/glow";
 import { Header } from "@/components/header";
+import { safeNext } from "@/lib/return-to";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "შესვლა — dawere",
 };
 
-export default async function AuthPage() {
+export default async function AuthPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const user = await getCurrentUser();
-  if (user) redirect(user.onboardedAt ? "/" : "/onboarding");
+  if (user) redirect(user.onboardedAt ? (safeNext((await searchParams).next) ?? "/") : "/onboarding");
 
   return (
     <div className="flex min-h-dvh flex-col">

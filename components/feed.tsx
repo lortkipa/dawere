@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { FeedPost } from "@/lib/fake-feed";
 import { Avatar } from "./avatar";
+import { FollowedIcon } from "./followed-icon";
 import { Icon, MenuItem, menuClass, useDismiss } from "./menu";
 
 // Likes, saves and follows live in client state only until there is a backend for them.
@@ -48,22 +49,7 @@ function PostCard({
       <div className="flex items-center gap-2 text-sm">
         <Avatar className="size-5" />
         <span className="font-medium text-ink">{post.author}</span>
-        {followed && (
-          <span title="გამოწერილი" className="flex text-blue-500">
-            <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" role="img" aria-label="გამოწერილი">
-              <circle cx="9" cy="7.5" r="4" />
-              <path d="M1.5 20.5a7.5 7.5 0 0 1 15 0 .5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5z" />
-              <path
-                d="m16 11.5 2.25 2.25L22.5 9.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.25"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        )}
+        {followed && <FollowedIcon className="flex" />}
         <span className="text-muted">· {post.date}</span>
         <div className="-my-2 -mr-2 ml-auto">
           <PostMenu followed={followed} onToggleFollow={onToggleFollow} />

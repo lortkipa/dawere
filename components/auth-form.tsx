@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { verifyCode } from "@/app/auth/actions";
 import { emailPattern } from "@/lib/profile-rules";
 import { FacebookIcon, GoogleIcon } from "./brand-icons";
@@ -103,6 +104,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   const [digits, setDigits] = useState(emptyCode);
   const [invalid, setInvalid] = useState(false);
   const [pending, startTransition] = useTransition();
+  const returnTo = useSearchParams().get("next");
   const [sends, setSends] = useState(1);
   const [secondsLeft, setSecondsLeft] = useState(resendCooldown);
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
@@ -125,7 +127,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
     if (next.every(Boolean)) {
       // On success the action redirects, so only a failure comes back.
       startTransition(async () => {
-        const result = await verifyCode(email, next.join(""));
+        const result = await verifyCode(email, next.join(""), returnTo);
         if (result?.error) setInvalid(true);
       });
     }

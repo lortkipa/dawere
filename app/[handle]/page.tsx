@@ -1,13 +1,13 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { Header } from "@/components/header";
 import { Profile } from "@/components/profile";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { posts, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
-import { menuUser } from "@/lib/user-view";
+import { formatDate, menuUser } from "@/lib/user-view";
 
 type Props = { params: Promise<{ handle: string }> };
 
@@ -41,12 +41,25 @@ export default async function ProfilePage({ params }: Props) {
   const viewer = await getCurrentUser();
   if (viewer && !viewer.onboardedAt) redirect("/onboarding");
 
+  const list = await db
+    .select({ id: posts.id, title: posts.title, description: posts.description, cover: posts.cover, createdAt: posts.createdAt })
+    .from(posts)
+    .where(eq(posts.userId, profile.id))
+    .orderBy(desc(posts.createdAt));
+
   return (
     <>
       <Header user={viewer ? menuUser(viewer) : undefined} />
       <main>
         <Profile
           user={{ name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
+          posts={list.map((post) => ({
+            href: `/@${profile.handle}/${post.id}`,
+            title: post.title,
+            description: post.description,
+            cover: post.cover,
+            date: formatDate(post.createdAt),
+          }))}
           isOwner={viewer?.id === profile.id}
           signedIn={Boolean(viewer)}
         />

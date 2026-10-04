@@ -3,9 +3,9 @@
 import { and, eq, ne } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { deleteAvatar, saveAvatar } from "@/lib/avatars";
+import { deleteAvatar, deleteImages, saveAvatar } from "@/lib/uploads";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { posts, users } from "@/lib/db/schema";
 import { maxNameLength } from "@/lib/onboarding-options";
 import {
   emailPattern,
@@ -126,11 +126,13 @@ export async function removeAvatar(): Promise<Result> {
   refresh();
 }
 
-// Sessions go with the row through ON DELETE CASCADE; the photo lives on disk.
+// Sessions and posts go with the row through ON DELETE CASCADE; photos live on disk.
 export async function deleteAccount() {
   const user = await requireUser();
+  const owned = await db.select({ images: posts.images }).from(posts).where(eq(posts.userId, user.id));
   await db.delete(users).where(eq(users.id, user.id));
   await deleteAvatar(user.avatar);
+  await deleteImages(owned.flatMap((post) => post.images));
   await deleteSession();
   redirect("/");
 }

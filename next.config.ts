@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   // Lets `next dev` serve phones on the local network (dev only).
   allowedDevOrigins: ["192.168.*.*"],
   experimental: {
-    // Profile photos up to 5 MB, plus room for the multipart overhead.
-    serverActions: { bodySizeLimit: "6mb" },
+    // Publishing sends a post with all its photos (up to 20, shrunk in the browser) at once.
+    serverActions: { bodySizeLimit: "25mb" },
   },
 };
 

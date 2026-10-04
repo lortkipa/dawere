@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import type { JSONContent } from "@tiptap/core";
 
 export const users = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),
@@ -31,4 +32,26 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+export const posts = pgTable(
+  "posts",
+  {
+    // 12 random hex characters, made by the publish action; the URL is /@handle/<id>.
+    id: text().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text().notNull(),
+    description: text().notNull(),
+    // File name under UPLOAD_DIR/images.
+    cover: text(),
+    // The TipTap document, with image srcs already pointing at /images/….
+    body: jsonb().$type<JSONContent>().notNull(),
+    // Every file the post owns (cover and body), so deleting it can remove them from disk.
+    images: text().array().notNull().default(sql`'{}'`),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId, table.createdAt.desc())],
+);
+
 export type User = typeof users.$inferSelect;
+export type Post = typeof posts.$inferSelect;

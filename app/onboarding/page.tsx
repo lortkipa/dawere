@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/header";
 import { Onboarding } from "@/components/onboarding";
+import { authUrl, safeNext } from "@/lib/return-to";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "რეგისტრაცია — dawere",
 };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const next = safeNext((await searchParams).next);
   const user = await getCurrentUser();
-  if (!user) redirect("/auth");
-  if (user.onboardedAt) redirect("/");
+  if (!user) redirect(authUrl(next));
+  if (user.onboardedAt) redirect(next ?? "/");
 
   return (
     <div className="flex min-h-dvh flex-col">

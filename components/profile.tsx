@@ -1,21 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { avatarUrl } from "@/lib/user-view";
+import { avatarUrl, imageUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { EmptyIllustration } from "./empty-illustration";
+import { FollowButton } from "./follow-button";
 
 type ProfileUser = { name: string; bio: string | null; avatar: string | null };
+export type ProfilePost = { href: string; title: string; description: string; cover: string | null; date: string };
 
-// There are no posts, follows or editor yet: the list is always empty, following lives in
-// client state only (like the feed) and the write buttons do nothing.
+// Follows don't exist yet: the follower count only reflects this visit (see FollowButton).
 export function Profile({
   user,
+  posts,
   isOwner,
   signedIn,
 }: {
   user: ProfileUser;
+  posts: ProfilePost[];
   isOwner: boolean;
   signedIn: boolean;
 }) {
@@ -39,42 +43,57 @@ export function Profile({
         </div>
 
         {isOwner ? (
-          <Button className="w-full gap-2 sm:w-auto">
+          <Button href="/write" className="w-full gap-2 sm:w-auto">
             <PenIcon />
             დაწერე
           </Button>
-        ) : signedIn ? (
-          <Button
-            variant={followed ? "outline" : "primary"}
-            aria-pressed={followed}
-            onClick={() => setFollowed((value) => !value)}
-            className="w-full sm:w-auto sm:min-w-32"
-          >
-            {followed ? "გამოწერილი" : "გამოწერა"}
-          </Button>
         ) : (
-          <Button href="/auth" className="w-full sm:w-auto sm:min-w-32">
-            გამოწერა
-          </Button>
+          <FollowButton signedIn={signedIn} onChange={setFollowed} className="w-full sm:w-auto sm:min-w-32" />
         )}
       </section>
 
       <section className="mt-10">
         <h2 className="border-b border-line pb-3 font-semibold text-ink">ბლოგები</h2>
-        <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
-          <EmptyIllustration className="w-44 sm:w-52" />
-          <h3 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">
-            {isOwner ? "ჯერ არაფერი დაგიწერია" : "ჯერ ბლოგები არ არის"}
-          </h3>
-          <p className="mt-2 text-muted">
-            {isOwner ? "შენი ბლოგები აქ გამოჩნდება." : "როცა ავტორი რამეს გამოაქვეყნებს, აქ გამოჩნდება."}
-          </p>
-          {isOwner && (
-            <Button variant="outline" className="mt-6">
-              დაიწყე წერა
-            </Button>
-          )}
-        </div>
+        {posts.length > 0 ? (
+          <ul className="divide-y divide-line">
+            {posts.map((post) => (
+              <li key={post.href}>
+                <Link href={post.href} className="group flex gap-4 py-6 sm:gap-6">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="line-clamp-2 text-lg font-bold leading-snug break-words text-ink group-hover:underline sm:text-xl">
+                      {post.title}
+                    </h3>
+                    <p className="mt-1.5 line-clamp-2 break-words text-muted">{post.description}</p>
+                    <p className="mt-3 text-sm text-muted">{post.date}</p>
+                  </div>
+                  {post.cover && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl(post.cover)}
+                      alt=""
+                      className="aspect-[4/3] w-24 shrink-0 self-start rounded-lg object-cover sm:w-36"
+                    />
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
+            <EmptyIllustration className="w-44 sm:w-52" />
+            <h3 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">
+              {isOwner ? "ჯერ არაფერი დაგიწერია" : "ჯერ ბლოგები არ არის"}
+            </h3>
+            <p className="mt-2 text-muted">
+              {isOwner ? "შენი ბლოგები აქ გამოჩნდება." : "როცა ავტორი რამეს გამოაქვეყნებს, აქ გამოჩნდება."}
+            </p>
+            {isOwner && (
+              <Button href="/write" variant="outline" className="mt-6">
+                დაიწყე წერა
+              </Button>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );

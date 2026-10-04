@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { emailPattern, normalizeEmail } from "@/lib/profile-rules";
+import { authUrl, safeNext } from "@/lib/return-to";
 import { createSession, deleteSession } from "@/lib/session";
 
 // Until email sending exists, this is the only code that passes.
 const testCode = "123456";
 
-export async function verifyCode(email: string, code: string): Promise<{ error: string }> {
+// `next` is the page the person was on before signing in; onboarding passes it along.
+export async function verifyCode(email: string, code: string, next?: string | null): Promise<{ error: string }> {
   const normalized = normalizeEmail(email);
   if (!emailPattern.test(normalized) || code !== testCode) {
     return { error: "კოდი არასწორია" };
@@ -23,10 +25,13 @@ export async function verifyCode(email: string, code: string): Promise<{ error: 
     .returning();
 
   await createSession(user.id);
-  redirect(user.onboardedAt ? "/" : "/onboarding");
+  const back = safeNext(next);
+  if (user.onboardedAt) redirect(back ?? "/");
+  redirect(back ? `/onboarding?next=${encodeURIComponent(back)}` : "/onboarding");
 }
 
-export async function logout() {
+// Called as a form action too, where the argument is FormData; only a string path counts.
+export async function logout(next?: unknown) {
   await deleteSession();
-  redirect("/auth");
+  redirect(authUrl(safeNext(next)));
 }
