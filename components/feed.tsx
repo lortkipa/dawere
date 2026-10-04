@@ -19,9 +19,8 @@ import { useWindowedList } from "./use-windowed-list";
 
 const feedClass = "mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6";
 
-// Posts per page, as feedPageSize in lib/feed.ts. Past `maxShown` the oldest page leaves the page.
+// Posts per page, as feedPageSize in lib/feed.ts. Pages far from the screen leave the page.
 const step = 25;
-const maxShown = 50;
 
 type Like = { liked: boolean; count: number };
 
@@ -39,10 +38,11 @@ export function FeedLoading() {
 // props to fall back to. They aren't kept in the cards either, since cards scrolled far enough
 // away are taken off the page. Saves stay client-only until there is a backend for them.
 export function Feed({ first }: { first: Page<FeedPost> }) {
-  const { items, before, after, done, failed, retry, top, bottom } = useWindowedList(first, "/api/feed", {
+  const { groups, above, below, empty, after, done, failed, retry, list, groupRef, bottom } = useWindowedList(
+    first,
+    "/api/feed",
     step,
-    max: maxShown,
-  });
+  );
   const seenRef = useSeen();
   // Follows changed during this visit, by author id. They apply to every card by that author.
   const [follows, setFollows] = useState<Map<string, boolean>>(() => new Map());
@@ -69,7 +69,7 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
       return updated;
     });
 
-  if (items.length === 0 && done) {
+  if (empty && done) {
     return (
       <div className={feedClass}>
         <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
@@ -87,25 +87,31 @@ export function Feed({ first }: { first: Page<FeedPost> }) {
   return (
     // The browser's own scroll anchoring stays off: useWindowedList keeps the position itself.
     <div className={`${feedClass} [overflow-anchor:none]`}>
-      <div ref={top} />
-      {before && <FeedSkeleton count={3} />}
-      {items.map((post) => {
-        const followed = follows.get(post.author.id) ?? post.followed;
-        const like = likes.get(post.id) ?? { liked: post.liked, count: post.likes };
-        return (
-          <PostCard
-            key={post.id}
-            post={post}
-            seenRef={seenRef}
-            followed={followed}
-            onToggleFollow={() => toggleFollow(post.author.id, followed)}
-            like={like}
-            onToggleLike={() => toggleLike(post.id, like)}
-            saved={saved.has(post.id)}
-            onToggleSaved={() => toggleSaved(post.id)}
-          />
-        );
-      })}
+      <div ref={list}>
+        <div style={{ height: above }} />
+        {groups.map((group) => (
+          <div key={group.index} ref={groupRef} data-group={group.index}>
+            {group.items.map((post) => {
+              const followed = follows.get(post.author.id) ?? post.followed;
+              const like = likes.get(post.id) ?? { liked: post.liked, count: post.likes };
+              return (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  seenRef={seenRef}
+                  followed={followed}
+                  onToggleFollow={() => toggleFollow(post.author.id, followed)}
+                  like={like}
+                  onToggleLike={() => toggleLike(post.id, like)}
+                  saved={saved.has(post.id)}
+                  onToggleSaved={() => toggleSaved(post.id)}
+                />
+              );
+            })}
+          </div>
+        ))}
+        <div style={{ height: below }} />
+      </div>
 
       <div ref={bottom} />
       {after && <FeedSkeleton count={3} />}
