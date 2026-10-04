@@ -12,7 +12,7 @@ import { db } from "@/lib/db";
 import { isFollowing } from "@/lib/follows";
 import { postIdPattern } from "@/lib/ids";
 import { postLikeState } from "@/lib/likes";
-import { posts, users } from "@/lib/db/schema";
+import { postViews, posts, users } from "@/lib/db/schema";
 import { postExtensions } from "@/lib/post-schema";
 import { getCurrentUser } from "@/lib/session";
 import { avatarUrl, formatDate, imageUrl, menuUser } from "@/lib/user-view";
@@ -53,6 +53,13 @@ export default async function PostPage({ params }: Props) {
     viewer && canFollow ? isFollowing(viewer.id, author.id) : false,
     postLikeState(post.id, viewer?.id),
     getPostComments(post.id, viewer?.id),
+    // Opened posts sink far down this reader's feed on later visits.
+    viewer && canFollow
+      ? db
+          .insert(postViews)
+          .values({ userId: viewer.id, postId: post.id, openedAt: new Date() })
+          .onConflictDoUpdate({ target: [postViews.userId, postViews.postId], set: { openedAt: new Date() } })
+      : null,
   ]);
 
   return (

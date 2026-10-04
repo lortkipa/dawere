@@ -56,6 +56,37 @@
   }
 }
 
+@layer components {
+  /* A loading placeholder. The band is sized and positioned against the viewport (fixed), so
+     every bone on screen lights up as part of one sweep. */
+  .bone {
+    background-color: #efefed;
+    background-image: linear-gradient(100deg, transparent 43%, rgb(255 255 255 / 0.9) 50%, transparent 57%);
+    background-size: 200vw 100%;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bone {
+      animation: none;
+      background-image: none;
+    }
+  }
+}
+
+/* The band crosses the screen left to right, then rests for a moment before the next sweep. */
+@keyframes shimmer {
+  0% {
+    background-position: -110vw 0;
+  }
+  75%,
+  100% {
+    background-position: 10vw 0;
+  }
+}
+
 /* A post's body, the same in the editor and on the read page. */
 @layer components {
   .post-body {

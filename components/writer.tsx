@@ -11,7 +11,9 @@ import { publishPost } from "@/app/write/actions";
 import { imageTypes, maxDescriptionLength, maxImages, maxPickedImageBytes, maxTitleLength } from "@/lib/post-rules";
 import { postExtensions } from "@/lib/post-schema";
 import { shrinkImage } from "@/lib/shrink-image";
+import { minTags } from "@/lib/tags";
 import { Button } from "./button";
+import { TagInput } from "./tag-input";
 import { Toolbar } from "./writer-toolbar";
 
 const errorClass = "text-[#d93025]";
@@ -40,6 +42,7 @@ export function Writer() {
   const [cover, setCover] = useState<Picked | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   // Problems with photos in the body show under the toolbar, cover problems under the cover.
   const [notice, setNotice] = useState("");
   const [coverError, setCoverError] = useState("");
@@ -53,6 +56,7 @@ export function Writer() {
   const imageInput = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const tagsRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef(cover);
   useEffect(() => {
     coverRef.current = cover;
@@ -140,8 +144,9 @@ export function Writer() {
     selector: ({ editor }) => (editor ? countImages(editor.view) > 0 : false),
   });
 
-  const canPublish = title.trim() !== "" && description.trim() !== "" && Boolean(bodyHasText) && !pending;
-  const dirty = Boolean(title.trim() || description.trim() || cover || bodyHasText || bodyHasImages);
+  const canPublish =
+    title.trim() !== "" && description.trim() !== "" && tags.length >= minTags && Boolean(bodyHasText) && !pending;
+  const dirty = Boolean(title.trim() || description.trim() || tags.length || cover || bodyHasText || bodyHasImages);
   useLeaveWarning(dirty && !pending);
 
   function pickCover(file: File | undefined) {
@@ -186,6 +191,7 @@ export function Writer() {
 
     data.set("title", title.trim());
     data.set("description", description.trim());
+    data.set("tags", JSON.stringify(tags));
     data.set("body", JSON.stringify(body));
     if (cover) data.set("cover", cover.blob);
 
@@ -307,9 +313,13 @@ export function Writer() {
           maxLength={maxDescriptionLength}
           value={description}
           onChange={setDescription}
-          onKeyDown={(event) => enterPressed(event) && editor?.commands.focus("start")}
+          // With five tags picked the tag field is gone, so Enter goes straight to the body.
+          onKeyDown={(event) =>
+            enterPressed(event) && (tagsRef.current ? tagsRef.current.focus() : editor?.commands.focus("start"))
+          }
           className="mt-3 text-lg leading-relaxed text-muted"
         />
+        <TagInput ref={tagsRef} tags={tags} onChange={setTags} onDone={() => editor?.commands.focus("start")} />
       </div>
 
       <div className="sticky top-16 z-40 border-y border-line bg-white">

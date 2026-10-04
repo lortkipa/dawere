@@ -1,15 +1,5 @@
 import { sql } from "drizzle-orm";
-import {
-  type AnyPgColumn,
-  check,
-  index,
-  jsonb,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { type AnyPgColumn, check, index, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
 
 export const users = pgTable("users", {
@@ -57,10 +47,22 @@ export const posts = pgTable(
     // The TipTap document, with image srcs already pointing at /images/….
     body: jsonb().$type<JSONContent>().notNull(),
     // Every file the post owns (cover and body), so deleting it can remove them from disk.
-    images: text().array().notNull().default(sql`'{}'`),
+    images: text()
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+    // Onboarding topic slugs plus the author's own tags, normalized by lib/tags.ts.
+    tags: text()
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index().on(table.userId, table.createdAt.desc())],
+  (table) => [
+    index().on(table.userId, table.createdAt.desc()),
+    // Matches posts against a reader's topics with `&&`.
+    index().using("gin", table.tags),
+  ],
 );
 
 export const follows = pgTable(
@@ -126,6 +128,24 @@ export const commentLikes = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.commentId] }), index().on(table.commentId)],
+);
+
+// What a reader has already come across, so the feed can lead with posts they haven't.
+export const postViews = pgTable(
+  "post_views",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    postId: text()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    // The first time the post's card was on screen in the feed.
+    seenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    // The last time the reader opened the post itself.
+    openedAt: timestamp({ withTimezone: true }),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.postId] })],
 );
 
 export type User = typeof users.$inferSelect;

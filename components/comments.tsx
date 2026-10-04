@@ -19,6 +19,7 @@ import { setCommentLike } from "@/app/likes/actions";
 import type { CommentNode } from "@/lib/comments";
 import { authUrl } from "@/lib/return-to";
 import { Avatar } from "./avatar";
+import { FollowedIcon } from "./followed-icon";
 import { Button } from "./button";
 import { Dialog } from "./dialog";
 import { LikeButton, useLike } from "./like-button";
@@ -223,10 +224,13 @@ function CommentRow({
         {author ? (
           <>
             <div className="flex min-h-6 items-center gap-2">
-              <div className="flex min-w-0 flex-1 items-baseline gap-2 text-sm">
-                <Link href={`/@${author.handle}`} className="truncate font-medium text-ink hover:underline">
-                  {author.name || `@${author.handle}`}
-                </Link>
+              <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <Link href={`/@${author.handle}`} className="truncate font-medium text-ink hover:underline">
+                    {author.name || `@${author.handle}`}
+                  </Link>
+                  {author.followed && <FollowedIcon className="flex shrink-0" />}
+                </div>
                 <time dateTime={comment.dateTime} className="shrink-0 text-muted">
                   {comment.time}
                 </time>

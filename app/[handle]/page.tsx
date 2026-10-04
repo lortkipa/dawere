@@ -1,14 +1,17 @@
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import { Header } from "@/components/header";
 import { Profile } from "@/components/profile";
+import { ProfilePosts } from "@/components/profile-posts";
+import { ProfilePostsSkeleton } from "@/components/skeleton";
 import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { getProfilePage } from "@/lib/feed";
 import { followerCount, isFollowing } from "@/lib/follows";
-import { posts, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/session";
-import { formatDate, menuUser } from "@/lib/user-view";
+import { menuUser } from "@/lib/user-view";
 
 type Props = { params: Promise<{ handle: string }> };
 
@@ -42,11 +45,6 @@ export default async function ProfilePage({ params }: Props) {
   const viewer = await getCurrentUser();
   if (viewer && !viewer.onboardedAt) redirect("/onboarding");
 
-  const list = await db
-    .select({ id: posts.id, title: posts.title, description: posts.description, cover: posts.cover, createdAt: posts.createdAt })
-    .from(posts)
-    .where(eq(posts.userId, profile.id))
-    .orderBy(desc(posts.createdAt));
   const isOwner = viewer?.id === profile.id;
   const [followers, followed] = await Promise.all([
     followerCount(profile.id),
@@ -59,13 +57,12 @@ export default async function ProfilePage({ params }: Props) {
       <main>
         <Profile
           user={{ id: profile.id, name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
-          posts={list.map((post) => ({
-            href: `/@${profile.handle}/${post.id}`,
-            title: post.title,
-            description: post.description,
-            cover: post.cover,
-            date: formatDate(post.createdAt),
-          }))}
+          posts={
+            // Keyed, so moving to another profile starts a fresh list.
+            <Suspense key={profile.id} fallback={<ProfilePostsSkeleton />}>
+              <PostList authorId={profile.id} isOwner={isOwner} />
+            </Suspense>
+          }
           followers={followers}
           followed={followed}
           isOwner={isOwner}
@@ -74,4 +71,8 @@ export default async function ProfilePage({ params }: Props) {
       </main>
     </>
   );
+}
+
+async function PostList({ authorId, isOwner }: { authorId: string; isOwner: boolean }) {
+  return <ProfilePosts authorId={authorId} first={await getProfilePage(authorId, null)} isOwner={isOwner} />;
 }

@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { Bento } from "@/components/bento";
 import { ClosingCta } from "@/components/closing-cta";
-import { Feed } from "@/components/feed";
+import { Feed, FeedLoading } from "@/components/feed";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
-import { fakePosts } from "@/lib/fake-feed";
+import type { User } from "@/lib/db/schema";
+import { getFeedPage } from "@/lib/feed";
 import { getCurrentUser } from "@/lib/session";
 import { menuUser } from "@/lib/user-view";
 
@@ -17,7 +19,9 @@ export default async function Home() {
       <>
         <Header user={menuUser(user)} />
         <main>
-          <Feed posts={fakePosts} />
+          <Suspense fallback={<FeedLoading />}>
+            <HomeFeed user={user} />
+          </Suspense>
         </main>
       </>
     );
@@ -34,4 +38,9 @@ export default async function Home() {
       <Footer />
     </>
   );
+}
+
+// Streams in after the header, with the skeleton in its place until then.
+async function HomeFeed({ user }: { user: User }) {
+  return <Feed first={await getFeedPage(user, null)} />;
 }

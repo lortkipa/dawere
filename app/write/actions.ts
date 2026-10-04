@@ -16,6 +16,7 @@ import {
 } from "@/lib/post-rules";
 import { postExtensions } from "@/lib/post-schema";
 import { getCurrentUser } from "@/lib/session";
+import { maxTags, minTags, normalizeTag } from "@/lib/tags";
 import { deleteImages, saveImage } from "@/lib/uploads";
 import { imageUrl } from "@/lib/user-view";
 
@@ -33,6 +34,21 @@ function walk(node: JSONContent, visit: (node: JSONContent) => void) {
   node.content?.forEach((child) => walk(child, visit));
 }
 
+// The editor sends the tags as a JSON array of what the author picked or typed.
+function parseTags(value: FormDataEntryValue | null) {
+  let list: unknown;
+  try {
+    list = JSON.parse(String(value));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(list) || !list.every((item) => typeof item === "string")) return null;
+  const tags = list.map(normalizeTag);
+  if (tags.some((tag) => tag === null)) return null;
+  const unique = [...new Set(tags as string[])];
+  return unique.length >= minTags && unique.length <= maxTags ? unique : null;
+}
+
 function uploadedFile(formData: FormData, key: string) {
   const file = formData.get(key);
   return file instanceof File && file.size > 0 && file.size <= maxUploadBytes ? file : null;
@@ -47,6 +63,8 @@ export async function publishPost(formData: FormData): Promise<Result> {
   const description = String(formData.get("description") ?? "").trim();
   if (!title || title.length > maxTitleLength) return { error: genericError };
   if (!description || description.length > maxDescriptionLength) return { error: genericError };
+  const tags = parseTags(formData.get("tags"));
+  if (!tags) return { error: genericError };
 
   // fromJSON throws on node types, marks or nesting the schema doesn't allow and drops
   // attributes it doesn't know.
@@ -120,7 +138,7 @@ export async function publishPost(formData: FormData): Promise<Result> {
 
   const id = randomBytes(6).toString("hex");
   try {
-    await db.insert(posts).values({ id, userId: user.id, title, description, cover, body, images: saved });
+    await db.insert(posts).values({ id, userId: user.id, title, description, cover, body, images: saved, tags });
   } catch (error) {
     await deleteImages(saved);
     throw error;

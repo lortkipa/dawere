@@ -1,34 +1,89 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
-import type { FeedPost } from "@/lib/fake-feed";
+import { setFollow } from "@/app/follow/actions";
+import { setPostLike } from "@/app/likes/actions";
+import type { FeedPost, Page } from "@/lib/feed";
 import { formatCount } from "@/lib/format-count";
+import { imageUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
+import { Button } from "./button";
+import { EmptyIllustration } from "./empty-illustration";
 import { FollowedIcon } from "./followed-icon";
+import { actionClass, LikeButton } from "./like-button";
 import { Icon, MenuItem, menuClass, useDismiss } from "./menu";
+import { FeedSkeleton } from "./skeleton";
+import { useInfiniteList } from "./use-infinite-list";
+import { useSeen } from "./use-seen";
 
-// Likes, saves and follows live in client state only until there is a backend for them.
-export function Feed({ posts }: { posts: FeedPost[] }) {
-  const [followed, setFollowed] = useState<Set<string>>(() => new Set());
+const feedClass = "mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6";
 
-  const toggleFollow = (author: string) =>
-    setFollowed((current) => {
-      const next = new Set(current);
-      if (next.has(author)) next.delete(author);
-      else next.add(author);
-      return next;
-    });
+// Shown while the first page loads.
+export function FeedLoading() {
+  return (
+    <div className={feedClass}>
+      <FeedSkeleton />
+    </div>
+  );
+}
+
+// Likes and follows change on screen at once and are saved in the background. They live in this
+// component rather than in useOptimistic: pages fetched while scrolling never get fresh server
+// props to fall back to. Saves stay client-only until there is a backend for them.
+export function Feed({ first }: { first: Page<FeedPost> }) {
+  const { items, done, loading, failed, retry, sentinel } = useInfiniteList(first, "/api/feed");
+  const seenRef = useSeen();
+  // Follows changed during this visit, by author id. They apply to every card by that author.
+  const [follows, setFollows] = useState<Map<string, boolean>>(() => new Map());
+
+  const toggleFollow = (authorId: string, followed: boolean) => {
+    const update = (value: boolean) => setFollows((current) => new Map(current).set(authorId, value));
+    update(!followed);
+    setFollow(authorId, !followed).catch(() => update(followed));
+  };
+
+  if (items.length === 0 && done) {
+    return (
+      <div className={feedClass}>
+        <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
+          <EmptyIllustration className="w-44 sm:w-52" />
+          <h2 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">ჯერ ბლოგები არ არის</h2>
+          <p className="mt-2 text-muted">როცა ვინმე რამეს გამოაქვეყნებს, აქ გამოჩნდება.</p>
+          <Button href="/write" variant="outline" className="mt-6">
+            დაწერე პირველი ბლოგი
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6">
-      {posts.map((post) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          followed={followed.has(post.author)}
-          onToggleFollow={() => toggleFollow(post.author)}
-        />
-      ))}
+    <div className={feedClass}>
+      {items.map((post) => {
+        const followed = follows.get(post.author.id) ?? post.followed;
+        return (
+          <PostCard
+            key={post.id}
+            post={post}
+            seenRef={seenRef}
+            followed={followed}
+            onToggleFollow={() => toggleFollow(post.author.id, followed)}
+          />
+        );
+      })}
+
+      <div ref={sentinel} />
+      {loading && <FeedSkeleton count={2} />}
+      {failed && (
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <p className="text-muted">ვერ ჩაიტვირთა</p>
+          <Button variant="outline" size="sm" onClick={retry}>
+            თავიდან ცდა
+          </Button>
+        </div>
+      )}
+      {done && <p className="py-10 text-center text-sm text-muted">სხვა ბლოგები ჯერ არ არის</p>}
     </div>
   );
 }
@@ -37,21 +92,34 @@ function PostCard({
   post,
   followed,
   onToggleFollow,
+  seenRef,
 }: {
   post: FeedPost;
   followed: boolean;
   onToggleFollow: () => void;
+  seenRef: (element: HTMLElement | null) => void;
 }) {
-  const [liked, setLiked] = useState(false);
+  const [like, setLike] = useState({ liked: post.liked, count: post.likes });
   const [saved, setSaved] = useState(false);
+  const profile = `/@${post.author.handle}`;
+
+  const toggleLike = () => {
+    const before = like;
+    setLike({ liked: !before.liked, count: before.count + (before.liked ? -1 : 1) });
+    setPostLike(post.id, !before.liked).catch(() => setLike(before));
+  };
 
   return (
-    <article className="border-b border-line py-6">
+    <article ref={seenRef} data-post-id={post.id} className="animate-rise border-b border-line py-6">
       <div className="flex items-center gap-2 text-sm">
-        <Avatar className="size-5" />
-        <span className="font-medium text-ink">{post.author}</span>
-        {followed && <FollowedIcon className="flex" />}
-        <span className="text-muted">· {post.date}</span>
+        <Link href={profile} className="flex min-w-0 items-center gap-2">
+          <Avatar src={post.author.avatar} className="size-5" />
+          <span className="truncate font-medium text-ink hover:underline">{post.author.name}</span>
+        </Link>
+        {followed && <FollowedIcon className="flex shrink-0" />}
+        <time dateTime={post.dateTime} className="shrink-0 text-muted">
+          · {post.date}
+        </time>
         <div className="-my-2 -mr-2 ml-auto">
           <PostMenu followed={followed} onToggleFollow={onToggleFollow} />
         </div>
@@ -59,29 +127,20 @@ function PostCard({
 
       <div className="mt-3 flex gap-6 sm:gap-10">
         <div className="min-w-0 flex-1">
-          <h2 className="line-clamp-3 text-xl font-extrabold leading-snug text-ink sm:text-2xl">{post.title}</h2>
-          <p className="mt-2 hidden text-muted sm:line-clamp-1">{post.description}</p>
+          <Link href={post.href} className="group block">
+            <h2 className="line-clamp-3 text-xl font-extrabold leading-snug break-words text-ink group-hover:underline sm:text-2xl">
+              {post.title}
+            </h2>
+            <p className="mt-2 hidden break-words text-muted sm:line-clamp-1">{post.description}</p>
+          </Link>
 
           <div className="-ml-2 mt-4 flex items-center gap-1">
-            <ActionButton
-              label="მოწონება"
-              pressed={liked}
-              count={post.likes + (liked ? 1 : 0)}
-              onClick={() => setLiked((value) => !value)}
+            <LikeButton signedIn liked={like.liked} count={like.count} onToggle={toggleLike} />
+            <Link
+              href={`${post.href}#comments`}
+              aria-label={post.comments ? `კომენტარები: ${post.comments}` : "კომენტარები"}
+              className={`${actionClass} h-9`}
             >
-              <svg
-                viewBox="0 0 24 24"
-                className={`size-5 ${liked ? "fill-red-500 text-red-500" : "fill-none"}`}
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 20.5s-8-4.6-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 6-8 10.6-8 10.6z" />
-              </svg>
-            </ActionButton>
-            {/* Comments aren't built yet; the button does nothing. */}
-            <ActionButton label="კომენტარები" count={post.comments} onClick={() => {}}>
               <svg
                 viewBox="0 0 24 24"
                 className="size-5"
@@ -93,7 +152,8 @@ function PostCard({
               >
                 <path d="M20.5 11.5a8.5 8 0 0 1-12.2 7.2L3.5 20l1.4-4.1a8.5 8 0 1 1 15.6-4.4z" />
               </svg>
-            </ActionButton>
+              {post.comments > 0 && <span className="text-sm tabular-nums">{formatCount(post.comments)}</span>}
+            </Link>
             <ActionButton label="შენახვა" pressed={saved} onClick={() => setSaved((value) => !value)}>
               <svg
                 viewBox="0 0 24 24"
@@ -110,11 +170,15 @@ function PostCard({
         </div>
 
         {post.cover && (
-          <div
-            className="h-16 w-24 shrink-0 rounded-md sm:h-28 sm:w-40"
-            style={{ background: post.cover }}
-            aria-hidden="true"
-          />
+          <Link href={post.href} tabIndex={-1} aria-hidden="true" className="shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageUrl(post.cover)}
+              alt=""
+              loading="lazy"
+              className="h-16 w-24 rounded-md bg-surface object-cover sm:h-28 sm:w-40"
+            />
+          </Link>
         )}
       </div>
     </article>
@@ -124,26 +188,17 @@ function PostCard({
 function ActionButton({
   label,
   pressed,
-  count,
   onClick,
   children,
 }: {
   label: string;
-  pressed?: boolean;
-  count?: number;
+  pressed: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={count ? `${label}: ${count}` : label}
-      aria-pressed={pressed}
-      onClick={onClick}
-      className="flex h-9 min-w-9 cursor-pointer items-center justify-center gap-1.5 rounded-full px-2 text-muted transition-colors hover:bg-surface hover:text-ink"
-    >
+    <button type="button" aria-label={label} aria-pressed={pressed} onClick={onClick} className={`${actionClass} h-9`}>
       {children}
-      {count ? <span className="text-sm tabular-nums">{formatCount(count)}</span> : null}
     </button>
   );
 }

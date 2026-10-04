@@ -1,14 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { avatarUrl, imageUrl } from "@/lib/user-view";
+import type { ReactNode } from "react";
+import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
-import { EmptyIllustration } from "./empty-illustration";
 import { FollowButton, useFollow } from "./follow-button";
+import { FollowedIcon } from "./followed-icon";
 
 type ProfileUser = { id: string; name: string; bio: string | null; avatar: string | null };
-export type ProfilePost = { href: string; title: string; description: string; cover: string | null; date: string };
 
 export function Profile({
   user,
@@ -19,7 +18,8 @@ export function Profile({
   signedIn,
 }: {
   user: ProfileUser;
-  posts: ProfilePost[];
+  // The post list, which loads on its own (see ProfilePosts).
+  posts: ReactNode;
   followers: number;
   followed: boolean;
   isOwner: boolean;
@@ -35,9 +35,13 @@ export function Profile({
         <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
           <Avatar src={avatarUrl(user.avatar)} className="size-16 sm:size-20" />
           <div className="min-w-0 flex-1 sm:pt-1">
-            <h1 title={user.name} className="truncate text-xl font-extrabold leading-tight text-ink">
-              {user.name}
-            </h1>
+            {/* One line: a long name ends in "…" and the subscribed icon stays visible after it. */}
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 title={user.name} className="truncate text-xl font-extrabold leading-tight text-ink">
+                {user.name}
+              </h1>
+              {followed && <FollowedIcon className="flex shrink-0" />}
+            </div>
             {user.bio && <p className="mt-1.5 whitespace-pre-line break-words text-muted">{user.bio}</p>}
             <p className="mt-2 text-sm text-muted">
               <span className="font-medium text-ink">{followers}</span> გამომწერი
@@ -62,46 +66,7 @@ export function Profile({
 
       <section className="mt-10">
         <h2 className="border-b border-line pb-3 font-semibold text-ink">ბლოგები</h2>
-        {posts.length > 0 ? (
-          <ul className="divide-y divide-line">
-            {posts.map((post) => (
-              <li key={post.href}>
-                <Link href={post.href} className="group flex gap-4 py-6 sm:gap-6">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="line-clamp-2 text-lg font-bold leading-snug break-words text-ink group-hover:underline sm:text-xl">
-                      {post.title}
-                    </h3>
-                    <p className="mt-1.5 line-clamp-2 break-words text-muted">{post.description}</p>
-                    <p className="mt-3 text-sm text-muted">{post.date}</p>
-                  </div>
-                  {post.cover && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={imageUrl(post.cover)}
-                      alt=""
-                      className="aspect-[4/3] w-24 shrink-0 self-start rounded-lg object-cover sm:w-36"
-                    />
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
-            <EmptyIllustration className="w-44 sm:w-52" />
-            <h3 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">
-              {isOwner ? "ჯერ არაფერი დაგიწერია" : "ჯერ ბლოგები არ არის"}
-            </h3>
-            <p className="mt-2 text-muted">
-              {isOwner ? "შენი ბლოგები აქ გამოჩნდება." : "როცა ავტორი რამეს გამოაქვეყნებს, აქ გამოჩნდება."}
-            </p>
-            {isOwner && (
-              <Button href="/write" variant="outline" className="mt-6">
-                დაიწყე წერა
-              </Button>
-            )}
-          </div>
-        )}
+        {posts}
       </section>
     </div>
   );

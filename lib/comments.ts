@@ -6,7 +6,8 @@ import { avatarUrl, formatRelative } from "./user-view";
 
 export const maxCommentLength = 2000;
 
-type Author = { name: string; handle: string; avatar?: string };
+// `followed`: the reader follows this commenter.
+type Author = { name: string; handle: string; avatar?: string; followed: boolean };
 
 export type CommentNode = {
   id: string;
@@ -45,6 +46,9 @@ export async function getPostComments(postId: string, viewerId: string | undefin
       liked: viewerId
         ? sql<boolean>`exists (select 1 from comment_likes cl where cl.comment_id = ${comments.id} and cl.user_id = ${viewerId})`
         : sql<boolean>`false`,
+      followed: viewerId
+        ? sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewerId} and f.following_id = ${comments.userId})`
+        : sql<boolean>`false`,
     })
     .from(comments)
     .leftJoin(users, eq(users.id, comments.userId))
@@ -59,7 +63,9 @@ export async function getPostComments(postId: string, viewerId: string | undefin
     parentOf.set(row.id, row.parentId);
     nodes.set(row.id, {
       id: row.id,
-      author: live ? { name: row.name ?? "", handle: row.handle!, avatar: avatarUrl(row.avatar) } : null,
+      author: live
+        ? { name: row.name ?? "", handle: row.handle!, avatar: avatarUrl(row.avatar), followed: row.followed }
+        : null,
       body: live ? row.body : null,
       time: formatRelative(row.createdAt, now),
       dateTime: row.createdAt.toISOString(),
