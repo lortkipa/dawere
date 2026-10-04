@@ -8,7 +8,7 @@ import { deleteAvatar, deleteImages, saveAvatar } from "@/lib/uploads";
 import { db } from "@/lib/db";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { comments, posts, users } from "@/lib/db/schema";
-import { maxNameLength } from "@/lib/onboarding-options";
+import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
 import {
   emailPattern,
   handleTakenError,
@@ -94,6 +94,16 @@ export async function updateBio(value: string): Promise<Result> {
     .update(users)
     .set({ bio: bio || null })
     .where(eq(users.id, user.id));
+  refresh();
+}
+
+export async function updateTopics(slugs: string[]): Promise<Result> {
+  const user = await requireUser();
+  const chosen = [...new Set(slugs)];
+  const valid = chosen.length >= minTopics && chosen.every((slug) => topics.some((topic) => topic.slug === slug));
+  if (!valid) return { error: genericError };
+
+  await db.update(users).set({ topics: chosen }).where(eq(users.id, user.id));
   refresh();
 }
 

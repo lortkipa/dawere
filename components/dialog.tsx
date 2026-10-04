@@ -6,10 +6,12 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
 // mount, so render it only while it should be visible.
 export function Dialog({
   title,
+  wide = false,
   onClose,
   children,
 }: {
   title: string;
+  wide?: boolean;
   onClose: () => void;
   children: ReactNode;
 }) {
@@ -44,13 +46,14 @@ export function Dialog({
       onClick={(event) => {
         if (pressedBackdrop.current && event.target === event.currentTarget) onClose();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-line bg-white p-0 text-ink shadow-lg backdrop:bg-black/40"
+      className={`m-auto w-[calc(100%-2rem)] ${wide ? "max-w-xl" : "max-w-md"} max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-xl border border-line bg-white p-0 text-ink open:flex shadow-lg backdrop:bg-black/40`}
     >
-      <div className="relative px-5 pt-6 pb-5 sm:px-6">
+      {/* A flex column capped at the viewport, so a long body can scroll between a fixed title and buttons. */}
+      <div className="relative flex min-h-0 flex-1 flex-col px-5 pt-6 pb-5 sm:px-6">
         <h2 id={titleId} className="px-8 text-center text-lg font-semibold">
           {title}
         </h2>
-        <div className="mt-5">{children}</div>
+        <div className="mt-5 flex min-h-0 flex-1 flex-col">{children}</div>
         {/* Last in the DOM so showModal() focuses the dialog's field rather than this button. */}
         <button
           type="button"

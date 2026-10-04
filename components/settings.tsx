@@ -10,8 +10,9 @@ import {
   updateEmail,
   updateHandle,
   updateName,
+  updateTopics,
 } from "@/app/settings/actions";
-import { maxNameLength } from "@/lib/onboarding-options";
+import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
 import {
   emailPattern,
   handleTakenError,
@@ -25,6 +26,7 @@ import {
 import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
+import { Chip } from "./chip";
 import { Dialog } from "./dialog";
 import { headingClasses } from "./heading";
 import { TextInput } from "./text-input";
@@ -35,9 +37,10 @@ export type SettingsUser = {
   name: string;
   bio: string | null;
   avatar: string | null;
+  topics: string[];
 };
 
-type Field = "email" | "handle" | "name" | "avatar" | "bio" | "delete";
+type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "delete";
 
 const errorClass = "text-[#d93025]";
 
@@ -62,8 +65,14 @@ export function Settings({ user, host }: { user: SettingsUser; host: string }) {
         <Row label="ფოტო" onClick={() => setEditing("avatar")}>
           <Avatar src={avatarUrl(user.avatar)} className="ml-auto size-9" />
         </Row>
-        <Row label="ბიო" onClick={() => setEditing("bio")}>
+        <Row label="აღწერა" onClick={() => setEditing("bio")}>
           {user.bio ?? "დამატება"}
+        </Row>
+        <Row label="თემები" onClick={() => setEditing("topics")}>
+          {topics
+            .filter((topic) => user.topics.includes(topic.slug))
+            .map((topic) => topic.label)
+            .join(", ")}
         </Row>
       </div>
 
@@ -76,6 +85,7 @@ export function Settings({ user, host }: { user: SettingsUser; host: string }) {
       {editing === "name" && <NameDialog current={user.name} onClose={close} />}
       {editing === "avatar" && <AvatarDialog current={user.avatar} onClose={close} />}
       {editing === "bio" && <BioDialog current={user.bio ?? ""} onClose={close} />}
+      {editing === "topics" && <TopicsDialog current={user.topics} onClose={close} />}
       {editing === "delete" && <DeleteDialog onClose={close} />}
     </div>
   );
@@ -144,8 +154,9 @@ function EditForm({
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} onChange={() => setError("")}>
-      {children}
+    <form noValidate onSubmit={handleSubmit} onChange={() => setError("")} className="flex min-h-0 flex-1 flex-col">
+      {/* Only this part scrolls; the padding keeps focus rings from being clipped. */}
+      <div className="-m-1 min-h-0 overflow-y-auto p-1">{children}</div>
       {(hint || counter || error) && (
         <div className="mt-2 flex min-h-5 justify-between gap-4 text-sm">
           <p aria-live="polite" className={`min-w-0 break-words ${error ? errorClass : "text-muted"}`}>
@@ -154,7 +165,7 @@ function EditForm({
           {counter && <span className="shrink-0 text-muted tabular-nums">{counter}</span>}
         </div>
       )}
-      <div className="mt-6 flex justify-end gap-2">
+      <div className="mt-6 flex shrink-0 justify-end gap-2">
         <Button variant="outline" onClick={onClose}>
           გაუქმება
         </Button>
@@ -283,7 +294,7 @@ function BioDialog({ current, onClose }: { current: string; onClose: () => void 
   const bio = value.trim();
 
   return (
-    <Dialog title="ბიო" onClose={onClose}>
+    <Dialog title="აღწერა" onClose={onClose}>
       <EditForm
         canSave={bio !== current}
         save={() => updateBio(bio)}
@@ -291,7 +302,7 @@ function BioDialog({ current, onClose }: { current: string; onClose: () => void 
         counter={`${value.length}/${maxBioLength}`}
       >
         <textarea
-          aria-label="ბიო"
+          aria-label="აღწერა"
           rows={4}
           maxLength={maxBioLength}
           value={value}
@@ -367,6 +378,39 @@ function AvatarDialog({ current, onClose }: { current: string | null; onClose: (
               setRemoving(false);
             }}
           />
+        </div>
+      </EditForm>
+    </Dialog>
+  );
+}
+
+function TopicsDialog({ current, onClose }: { current: string[]; onClose: () => void }) {
+  const [chosen, setChosen] = useState(current);
+  const changed = chosen.length !== current.length || chosen.some((slug) => !current.includes(slug));
+
+  function toggle(slug: string) {
+    setChosen((items) => (items.includes(slug) ? items.filter((item) => item !== slug) : [...items, slug]));
+  }
+
+  return (
+    <Dialog title="თემები" wide onClose={onClose}>
+      <EditForm
+        canSave={chosen.length >= minTopics && changed}
+        save={() => updateTopics(chosen)}
+        onClose={onClose}
+      >
+        <p className="mb-4 text-center text-sm text-muted">
+          აირჩიე მინიმუმ {minTopics}. ამ თემების ბლოგები მთავარ გვერდზე უფრო მაღლა გამოჩნდება.
+        </p>
+        <div role="group" aria-label="თემები" className="flex flex-wrap gap-2">
+          {topics.map((topic) => (
+            <Chip
+              key={topic.slug}
+              option={topic}
+              selected={chosen.includes(topic.slug)}
+              onClick={() => toggle(topic.slug)}
+            />
+          ))}
         </div>
       </EditForm>
     </Dialog>
