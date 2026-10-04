@@ -8,6 +8,7 @@ import {
   updateAvatar,
   updateBio,
   updateEmail,
+  updateFavoritesPublic,
   updateHandle,
   updateName,
   updateTopics,
@@ -38,9 +39,10 @@ export type SettingsUser = {
   bio: string | null;
   avatar: string | null;
   topics: string[];
+  favoritesPublic: boolean;
 };
 
-type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "delete";
+type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "favorites" | "delete";
 
 const errorClass = "text-[#d93025]";
 
@@ -74,6 +76,9 @@ export function Settings({ user, host }: { user: SettingsUser; host: string }) {
             .map((topic) => topic.label)
             .join(", ")}
         </Row>
+        <Row label="რჩეულები" onClick={() => setEditing("favorites")}>
+          {user.favoritesPublic ? "ყველა ხედავს" : "მხოლოდ მე"}
+        </Row>
       </div>
 
       <div className="mt-4 border-t border-line pt-4">
@@ -86,6 +91,7 @@ export function Settings({ user, host }: { user: SettingsUser; host: string }) {
       {editing === "avatar" && <AvatarDialog current={user.avatar} onClose={close} />}
       {editing === "bio" && <BioDialog current={user.bio ?? ""} onClose={close} />}
       {editing === "topics" && <TopicsDialog current={user.topics} onClose={close} />}
+      {editing === "favorites" && <FavoritesDialog current={user.favoritesPublic} onClose={close} />}
       {editing === "delete" && <DeleteDialog onClose={close} />}
     </div>
   );
@@ -409,6 +415,34 @@ function TopicsDialog({ current, onClose }: { current: string[]; onClose: () => 
               option={topic}
               selected={chosen.includes(topic.slug)}
               onClick={() => toggle(topic.slug)}
+            />
+          ))}
+        </div>
+      </EditForm>
+    </Dialog>
+  );
+}
+
+const favoritesOptions = [
+  { slug: "public", emoji: "🌍", label: "ყველა ხედავს" },
+  { slug: "private", emoji: "🔒", label: "მხოლოდ მე" },
+];
+
+function FavoritesDialog({ current, onClose }: { current: boolean; onClose: () => void }) {
+  const [isPublic, setIsPublic] = useState(current);
+
+  return (
+    <Dialog title="რჩეულები" onClose={onClose}>
+      <EditForm canSave={isPublic !== current} save={() => updateFavoritesPublic(isPublic)} onClose={onClose}>
+        <p className="mb-4 text-center text-sm text-muted">აირჩიე, ვინ ნახავს რჩეულებს შენს პროფილზე.</p>
+        <div role="radiogroup" aria-label="რჩეულები" className="flex flex-wrap justify-center gap-2">
+          {favoritesOptions.map((option) => (
+            <Chip
+              key={option.slug}
+              role="radio"
+              option={option}
+              selected={isPublic === (option.slug === "public")}
+              onClick={() => setIsPublic(option.slug === "public")}
             />
           ))}
         </div>

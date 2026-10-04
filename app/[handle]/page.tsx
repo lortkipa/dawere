@@ -5,16 +5,20 @@ import { cache, Suspense } from "react";
 import { Header } from "@/components/header";
 import { Button } from "@/components/button";
 import { EmptyState, PostList } from "@/components/feed";
-import { Profile } from "@/components/profile";
+import { LockedIllustration } from "@/components/empty-illustration";
+import { Profile, type ProfileTab } from "@/components/profile";
 import { FeedSkeleton } from "@/components/skeleton";
 import { db } from "@/lib/db";
 import { type User, users } from "@/lib/db/schema";
-import { getProfilePage } from "@/lib/feed";
+import { getFavoritesPage, getProfilePage } from "@/lib/feed";
 import { followerCount, isFollowing } from "@/lib/follows";
 import { getCurrentUser } from "@/lib/session";
 import { menuUser } from "@/lib/user-view";
 
-type Props = { params: Promise<{ handle: string }> };
+type Props = {
+  params: Promise<{ handle: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
+};
 
 // A folder named `@…` would be a parallel-route slot, so `/@handle` is caught by this
 // dynamic segment and anything without the `@` is a 404. Handles are stored lowercase, so
@@ -39,9 +43,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${profile.name} (@${profile.handle})`, description: profile.bio ?? undefined };
 }
 
-export default async function ProfilePage({ params }: Props) {
+export default async function ProfilePage({ params, searchParams }: Props) {
   const profile = await getProfile((await params).handle);
   if (!profile) notFound();
+  const tab: ProfileTab = (await searchParams).tab === "favorites" ? "favorites" : "posts";
 
   const viewer = await getCurrentUser();
   if (viewer && !viewer.onboardedAt) redirect("/onboarding");
@@ -57,11 +62,23 @@ export default async function ProfilePage({ params }: Props) {
       <Header user={viewer ? menuUser(viewer) : undefined} />
       <main>
         <Profile
-          user={{ id: profile.id, name: profile.name ?? "", bio: profile.bio, avatar: profile.avatar }}
+          user={{
+            id: profile.id,
+            handle: profile.handle,
+            name: profile.name ?? "",
+            bio: profile.bio,
+            avatar: profile.avatar,
+            favoritesPublic: profile.favoritesPublic,
+          }}
+          tab={tab}
           posts={
-            // Keyed, so moving to another profile starts a fresh list.
-            <Suspense key={profile.id} fallback={<FeedSkeleton />}>
-              <ProfilePosts viewer={viewer} authorId={profile.id} isOwner={isOwner} />
+            // Keyed, so moving to another profile or tab starts a fresh list.
+            <Suspense key={`${profile.id}-${tab}`} fallback={<FeedSkeleton />}>
+              {tab === "favorites" ? (
+                <ProfileFavorites viewer={viewer} owner={profile} isOwner={isOwner} />
+              ) : (
+                <ProfilePosts viewer={viewer} authorId={profile.id} isOwner={isOwner} />
+              )}
             </Suspense>
           }
           followers={followers}
@@ -90,6 +107,37 @@ async function ProfilePosts({ viewer, authorId, isOwner }: { viewer: User | null
           </EmptyState>
         ) : (
           <EmptyState title="ჯერ ბლოგები არ არის" text="როცა ავტორი რამეს გამოაქვეყნებს, აქ გამოჩნდება." />
+        )
+      }
+    />
+  );
+}
+
+async function ProfileFavorites({ viewer, owner, isOwner }: { viewer: User | null; owner: User; isOwner: boolean }) {
+  if (!owner.favoritesPublic && !isOwner) {
+    return (
+      <EmptyState
+        title="რჩეულები დამალულია"
+        text="ავტორმა რჩეულები მხოლოდ თავისთვის დატოვა."
+        art={<LockedIllustration className="w-44 sm:w-52" />}
+      />
+    );
+  }
+
+  return (
+    <PostList
+      first={await getFavoritesPage(viewer, owner.id, null)}
+      endpoint={`/api/favorites?user=${owner.id}`}
+      viewerId={viewer?.id}
+      empty={
+        isOwner ? (
+          <EmptyState title="ჯერ არაფერი შეგინახავს" text="ბლოგები, რომლებსაც რჩეულებში დაამატებ, აქ გამოჩნდება.">
+            <Button href="/" variant="outline" className="mt-6">
+              ბლოგების ნახვა
+            </Button>
+          </EmptyState>
+        ) : (
+          <EmptyState title="რჩეულები ცარიელია" text="ავტორს ჯერ არცერთი ბლოგი არ დაუმატებია." />
         )
       }
     />

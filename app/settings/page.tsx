@@ -29,6 +29,7 @@ export default async function SettingsPage() {
             bio: user.bio,
             avatar: user.avatar,
             topics: user.topics ?? [],
+            favoritesPublic: user.favoritesPublic,
           }}
           host={host}
         />

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
@@ -7,10 +8,20 @@ import { Button } from "./button";
 import { FollowButton, useFollow } from "./follow-button";
 import { FollowedIcon } from "./followed-icon";
 
-type ProfileUser = { id: string; name: string; bio: string | null; avatar: string | null };
+type ProfileUser = {
+  id: string;
+  handle: string;
+  name: string;
+  bio: string | null;
+  avatar: string | null;
+  favoritesPublic: boolean;
+};
+
+export type ProfileTab = "posts" | "favorites";
 
 export function Profile({
   user,
+  tab,
   posts,
   followers: storedFollowers,
   followed: storedFollowed,
@@ -18,7 +29,8 @@ export function Profile({
   signedIn,
 }: {
   user: ProfileUser;
-  // The post list, which loads on its own (see ProfilePosts).
+  tab: ProfileTab;
+  // The open tab's list, which loads on its own (see ProfilePosts and ProfileFavorites).
   posts: ReactNode;
   followers: number;
   followed: boolean;
@@ -65,10 +77,54 @@ export function Profile({
       </section>
 
       <section className="mt-10">
-        <h2 className="border-b border-line pb-3 font-semibold text-ink">ბლოგები</h2>
+        <nav aria-label="პროფილი" className="flex gap-6 border-b border-line">
+          <Tab href={`/@${user.handle}`} active={tab === "posts"}>
+            ბლოგები
+          </Tab>
+          <Tab href={`/@${user.handle}?tab=favorites`} active={tab === "favorites"}>
+            რჩეულები
+            {/* Only the owner reaches here with private favorites; others see the locked card. */}
+            {isOwner && !user.favoritesPublic && <LockIcon />}
+          </Tab>
+        </nav>
         {posts}
       </section>
     </div>
+  );
+}
+
+function Tab({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      replace
+      scroll={false}
+      aria-current={active ? "page" : undefined}
+      className={`-mb-px flex items-center gap-1.5 border-b-2 pb-3 font-semibold transition-colors ${
+        active ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="img"
+      aria-label="მხოლოდ შენ ხედავ"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
   );
 }
 

@@ -2,24 +2,16 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { refresh } from "next/cache";
-import { redirect } from "next/navigation";
 import { maxCommentLength, retireComments } from "@/lib/comments";
 import { db } from "@/lib/db";
 import { isForeignKeyViolation } from "@/lib/db/errors";
 import { comments } from "@/lib/db/schema";
 import { postIdPattern, uuidPattern } from "@/lib/ids";
-import { getCurrentUser } from "@/lib/session";
+import { requireReader } from "@/lib/session";
 
 type Result = { error: string } | void;
 
 const genericError = "რაღაც შეცდომაა, სცადე თავიდან";
-
-async function requireReader() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/auth");
-  if (!user.onboardedAt) redirect("/onboarding");
-  return user;
-}
 
 export async function addComment(postId: string, parentId: string | null, value: string): Promise<Result> {
   const user = await requireReader();

@@ -2,28 +2,11 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { refresh } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { isForeignKeyViolation } from "@/lib/db/errors";
+import { insertIgnoringGone } from "@/lib/db/errors";
 import { commentLikes, comments, postLikes } from "@/lib/db/schema";
 import { postIdPattern, uuidPattern } from "@/lib/ids";
-import { getCurrentUser } from "@/lib/session";
-
-async function requireReader() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/auth");
-  if (!user.onboardedAt) redirect("/onboarding");
-  return user;
-}
-
-// A post or comment deleted in the meantime makes the insert fail; there is nothing to like then.
-async function insertIgnoringGone(insert: () => Promise<unknown>) {
-  try {
-    await insert();
-  } catch (error) {
-    if (!isForeignKeyViolation(error)) throw error;
-  }
-}
+import { requireReader } from "@/lib/session";
 
 export async function setPostLike(postId: string, like: boolean) {
   const user = await requireReader();

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type ReactNode, useCallback, useRef, useState } from "react";
+import { setPostFavorite } from "@/app/favorites/actions";
 import { setFollow } from "@/app/follow/actions";
 import { setPostLike } from "@/app/likes/actions";
 import type { FeedPost, Page } from "@/lib/feed";
@@ -10,6 +11,7 @@ import { imageUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { EmptyIllustration } from "./empty-illustration";
+import { FavoriteButton } from "./favorite-button";
 import { FollowedIcon } from "./followed-icon";
 import { actionClass, LikeButton } from "./like-button";
 import { Icon, MenuItem, menuClass, useDismiss } from "./menu";
@@ -30,6 +32,7 @@ export function Feed({ first, viewerId }: { first: Page<FeedPost>; viewerId: str
         first={first}
         endpoint="/api/feed"
         viewerId={viewerId}
+        endNote="სხვა ბლოგები ჯერ არ არის"
         empty={
           <EmptyState title="ჯერ ბლოგები არ არის" text="როცა ვინმე რამეს გამოაქვეყნებს, აქ გამოჩნდება.">
             <Button href="/write" variant="outline" className="mt-6">
@@ -42,10 +45,21 @@ export function Feed({ first, viewerId }: { first: Page<FeedPost>; viewerId: str
   );
 }
 
-export function EmptyState({ title, text, children }: { title: string; text: string; children?: ReactNode }) {
+export function EmptyState({
+  title,
+  text,
+  art,
+  children,
+}: {
+  title: string;
+  text: string;
+  // The notebook unless something else fits better.
+  art?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
     <div className="mt-6 flex flex-col items-center rounded-xl border border-line px-6 py-12 text-center sm:py-16">
-      <EmptyIllustration className="w-44 sm:w-52" />
+      {art ?? <EmptyIllustration className="w-44 sm:w-52" />}
       <h2 className="mt-6 text-xl font-semibold text-ink sm:text-2xl">{title}</h2>
       <p className="mt-2 text-muted">{text}</p>
       {children}
@@ -67,20 +81,23 @@ export function FeedLoading() {
 // The list of post cards on the home feed and on profiles. `viewerId` is the signed-in reader, if
 // any; signed-out readers get sign-in links for likes and no menu.
 //
-// Likes and follows change on screen at once and are saved in the background. They live in this
-// component rather than in useOptimistic: pages fetched while scrolling never get fresh server
-// props to fall back to. They aren't kept in the cards either, since cards scrolled far enough
-// away are taken off the page. Saves stay client-only until there is a backend for them.
+// Likes, favorites and follows change on screen at once and are saved in the background. They
+// live in this component rather than in useOptimistic: pages fetched while scrolling never get
+// fresh server props to fall back to. They aren't kept in the cards either, since cards scrolled
+// far enough away are taken off the page.
 export function PostList({
   first,
   endpoint,
   viewerId,
   empty: emptyState,
+  endNote,
 }: {
   first: Page<FeedPost>;
   endpoint: string;
   viewerId?: string;
   empty: ReactNode;
+  // Shown under the last post once there is nothing more to load; profiles go without one.
+  endNote?: string;
 }) {
   const { groups, above, below, empty, after, done, failed, retry, list, groupRef, bottom } = useWindowedList(
     first,
@@ -90,9 +107,9 @@ export function PostList({
   const seenRef = useSeen();
   // Follows changed during this visit, by author id. They apply to every card by that author.
   const [follows, setFollows] = useState<Map<string, boolean>>(() => new Map());
-  // Likes and saves changed during this visit, by post id.
+  // Likes and favorites changed during this visit, by post id.
   const [likes, setLikes] = useState<Map<string, Like>>(() => new Map());
-  const [saved, setSaved] = useState<Set<string>>(() => new Set());
+  const [favorites, setFavorites] = useState<Map<string, boolean>>(() => new Map());
 
   const toggleFollow = (authorId: string, followed: boolean) => {
     const update = (value: boolean) => setFollows((current) => new Map(current).set(authorId, value));
@@ -106,12 +123,11 @@ export function PostList({
     setPostLike(postId, !before.liked).catch(() => update(before));
   };
 
-  const toggleSaved = (postId: string) =>
-    setSaved((current) => {
-      const updated = new Set(current);
-      if (!updated.delete(postId)) updated.add(postId);
-      return updated;
-    });
+  const toggleFavorite = (postId: string, favorited: boolean) => {
+    const update = (value: boolean) => setFavorites((current) => new Map(current).set(postId, value));
+    update(!favorited);
+    setPostFavorite(postId, !favorited).catch(() => update(favorited));
+  };
 
   if (empty && done) return emptyState;
 
@@ -125,6 +141,7 @@ export function PostList({
             {group.items.map((post) => {
               const followed = follows.get(post.author.id) ?? post.followed;
               const like = likes.get(post.id) ?? { liked: post.liked, count: post.likes };
+              const favorited = favorites.get(post.id) ?? post.favorited;
               return (
                 <PostCard
                   key={post.id}
@@ -136,8 +153,8 @@ export function PostList({
                   onToggleFollow={() => toggleFollow(post.author.id, followed)}
                   like={like}
                   onToggleLike={() => toggleLike(post.id, like)}
-                  saved={saved.has(post.id)}
-                  onToggleSaved={() => toggleSaved(post.id)}
+                  favorited={favorited}
+                  onToggleFavorite={() => toggleFavorite(post.id, favorited)}
                 />
               );
             })}
@@ -156,7 +173,7 @@ export function PostList({
           </Button>
         </div>
       )}
-      {done && <p className="py-10 text-center text-sm text-muted">სხვა ბლოგები ჯერ არ არის</p>}
+      {done && endNote && <p className="py-10 text-center text-sm text-muted">{endNote}</p>}
     </div>
   );
 }
@@ -169,8 +186,8 @@ function PostCard({
   onToggleFollow,
   like,
   onToggleLike,
-  saved,
-  onToggleSaved,
+  favorited,
+  onToggleFavorite,
   seenRef,
 }: {
   post: FeedPost;
@@ -181,8 +198,8 @@ function PostCard({
   onToggleFollow: () => void;
   like: Like;
   onToggleLike: () => void;
-  saved: boolean;
-  onToggleSaved: () => void;
+  favorited: boolean;
+  onToggleFavorite: () => void;
   seenRef: (element: HTMLElement | null) => void;
 }) {
   const profile = `/@${post.author.handle}`;
@@ -234,18 +251,7 @@ function PostCard({
               </svg>
               {post.comments > 0 && <span className="text-sm tabular-nums">{formatCount(post.comments)}</span>}
             </Link>
-            <ActionButton label="შენახვა" pressed={saved} onClick={onToggleSaved}>
-              <svg
-                viewBox="0 0 24 24"
-                className={`size-5 ${saved ? "fill-yellow-400 text-yellow-500" : "fill-none"}`}
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M6 3.5h12a.5.5 0 0 1 .5.5v16.5L12 16l-6.5 4.5V4a.5.5 0 0 1 .5-.5z" />
-              </svg>
-            </ActionButton>
+            <FavoriteButton signedIn={signedIn} favorited={favorited} onToggle={onToggleFavorite} />
           </div>
         </div>
 
@@ -262,24 +268,6 @@ function PostCard({
         )}
       </div>
     </article>
-  );
-}
-
-function ActionButton({
-  label,
-  pressed,
-  onClick,
-  children,
-}: {
-  label: string;
-  pressed: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button type="button" aria-label={label} aria-pressed={pressed} onClick={onClick} className={`${actionClass} h-9`}>
-      {children}
-    </button>
   );
 }
 

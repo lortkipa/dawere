@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { and, desc, eq, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
-import { posts, users, type User } from "./db/schema";
+import { postFavorites, posts, users, type User } from "./db/schema";
 import { avatarUrl, formatRelative } from "./user-view";
 
 // The home feed and profiles both load in pages this size; see useWindowedList.
@@ -23,6 +23,7 @@ export type FeedPost = {
   liked: boolean;
   comments: number;
   followed: boolean;
+  favorited: boolean;
 };
 
 // Cursors are opaque to the browser: base64url JSON, checked field by field on the way back.
@@ -78,6 +79,9 @@ function cardFields(viewerId: string | null) {
     followed: viewerId
       ? sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewerId} and f.following_id = ${posts.userId})`
       : sql<boolean>`false`,
+    favorited: viewerId
+      ? sql<boolean>`exists (select 1 from post_favorites pf where pf.post_id = ${posts.id} and pf.user_id = ${viewerId})`
+      : sql<boolean>`false`,
   };
 }
 
@@ -95,6 +99,7 @@ type CardRow = {
   liked: boolean;
   comments: number;
   followed: boolean;
+  favorited: boolean;
 };
 
 function toFeedPost(row: CardRow, now: Date): FeedPost {
@@ -111,6 +116,7 @@ function toFeedPost(row: CardRow, now: Date): FeedPost {
     liked: row.liked,
     comments: row.comments,
     followed: row.followed,
+    favorited: row.favorited,
   };
 }
 
@@ -222,5 +228,44 @@ export async function getProfilePage(
   return {
     items: page.map((row) => toFeedPost(row, now)),
     next: rows.length > feedPageSize && last ? encodeCursor({ createdAt: last.exactCreatedAt, id: last.id }) : null,
+  };
+}
+
+// The posts a user added to favorites, the last added first, as the same cards. Whether the
+// viewer may see them is up to the caller.
+export async function getFavoritesPage(
+  viewer: User | null,
+  ownerId: string,
+  cursor: string | null,
+): Promise<Page<FeedPost>> {
+  const after = decodeCursor(cursor);
+  if (cursor && !after) return { items: [], next: null };
+  let keyset: SQL | undefined;
+  if (after) {
+    if (typeof after.addedAt !== "string" || !pgTimestamp.test(after.addedAt) || !postId.test(String(after.id))) {
+      return { items: [], next: null };
+    }
+    const addedAt = sql`${after.addedAt}::timestamptz`;
+    keyset = or(
+      sql`${postFavorites.createdAt} < ${addedAt}`,
+      and(sql`${postFavorites.createdAt} = ${addedAt}`, sql`${posts.id} < ${after.id}`),
+    );
+  }
+
+  const rows = await db
+    .select({ ...cardFields(viewer?.id ?? null), exactAddedAt: sql<string>`${postFavorites.createdAt}::text` })
+    .from(postFavorites)
+    .innerJoin(posts, eq(posts.id, postFavorites.postId))
+    .innerJoin(users, eq(users.id, posts.userId))
+    .where(and(eq(postFavorites.userId, ownerId), keyset))
+    .orderBy(desc(postFavorites.createdAt), desc(posts.id))
+    .limit(feedPageSize + 1);
+
+  const page = rows.slice(0, feedPageSize);
+  const last = page.at(-1);
+  const now = new Date();
+  return {
+    items: page.map((row) => toFeedPost(row, now)),
+    next: rows.length > feedPageSize && last ? encodeCursor({ addedAt: last.exactAddedAt, id: last.id }) : null,
   };
 }

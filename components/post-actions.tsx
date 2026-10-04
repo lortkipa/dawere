@@ -2,6 +2,7 @@
 
 import { setPostLike } from "@/app/likes/actions";
 import { formatCount } from "@/lib/format-count";
+import { FavoriteButton, useFavorite } from "./favorite-button";
 import { actionClass, LikeButton, useLike } from "./like-button";
 
 export function PostActions({
@@ -9,15 +10,18 @@ export function PostActions({
   signedIn,
   liked,
   likes,
+  favorited: storedFavorited,
   comments,
 }: {
   postId: string;
   signedIn: boolean;
   liked: boolean;
   likes: number;
+  favorited: boolean;
   comments: number;
 }) {
   const [like, toggle] = useLike(liked, likes, (value) => setPostLike(postId, value));
+  const [favorited, toggleFavorite] = useFavorite(postId, storedFavorited);
 
   return (
     <div className="mt-12 flex items-center gap-1 border-y border-line py-2">
@@ -40,6 +44,7 @@ export function PostActions({
         </svg>
         {comments > 0 && <span className="text-sm tabular-nums">{formatCount(comments)}</span>}
       </a>
+      <FavoriteButton signedIn={signedIn} favorited={favorited} onToggle={toggleFavorite} />
     </div>
   );
 }

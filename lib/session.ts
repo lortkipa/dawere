@@ -2,6 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { db } from "./db";
 import { sessions, users } from "./db/schema";
 
@@ -53,4 +54,12 @@ export async function deleteSession() {
   const token = store.get(cookieName)?.value;
   if (token) await db.delete(sessions).where(eq(sessions.id, hashToken(token)));
   store.delete(cookieName);
+}
+
+// For actions only a reader who finished onboarding can take: likes, favorites, comments.
+export async function requireReader() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth");
+  if (!user.onboardedAt) redirect("/onboarding");
+  return user;
 }

@@ -40,3 +40,39 @@ export function EmptyIllustration({ className = "" }: { className?: string }) {
     </svg>
   );
 }
+
+// A post card with a bookmark on it and a padlock in front, for favorites their owner keeps
+// to themselves.
+export function LockedIllustration({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 200 150" aria-hidden="true" className={className}>
+      <circle cx="100" cy="70" r="58" fill="#eef0ff" />
+      <ellipse cx="100" cy="127" rx="70" ry="5" fill="#efefec" />
+
+      {/* Post card */}
+      <g transform="rotate(-7 86 76)">
+        <rect x="50" y="30" width="72" height="92" rx="6" fill="#fff" stroke="#dededa" strokeWidth="1.2" />
+        <rect x="60" y="42" width="30" height="20" rx="3" fill="#e5e8ff" />
+        <path
+          d="M60 74h44M60 83h48M60 92h36M60 101h42"
+          fill="none"
+          stroke="#e2e2df"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        {/* Bookmark */}
+        <path d="M96 26h18v40l-9-6.5-9 6.5z" fill="#7d86c4" />
+      </g>
+
+      {/* Sparkles */}
+      <path d="M38 52v10M33 57h10M160 40v8M156 44h8" fill="none" stroke="#c7cdf9" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Padlock */}
+      <path d="M124 94v-11a14 14 0 0 1 28 0v11" fill="none" stroke="#a1a1aa" strokeWidth="6" strokeLinecap="round" />
+      <rect x="114" y="91" width="48" height="36" rx="7" fill="#f2c94c" />
+      <path d="M114 101h48" stroke="#e0b53a" strokeWidth="1" />
+      <circle cx="138" cy="106" r="4.5" fill="#8a5a3b" />
+      <rect x="136" y="107" width="4" height="10" rx="2" fill="#8a5a3b" />
+    </svg>
+  );
+}

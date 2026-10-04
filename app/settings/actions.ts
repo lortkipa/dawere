@@ -107,6 +107,14 @@ export async function updateTopics(slugs: string[]): Promise<Result> {
   refresh();
 }
 
+export async function updateFavoritesPublic(value: boolean): Promise<Result> {
+  const user = await requireUser();
+  if (typeof value !== "boolean") return { error: genericError };
+
+  await db.update(users).set({ favoritesPublic: value }).where(eq(users.id, user.id));
+  refresh();
+}
+
 export async function updateAvatar(formData: FormData): Promise<Result> {
   const user = await requireUser();
   const file = formData.get("avatar");

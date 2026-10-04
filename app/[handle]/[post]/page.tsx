@@ -9,6 +9,7 @@ import { PostActions } from "@/components/post-actions";
 import { PostByline } from "@/components/post-byline";
 import { getPostComments } from "@/lib/comments";
 import { db } from "@/lib/db";
+import { isFavorite } from "@/lib/favorites";
 import { isFollowing } from "@/lib/follows";
 import { postIdPattern } from "@/lib/ids";
 import { postLikeState } from "@/lib/likes";
@@ -49,10 +50,11 @@ export default async function PostPage({ params }: Props) {
   const viewer = await getCurrentUser();
   if (viewer && !viewer.onboardedAt) redirect("/onboarding");
   const canFollow = viewer?.id !== author.id;
-  const [followed, likes, thread] = await Promise.all([
+  const [followed, likes, thread, favorited] = await Promise.all([
     viewer && canFollow ? isFollowing(viewer.id, author.id) : false,
     postLikeState(post.id, viewer?.id),
     getPostComments(post.id, viewer?.id),
+    viewer ? isFavorite(post.id, viewer.id) : false,
     // Opened posts sink far down this reader's feed on later visits.
     viewer && canFollow
       ? db
@@ -98,6 +100,7 @@ export default async function PostPage({ params }: Props) {
           signedIn={Boolean(viewer)}
           liked={likes.liked}
           likes={likes.count}
+          favorited={favorited}
           comments={thread.total}
         />
         <Comments
