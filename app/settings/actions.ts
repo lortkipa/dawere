@@ -3,9 +3,11 @@
 import { and, eq, ne } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { retireComments } from "@/lib/comments";
 import { deleteAvatar, deleteImages, saveAvatar } from "@/lib/uploads";
 import { db } from "@/lib/db";
-import { posts, users } from "@/lib/db/schema";
+import { isUniqueViolation } from "@/lib/db/errors";
+import { comments, posts, users } from "@/lib/db/schema";
 import { maxNameLength } from "@/lib/onboarding-options";
 import {
   emailPattern,
@@ -27,12 +29,6 @@ async function requireUser() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth");
   return user;
-}
-
-// Drizzle wraps the postgres.js error, which carries the SQLSTATE code.
-function isUniqueViolation(error: unknown) {
-  const { code, cause } = (error ?? {}) as { code?: string; cause?: { code?: string } };
-  return code === "23505" || cause?.code === "23505";
 }
 
 // Email codes aren't sent yet, so the address changes without confirming it.
@@ -126,9 +122,11 @@ export async function removeAvatar(): Promise<Result> {
   refresh();
 }
 
-// Sessions and posts go with the row through ON DELETE CASCADE; photos live on disk.
+// Sessions, posts and likes go with the row through ON DELETE CASCADE; photos live on disk.
+// Comments are retired first, so the ones with replies stay as placeholders.
 export async function deleteAccount() {
   const user = await requireUser();
+  await retireComments(eq(comments.userId, user.id));
   const owned = await db.select({ images: posts.images }).from(posts).where(eq(posts.userId, user.id));
   await db.delete(users).where(eq(users.id, user.id));
   await deleteAvatar(user.avatar);

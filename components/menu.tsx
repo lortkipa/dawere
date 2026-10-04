@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, type ReactNode, type RefObject } from "react";
 
-export const menuClass = "absolute right-0 top-full z-20 mt-2 rounded-xl border border-line bg-white p-1.5 shadow-lg";
+// A card that drops down from its trigger; add a side (left-0 or right-0), a width and padding.
+export const popoverClass = "absolute top-full z-20 mt-2 rounded-xl border border-line bg-white shadow-lg";
+
+export const menuClass = `${popoverClass} right-0 p-1.5`;
 
 const itemBase =
   "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-[15px] transition-colors";

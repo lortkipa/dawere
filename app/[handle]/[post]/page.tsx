@@ -3,10 +3,15 @@ import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
+import { Comments } from "@/components/comments";
 import { Header } from "@/components/header";
+import { PostActions } from "@/components/post-actions";
 import { PostByline } from "@/components/post-byline";
+import { getPostComments } from "@/lib/comments";
 import { db } from "@/lib/db";
 import { isFollowing } from "@/lib/follows";
+import { postIdPattern } from "@/lib/ids";
+import { postLikeState } from "@/lib/likes";
 import { posts, users } from "@/lib/db/schema";
 import { postExtensions } from "@/lib/post-schema";
 import { getCurrentUser } from "@/lib/session";
@@ -15,7 +20,7 @@ import { avatarUrl, formatDate, imageUrl, menuUser } from "@/lib/user-view";
 type Props = { params: Promise<{ handle: string; post: string }> };
 
 const getPost = cache(async (id: string) => {
-  if (!/^[0-9a-f]{12}$/.test(id)) return null;
+  if (!postIdPattern.test(id)) return null;
   const [row] = await db
     .select({ post: posts, author: users })
     .from(posts)
@@ -44,7 +49,11 @@ export default async function PostPage({ params }: Props) {
   const viewer = await getCurrentUser();
   if (viewer && !viewer.onboardedAt) redirect("/onboarding");
   const canFollow = viewer?.id !== author.id;
-  const followed = viewer && canFollow ? await isFollowing(viewer.id, author.id) : false;
+  const [followed, likes, thread] = await Promise.all([
+    viewer && canFollow ? isFollowing(viewer.id, author.id) : false,
+    postLikeState(post.id, viewer?.id),
+    getPostComments(post.id, viewer?.id),
+  ]);
 
   return (
     <>
@@ -76,6 +85,20 @@ export default async function PostPage({ params }: Props) {
             {renderToReactElement({ content: post.body, extensions: postExtensions })}
           </div>
         </article>
+
+        <PostActions
+          postId={post.id}
+          signedIn={Boolean(viewer)}
+          liked={likes.liked}
+          likes={likes.count}
+          comments={thread.total}
+        />
+        <Comments
+          postId={post.id}
+          viewer={viewer ? { avatar: avatarUrl(viewer.avatar) } : null}
+          comments={thread.comments}
+          total={thread.total}
+        />
       </main>
     </>
   );

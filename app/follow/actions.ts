@@ -4,16 +4,11 @@ import { and, eq } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { isForeignKeyViolation } from "@/lib/db/errors";
 import { follows } from "@/lib/db/schema";
+import { uuidPattern } from "@/lib/ids";
 import { getCurrentUser } from "@/lib/session";
 
-// Drizzle wraps the postgres.js error, which carries the SQLSTATE code.
-function isForeignKeyViolation(error: unknown) {
-  const { code, cause } = (error ?? {}) as { code?: string; cause?: { code?: string } };
-  return code === "23503" || cause?.code === "23503";
-}
-
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 export async function setFollow(authorId: string, follow: boolean) {
   const user = await getCurrentUser();

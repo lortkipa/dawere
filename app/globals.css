@@ -9,6 +9,8 @@
   --color-accent: #4f46e5;
   --color-accent-hover: #4338ca;
   --color-accent-soft: #eef0ff;
+  /* The lines joining comment replies; a little darker than `line` so they read as lines. */
+  --color-thread: #d6d6d3;
 
   --font-sans: var(--font-noto-sans-georgian), ui-sans-serif, system-ui, sans-serif;
 

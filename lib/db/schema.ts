@@ -1,5 +1,15 @@
 import { sql } from "drizzle-orm";
-import { check, index, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  type AnyPgColumn,
+  check,
+  index,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
 
 export const users = pgTable("users", {
@@ -70,6 +80,52 @@ export const follows = pgTable(
     index().on(table.followingId),
     check("follows_not_self", sql`${table.followerId} <> ${table.followingId}`),
   ],
+);
+
+export const postLikes = pgTable(
+  "post_likes",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    postId: text()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.postId] }), index().on(table.postId)],
+);
+
+export const comments = pgTable(
+  "comments",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    postId: text()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    // Null once the comment is deleted but kept as a placeholder for its replies.
+    userId: uuid().references(() => users.id, { onDelete: "set null" }),
+    // Null for a comment on the post itself; otherwise the comment it replies to.
+    parentId: uuid().references((): AnyPgColumn => comments.id, { onDelete: "cascade" }),
+    body: text(),
+    deletedAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.postId, table.createdAt), index().on(table.parentId)],
+);
+
+export const commentLikes = pgTable(
+  "comment_likes",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    commentId: uuid()
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.commentId] }), index().on(table.commentId)],
 );
 
 export type User = typeof users.$inferSelect;

@@ -19,3 +19,23 @@ const dateFormat = new Intl.DateTimeFormat("ka-GE", { day: "numeric", month: "lo
 export function formatDate(date: Date) {
   return dateFormat.format(date);
 }
+
+const relativeFormat = new Intl.RelativeTimeFormat("ka", { numeric: "auto" });
+
+const relativeSteps: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["minute", 60],
+  ["hour", 60 * 60],
+  ["day", 60 * 60 * 24],
+  ["week", 60 * 60 * 24 * 7],
+  ["month", 60 * 60 * 24 * 30],
+  ["year", 60 * 60 * 24 * 365],
+];
+
+// „4 დღის წინ“. Also formatted on the server, for the same reason as formatDate.
+export function formatRelative(date: Date, now = new Date()) {
+  const seconds = Math.max(0, (now.getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return "ახლახან";
+  let unit = relativeSteps[0];
+  for (const step of relativeSteps) if (seconds >= step[1]) unit = step;
+  return relativeFormat.format(-Math.floor(seconds / unit[1]), unit[0]);
+}
