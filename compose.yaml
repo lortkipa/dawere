@@ -25,6 +25,8 @@ services:
       DATABASE_URL: postgres://dawere:${POSTGRES_PASSWORD}@db/dawere
       SITE_URL: ${SITE_URL:-http://localhost:3000}
       SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
     volumes:
       - ./data/uploads:/data/uploads
     ports:

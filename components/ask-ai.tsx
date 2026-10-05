@@ -14,11 +14,12 @@ import { authUrl } from "@/lib/return-to";
 import { Button } from "./button";
 import { SparkleIcon, sampleChat } from "./mockups";
 
-type Message = { role: "user" | "ai"; text: string };
+type Message = { role: "user" | "ai"; text: string; failed?: boolean };
 
 const title = "ჰკითხე სტატიას";
-// There's no AI behind the chat yet, so every question gets this.
-const placeholderReply = "ჩატი ჯერ არ მუშაობს. პასუხებს მალე მიიღებ.";
+const failedReply = "პასუხი ვერ მივიღე. სცადე თავიდან.";
+// The server answers 503 while no OpenAI key is set.
+const offlineReply = "ჩატი ჯერ არ მუშაობს. პასუხებს მალე მიიღებ.";
 
 // Below Tailwind's `lg` the chat is a bottom sheet; from `lg` up it docks on the right.
 const phoneQuery = "(max-width: 1023px)";
@@ -67,7 +68,15 @@ function usePhone() {
   docks on the right and the page narrows beside it; the reader can drag its edge to resize it.
   On a phone it slides up from the bottom and covers most of the screen.
 */
-export function AskAi({ signedIn, children }: { signedIn: boolean; children: ReactNode }) {
+export function AskAi({
+  postId,
+  signedIn,
+  children,
+}: {
+  postId: string;
+  signedIn: boolean;
+  children: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const [width, setWidth] = useState(defaultWidth);
   const [resizing, setResizing] = useState(false);
@@ -285,7 +294,7 @@ export function AskAi({ signedIn, children }: { signedIn: boolean; children: Rea
         </div>
 
         {signedIn ? (
-          <Conversation key={chat} focus={open && !phone} onStart={() => setStarted(true)} />
+          <Conversation key={chat} postId={postId} focus={open && !phone} onStart={() => setStarted(true)} />
         ) : (
           <SignInGate />
         )}
@@ -298,23 +307,27 @@ const headerButton =
   "grid size-9 cursor-pointer place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink";
 
 // `onStart` tells the panel a question was sent, so it can offer a new chat. `focus` moves the cursor into the field. Phones skip it: the keyboard would cover the sheet.
-function Conversation({ focus, onStart }: { focus: boolean; onStart: () => void }) {
+function Conversation({ postId, focus, onStart }: { postId: string; focus: boolean; onStart: () => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
-  const [pending, setPending] = useState(false);
+  // "waiting" until the first words of the answer arrive, "streaming" while the rest come in.
+  const [status, setStatus] = useState<"idle" | "waiting" | "streaming">("idle");
   const field = useRef<HTMLTextAreaElement>(null);
   const list = useRef<HTMLDivElement>(null);
-  const timer = useRef<number>(undefined);
+  const request = useRef<AbortController>(undefined);
+  // Follows the answer down as it grows, unless the reader scrolled up to read.
+  const stick = useRef(true);
 
   useEffect(() => {
     if (focus) field.current?.focus();
   }, [focus]);
 
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  // A new chat or a closed page stops the answer on the way.
+  useEffect(() => () => request.current?.abort(), []);
 
   useEffect(() => {
-    list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" });
-  }, [messages, pending]);
+    if (stick.current) list.current?.scrollTo({ top: list.current.scrollHeight });
+  }, [messages, status]);
 
   function fit() {
     const element = field.current;
@@ -323,31 +336,79 @@ function Conversation({ focus, onStart }: { focus: boolean; onStart: () => void 
     element.style.height = `${element.scrollHeight}px`;
   }
 
-  function send() {
+  async function send() {
     const text = draft.trim();
-    if (!text || pending) return;
+    if (!text || status !== "idle") return;
+    // Failed answers aren't real replies, so they don't go back to the model.
+    const history = [...messages.filter((message) => !message.failed), { role: "user" as const, text }];
     setMessages((current) => [...current, { role: "user", text }]);
     onStart();
     setDraft("");
     requestAnimationFrame(fit);
-    setPending(true);
-    timer.current = window.setTimeout(() => {
-      setMessages((current) => [...current, { role: "ai", text: placeholderReply }]);
-      setPending(false);
-    }, 700);
+    stick.current = true;
+    setStatus("waiting");
+
+    const controller = new AbortController();
+    request.current = controller;
+    let answer = "";
+    try {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          postId,
+          messages: history.map((message) => ({ role: message.role, text: message.text })),
+        }),
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) throw new Error(response.status === 503 ? "offline" : "failed");
+
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (!answer) setStatus("streaming");
+        answer += value;
+        const sofar = answer;
+        setMessages((current) =>
+          current.at(-1)?.role === "ai"
+            ? [...current.slice(0, -1), { role: "ai", text: sofar }]
+            : [...current, { role: "ai", text: sofar }],
+        );
+      }
+      if (!answer) throw new Error("failed");
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      const reply = error instanceof Error && error.message === "offline" ? offlineReply : failedReply;
+      // A cut-off answer keeps what arrived, with the error under it.
+      const failed: Message = { role: "ai", text: answer ? `${answer}\n\n${reply}` : reply, failed: true };
+      setMessages((current) =>
+        answer ? [...current.slice(0, -1), failed] : [...current, failed],
+      );
+    }
+    setStatus("idle");
   }
 
   return (
     <>
-      <div ref={list} className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-1 pb-4">
+      <div
+        ref={list}
+        onScroll={(event) => {
+          const element = event.currentTarget;
+          stick.current = element.scrollHeight - element.scrollTop - element.clientHeight < 40;
+        }}
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-1 pb-4"
+      >
         {messages.map((message, index) =>
           message.role === "user" ? (
             <Question key={index}>{message.text}</Question>
           ) : (
-            <Answer key={index}>{message.text}</Answer>
+            <Answer key={index} failed={message.failed}>
+              {message.text}
+            </Answer>
           ),
         )}
-        {pending && (
+        {status === "waiting" && (
           <Answer>
             <span className="inline-flex h-6 items-center gap-1" aria-label="პასუხი იწერება">
               <Dot />
@@ -385,7 +446,7 @@ function Conversation({ focus, onStart }: { focus: boolean; onStart: () => void 
             }}
             className="max-h-36 min-w-0 flex-1 resize-none bg-transparent py-1 text-base leading-6 placeholder:text-faint focus-visible:outline-none lg:text-[15px]"
           />
-          <SendButton disabled={!draft.trim() || pending} />
+          <SendButton disabled={!draft.trim() || status !== "idle"} />
         </div>
       </form>
     </>
@@ -435,9 +496,11 @@ function Question({ children }: { children: ReactNode }) {
   );
 }
 
-function Answer({ children }: { children: ReactNode }) {
+function Answer({ failed = false, children }: { failed?: boolean; children: ReactNode }) {
   return (
-    <div className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">{children}</div>
+    <div className={`text-[15px] leading-relaxed break-words whitespace-pre-wrap ${failed ? "text-muted" : ""}`}>
+      {children}
+    </div>
   );
 }
 

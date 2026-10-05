@@ -68,7 +68,7 @@ export default async function PostPage({ params }: Props) {
   return (
     <>
       <Header user={viewer ? menuUser(viewer) : undefined} />
-      <AskAi signedIn={Boolean(viewer)}>
+      <AskAi postId={post.id} signedIn={Boolean(viewer)}>
         <main className="mx-auto max-w-2xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10">
           <article>
             {post.cover && (
