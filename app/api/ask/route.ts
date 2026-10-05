@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { openChat, saveMessage } from "@/lib/ai-chats";
 import { aiConfigured, askAboutPost, maxMessageLength, maxMessages, type ChatMessage } from "@/lib/ask-ai";
 import { db } from "@/lib/db";
 import { posts } from "@/lib/db/schema";
@@ -16,7 +17,11 @@ function isMessage(value: unknown): value is ChatMessage {
   );
 }
 
-// The reading chat: streams the answer to the last question about a post as plain text.
+/*
+  The reading chat: streams the answer to the last question about a post as plain text. The
+  question and the answer are saved for /admin/chats; the X-Chat-Id header names the chat, which
+  the reader sends back with the next question.
+*/
 export async function POST(request: Request) {
   const viewer = await getCurrentUser();
   if (!viewer?.onboardedAt) return Response.json({ error: "sign in" }, { status: 401 });
@@ -42,14 +47,20 @@ export async function POST(request: Request) {
     .limit(1);
   if (!post) return Response.json({ error: "not found" }, { status: 404 });
 
+  const chatId = await openChat(viewer.id, postId, body.chatId);
+  await saveMessage(chatId, "user", messages.at(-1)!.text);
+  const saveAnswer = (answer: string, failed: boolean) =>
+    saveMessage(chatId, "ai", answer, failed).catch((error) => console.error("ask-ai save:", error));
+
   try {
-    const stream = await askAboutPost(post, messages.slice(-maxMessages), request.signal);
+    const stream = await askAboutPost(post, messages.slice(-maxMessages), request.signal, saveAnswer);
     return new Response(stream, {
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "X-Chat-Id": chatId },
     });
   } catch (error) {
+    await saveAnswer("", true);
     if (request.signal.aborted) return new Response(null, { status: 499 });
     console.error("ask-ai:", error);
-    return Response.json({ error: "upstream" }, { status: 502 });
+    return Response.json({ error: "upstream" }, { status: 502, headers: { "X-Chat-Id": chatId } });
   }
 }

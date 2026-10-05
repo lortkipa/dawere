@@ -193,5 +193,38 @@ export const categories = pgTable("categories", {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+// A reader's conversation with the reading chat about one post. Kept so admins can read them on
+// /admin/chats.
+export const aiChats = pgTable(
+  "ai_chats",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    postId: text()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.userId, table.createdAt.desc()), index().on(table.postId, table.createdAt.desc())],
+);
+
+export const aiMessages = pgTable(
+  "ai_messages",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    chatId: uuid()
+      .notNull()
+      .references(() => aiChats.id, { onDelete: "cascade" }),
+    role: text().$type<"user" | "ai">().notNull(),
+    // For an answer that failed or was stopped: whatever arrived before that, possibly nothing.
+    text: text().notNull(),
+    failed: boolean().notNull().default(false),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.chatId, table.createdAt)],
+);
+
 export type User = typeof users.$inferSelect;
 export type Post = typeof posts.$inferSelect;

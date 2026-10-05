@@ -12,6 +12,7 @@ const sections = [
   { href: "/admin/users", label: "მომხმარებლები", icon: <UsersIcon /> },
   { href: "/admin/blogs", label: "ბლოგები", icon: <BlogsIcon /> },
   { href: "/admin/comments", label: "კომენტარები", icon: <CommentsIcon /> },
+  { href: "/admin/chats", label: "AI ჩატები", icon: <ChatsIcon /> },
   { href: "/admin/categories", label: "კატეგორიები", icon: <CategoriesIcon /> },
 ];
 
@@ -198,6 +199,15 @@ function CommentsIcon() {
   return (
     <NavIcon>
       <path d="M20.5 11.5a8.5 8 0 0 1-12.2 7.2L3.5 20l1.4-4.1a8.5 8 0 1 1 15.6-4.4z" />
+    </NavIcon>
+  );
+}
+
+// The reader-side „ჰკითხე AI-ს“ sparkle, outlined like the other icons.
+function ChatsIcon() {
+  return (
+    <NavIcon>
+      <path d="M12 2l2.2 6.3L20.5 10.5l-6.3 2.2L12 19l-2.2-6.3L3.5 10.5l6.3-2.2z" />
     </NavIcon>
   );
 }

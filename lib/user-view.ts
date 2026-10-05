@@ -28,6 +28,28 @@ export function formatShortDate(date: Date) {
   return shortDateFormat.format(date);
 }
 
+// The server runs in UTC, so times are pinned to Georgia's clock.
+const dateTimeFormat = new Intl.DateTimeFormat("ka-GE", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Tbilisi",
+});
+
+// "5 ოქტომბერი, 2026, 18:44"
+export function formatDateTime(date: Date) {
+  return dateTimeFormat.format(date);
+}
+
+const timeFormat = new Intl.DateTimeFormat("ka-GE", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tbilisi" });
+
+// "18:44"
+export function formatTime(date: Date) {
+  return timeFormat.format(date);
+}
+
 const relativeFormat = new Intl.RelativeTimeFormat("ka", { numeric: "auto" });
 
 const relativeSteps: [Intl.RelativeTimeFormatUnit, number][] = [

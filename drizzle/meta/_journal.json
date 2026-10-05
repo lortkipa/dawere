@@ -99,6 +99,13 @@
       "when": 1791209860736,
       "tag": "0013_user_theme",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791211425794,
+      "tag": "0014_ai_chats",
+      "breakpoints": true
     }
   ]
 }

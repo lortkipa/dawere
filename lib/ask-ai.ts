@@ -34,11 +34,13 @@ ${text}
 /*
   Asks OpenAI about a post and returns the answer as a stream of text, chunk by chunk as the model
   writes it. Aborting `signal` (the reader left or started a new chat) stops the request upstream too.
+  `onEnd` gets the whole answer once the stream is over, and whether it ended early.
 */
 export async function askAboutPost(
   post: { title: string; description: string; body: JSONContent },
   messages: ChatMessage[],
   signal: AbortSignal,
+  onEnd: (answer: string, failed: boolean) => void,
 ) {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -68,37 +70,54 @@ export async function askAboutPost(
   const events = response.body.pipeThrough(new TextDecoderStream()).getReader();
   const encoder = new TextEncoder();
   let buffer = "";
+  let answer = "";
+  let ended = false;
+  const finish = (failed: boolean) => {
+    if (ended) return;
+    ended = true;
+    onEnd(answer, failed);
+  };
 
   // The API sends server-sent events; only the text deltas go on to the reader.
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
-      for (;;) {
-        const end = buffer.indexOf("\n\n");
-        if (end === -1) {
-          const { value, done } = await events.read();
-          if (done) return controller.close();
-          buffer += value;
-          continue;
-        }
-        const block = buffer.slice(0, end);
-        buffer = buffer.slice(end + 2);
-        const data = block
-          .split("\n")
-          .filter((line) => line.startsWith("data:"))
-          .map((line) => line.slice(5).trimStart())
-          .join("\n");
-        if (!data || data === "[DONE]") continue;
+      try {
+        for (;;) {
+          const end = buffer.indexOf("\n\n");
+          if (end === -1) {
+            const { value, done } = await events.read();
+            if (done) {
+              finish(false);
+              return controller.close();
+            }
+            buffer += value;
+            continue;
+          }
+          const block = buffer.slice(0, end);
+          buffer = buffer.slice(end + 2);
+          const data = block
+            .split("\n")
+            .filter((line) => line.startsWith("data:"))
+            .map((line) => line.slice(5).trimStart())
+            .join("\n");
+          if (!data || data === "[DONE]") continue;
 
-        const event = JSON.parse(data);
-        if (event.type === "response.output_text.delta" && event.delta) {
-          return controller.enqueue(encoder.encode(event.delta));
+          const event = JSON.parse(data);
+          if (event.type === "response.output_text.delta" && event.delta) {
+            answer += event.delta;
+            return controller.enqueue(encoder.encode(event.delta));
+          }
+          if (event.type === "error" || event.type === "response.failed") {
+            throw new Error(JSON.stringify(event.error ?? event.response?.error ?? event));
+          }
         }
-        if (event.type === "error" || event.type === "response.failed") {
-          return controller.error(new Error(JSON.stringify(event.error ?? event.response?.error ?? event)));
-        }
+      } catch (error) {
+        finish(true);
+        throw error;
       }
     },
     cancel() {
+      finish(true);
       events.cancel();
     },
   });

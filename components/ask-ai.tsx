@@ -315,6 +315,8 @@ function Conversation({ postId, focus, onStart }: { postId: string; focus: boole
   const field = useRef<HTMLTextAreaElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const request = useRef<AbortController>(undefined);
+  // The server's id for this conversation, from the first answer on.
+  const chatId = useRef<string>(undefined);
   // Follows the answer down as it grows, unless the reader scrolled up to read.
   const stick = useRef(true);
 
@@ -357,10 +359,12 @@ function Conversation({ postId, focus, onStart }: { postId: string; focus: boole
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           postId,
+          chatId: chatId.current,
           messages: history.map((message) => ({ role: message.role, text: message.text })),
         }),
         signal: controller.signal,
       });
+      chatId.current = response.headers.get("X-Chat-Id") ?? chatId.current;
       if (!response.ok || !response.body) throw new Error(response.status === 503 ? "offline" : "failed");
 
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
