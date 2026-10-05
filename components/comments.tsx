@@ -168,7 +168,7 @@ function CommentThread({ comment, level, holderId }: { comment: CommentNode; lev
               type="button"
               aria-expanded={open}
               onClick={() => setOpen(comment.id, !open)}
-              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-[#ededeb]"
+              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-4 text-sm font-medium text-ink transition-colors hover:bg-hover"
             >
               {open ? "დამალვა" : `${comment.replyCount} პასუხი`}
               <Chevron up={open} />
@@ -405,7 +405,7 @@ function Composer({
           className="block w-full resize-none overflow-hidden border-b border-line bg-transparent py-1.5 text-[15px] leading-relaxed outline-none transition-colors placeholder:text-muted focus:border-ink focus-visible:outline-none"
         />
         {error && (
-          <p aria-live="polite" className="mt-2 text-sm text-red-600">
+          <p aria-live="polite" className="mt-2 text-sm text-danger">
             {error}
           </p>
         )}

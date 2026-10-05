@@ -49,10 +49,10 @@ function Mock({ className, children }: { className: string; children: ReactNode 
 /* Hero, desktop: article with the AI panel docked beside it. */
 export function ReadingDesktopMock() {
   return (
-    <Mock className="absolute inset-0 flex flex-col bg-white text-ink">
+    <Mock className="absolute inset-0 flex flex-col bg-bg text-ink">
       <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-5">
         <span className="text-[15px] font-extrabold tracking-tight">dawere</span>
-        <Avatar initial="ლ" tone="bg-[#e4e2ee]" />
+        <Avatar initial="ლ" tone="bg-[color:light-dark(#e4e2ee,#35334a)]" />
       </div>
       <div className="flex min-h-0 flex-1">
         <div className="min-w-0 flex-1 overflow-hidden px-6 pt-7 lg:px-12 lg:pt-10">
@@ -92,7 +92,7 @@ export function ReadingDesktopMock() {
 /* Hero, phone: the same article with the chat as a bottom sheet. */
 export function ReadingPhoneMock() {
   return (
-    <Mock className="absolute inset-0 bg-white text-ink">
+    <Mock className="absolute inset-0 bg-bg text-ink">
       <div className="px-4 pt-12">
         <div className="flex items-center gap-2 text-muted">
           <ChevronLeft />
@@ -102,7 +102,7 @@ export function ReadingPhoneMock() {
         <Byline small />
         <p className="mt-3 text-[11.5px] leading-relaxed">{article.intro}</p>
       </div>
-      <div className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col rounded-t-[1.25rem] border-t border-line bg-white px-4 pt-2 shadow-[0_-12px_30px_-14px_rgba(17,17,17,0.25)]">
+      <div className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col rounded-t-[1.25rem] border-t border-line bg-bg px-4 pt-2 shadow-[0_-12px_30px_-14px_rgba(17,17,17,0.25)]">
         <span className="mx-auto h-1 w-9 rounded-full bg-line" />
         <div className="mt-2 flex items-center justify-between">
           <span className="text-[12px] font-semibold">ჰკითხე სტატიას</span>
@@ -177,7 +177,7 @@ export function FeedMock() {
         {posts.map((p) => (
           <div key={p.title} className="py-4">
             <div className="flex items-center gap-2 text-[12px] text-muted">
-              <Avatar initial={article.initial} tone="bg-[#e9e4da]" />
+              <Avatar initial={article.initial} tone="bg-[color:light-dark(#e9e4da,#3b362d)]" />
               {article.author}
             </div>
             <p className="mt-2 text-[15px] leading-snug font-bold">{p.title}</p>
@@ -223,7 +223,7 @@ function ArticleHead() {
 function Byline({ small }: { small?: boolean }) {
   return (
     <div className={`flex items-center gap-2 text-muted ${small ? "mt-2.5 text-[10.5px]" : "mt-4 text-[12px]"}`}>
-      <Avatar initial={article.initial} tone="bg-[#e9e4da]" />
+      <Avatar initial={article.initial} tone="bg-[color:light-dark(#e9e4da,#3b362d)]" />
       <span className="whitespace-nowrap text-ink">{article.author}</span>
       {!small && (
         <>
@@ -285,7 +285,7 @@ export function SparkleIcon({ className }: { className: string }) {
 function ChatInput({ small }: { small?: boolean }) {
   return (
     <div
-      className={`flex items-center justify-between rounded-xl border border-line bg-white text-muted ${
+      className={`flex items-center justify-between rounded-xl border border-line bg-bg text-muted ${
         small ? "h-8 pr-1 pl-3 text-[11px]" : "h-10 pr-1.5 pl-3.5 text-[13px]"
       }`}
     >

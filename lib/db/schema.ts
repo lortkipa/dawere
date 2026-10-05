@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { type AnyPgColumn, boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
+import type { Theme } from "../theme-options";
 
 export const roles = ["user", "admin", "superadmin"] as const;
 export type Role = (typeof roles)[number];
@@ -32,6 +33,8 @@ export const users = pgTable("users", {
   referralOther: text(),
   // Whether other people can open the favorites tab on this user's profile.
   favoritesPublic: boolean().notNull().default(true),
+  // "system" follows the device's own light or dark setting.
+  theme: text().$type<Theme>().notNull().default("system"),
   onboardedAt: timestamp({ withTimezone: true }),
   // Who can open /admin; see lib/admin.ts. Only signing in with SUPERADMIN_EMAIL makes a superadmin.
   role: text().$type<Role>().notNull().default("user"),

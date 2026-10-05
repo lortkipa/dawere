@@ -17,7 +17,7 @@ import { Button } from "./button";
 import { TagInput } from "./tag-input";
 import { Toolbar } from "./writer-toolbar";
 
-const errorClass = "text-[#d93025]";
+const errorClass = "text-error";
 const tooBigError = "ფოტო 20 მბ-ზე დიდი არ უნდა იყოს";
 const unreadableError = "ამ ფაილს ვერ ვკითხულობთ, სცადე სხვა ფოტო";
 const tooManyError = `ბლოგში ${maxImages}-ზე მეტი ფოტო არ უნდა იყოს`;
@@ -298,7 +298,7 @@ export function Writer({
               type="button"
               onClick={() => coverInput.current?.click()}
               className={`flex aspect-[2/1] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 text-center transition-colors ${
-                draggingCover ? "border-ink bg-[#efefed]" : "border-line bg-surface hover:bg-[#f1f1ef]"
+                draggingCover ? "border-ink bg-hover" : "border-line bg-surface hover:bg-hover"
               }`}
             >
               <svg
@@ -366,7 +366,7 @@ export function Writer({
         <TagInput ref={tagsRef} tags={tags} onChange={setTags} onDone={() => editor?.commands.focus("start")} topics={topics} />
       </div>
 
-      <div className={`sticky ${toolbarTop} z-40 border-y border-line bg-white`}>
+      <div className={`sticky ${toolbarTop} z-40 border-y border-line bg-bg`}>
         <Toolbar editor={editor} onPickImage={() => imageInput.current?.click()} />
         {notice && (
           <p aria-live="polite" className={`mx-auto max-w-2xl px-4 pb-2 text-sm sm:px-6 ${errorClass}`}>
@@ -398,7 +398,7 @@ export function Writer({
           {error && (
             <p
               aria-live="polite"
-              className={`rounded-lg border border-line bg-white px-3 py-2 text-sm shadow-sm ${errorClass}`}
+              className={`rounded-lg border border-line bg-bg px-3 py-2 text-sm shadow-sm ${errorClass}`}
             >
               {error}
             </p>
@@ -407,7 +407,7 @@ export function Writer({
             size="lg"
             disabled={!canPublish}
             onClick={publish}
-            className="shadow-lg disabled:opacity-100 disabled:bg-[#a5a1f0]"
+            className="shadow-lg disabled:opacity-100 disabled:bg-[color:light-dark(#a5a1f0,#3a377a)]"
           >
             {submitLabel}
           </Button>
@@ -431,7 +431,7 @@ function CoverButton({ label, onClick, children }: { label: string; onClick: () 
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="grid size-9 cursor-pointer place-items-center rounded-lg bg-white/90 text-ink shadow-sm transition-colors hover:bg-white"
+      className="grid size-9 cursor-pointer place-items-center rounded-lg bg-bg/90 text-ink shadow-sm transition-colors hover:bg-bg"
     >
       <svg
         viewBox="0 0 24 24"
@@ -485,7 +485,7 @@ function AutoTextarea({
       rows={1}
       value={value}
       onChange={(event) => onChange(event.target.value.replace(/\r?\n/g, " "))}
-      className={`block w-full resize-none overflow-hidden bg-transparent text-ink outline-none placeholder:text-[#b4b4b2] ${className}`}
+      className={`block w-full resize-none overflow-hidden bg-transparent text-ink outline-none placeholder:text-fainter ${className}`}
       {...props}
     />
   );

@@ -3,8 +3,8 @@ import type { ComponentProps } from "react";
 
 const variants = {
   primary: "bg-accent text-white shadow-sm hover:bg-accent-hover",
-  secondary: "bg-accent-soft text-ink hover:bg-[#e2e5fd]",
-  outline: "border border-line bg-white text-ink hover:bg-surface",
+  secondary: "bg-accent-soft text-ink hover:bg-accent-soft-hover",
+  outline: "border border-line bg-bg text-ink hover:bg-surface",
   ghost: "text-ink hover:bg-surface",
   danger: "bg-red-600 text-white shadow-sm hover:bg-red-700",
 };

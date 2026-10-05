@@ -30,7 +30,7 @@ export function BlogActions({
           <Button variant="outline" href={`/admin/blogs/${id}/edit`}>
             შეცვლა
           </Button>
-          <Button variant="outline" onClick={() => setConfirming(true)} className="text-red-600 hover:bg-red-50">
+          <Button variant="outline" onClick={() => setConfirming(true)} className="text-danger hover:bg-danger-soft">
             წაშლა
           </Button>
         </>

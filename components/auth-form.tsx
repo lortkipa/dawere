@@ -75,7 +75,7 @@ export function AuthForm() {
             aria-describedby={error ? "email-error" : undefined}
           />
           {error && (
-            <p id="email-error" className="text-sm text-[#d93025]">
+            <p id="email-error" className="text-sm text-error">
               {error}
             </p>
           )}
@@ -236,9 +236,9 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
                 fill(index, event.clipboardData.getData("text"));
               }}
               onKeyDown={(event) => handleKeyDown(index, event)}
-              className={`h-14 w-full min-w-0 flex-1 rounded-xl border text-center text-xl font-medium outline-none transition-colors placeholder:text-[#c4c4c2] focus:bg-white disabled:opacity-60 ${
+              className={`h-14 w-full min-w-0 flex-1 rounded-xl border text-center text-xl font-medium outline-none transition-colors placeholder:text-[color:light-dark(#c4c4c2,var(--color-fainter))] focus:bg-bg disabled:opacity-60 ${
                 invalid
-                  ? "border-[#d93025] bg-white"
+                  ? "border-error bg-bg"
                   : "border-transparent bg-surface focus:border-ink"
               }`}
             />
@@ -246,7 +246,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
         ))}
       </div>
 
-      <p aria-live="polite" className="mt-3 min-h-5 text-sm text-[#d93025]">
+      <p aria-live="polite" className="mt-3 min-h-5 text-sm text-error">
         {invalid && "კოდი არასწორია"}
       </p>
 

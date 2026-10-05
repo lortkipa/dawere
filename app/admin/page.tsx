@@ -34,7 +34,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
               aria-current={value === range ? "page" : undefined}
               scroll={false}
               className={`rounded-md px-3 py-1.5 text-sm whitespace-nowrap transition-colors ${
-                value === range ? "bg-ink text-white" : "text-muted hover:bg-surface hover:text-ink"
+                value === range ? "bg-ink text-bg" : "text-muted hover:bg-surface hover:text-ink"
               }`}
             >
               {rangeLabels[value]}
@@ -132,7 +132,7 @@ function Tile({ label, value, previous }: { label: string; value: number; previo
       {change !== null && (
         <p
           title="წინა პერიოდთან შედარებით"
-          className={`mt-0.5 text-xs tabular-nums ${change > 0 ? "text-emerald-700" : change < 0 ? "text-red-600" : "text-muted"}`}
+          className={`mt-0.5 text-xs tabular-nums ${change > 0 ? "text-[color:light-dark(#047857,#34d399)]" : change < 0 ? "text-danger" : "text-muted"}`}
         >
           {change === 0
             ? "უცვლელი"

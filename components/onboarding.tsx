@@ -179,12 +179,12 @@ export function Onboarding({ topics }: { topics: Option[] }) {
       </div>
 
       {/* Pinned to the bottom on phones, right under the step on larger screens. */}
-      <div className="sticky bottom-0 mt-auto bg-white pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:mt-8 sm:bg-transparent sm:pt-0">
+      <div className="sticky bottom-0 mt-auto bg-bg pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:static sm:mt-8 sm:bg-transparent sm:pt-0">
         <Button type="submit" size="lg" disabled={!valid || pending} className="w-full">
           {isLast ? "დასრულება" : "გაგრძელება"}
         </Button>
         {error && (
-          <p aria-live="polite" className="mt-3 text-center text-sm text-[#d93025]">
+          <p aria-live="polite" className="mt-3 text-center text-sm text-error">
             {error}
           </p>
         )}

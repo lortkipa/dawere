@@ -25,8 +25,8 @@ export function Header({ bare = false, user }: { bare?: boolean; user?: MenuUser
     <header
       className={`sticky top-0 z-50 border-b transition-colors duration-200 ${
         scrolled
-          ? "border-line bg-white"
-          : "border-transparent bg-transparent in-data-chat-open:border-line! in-data-chat-open:bg-white!"
+          ? "border-line bg-bg"
+          : "border-transparent bg-transparent in-data-chat-open:border-line! in-data-chat-open:bg-bg!"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">

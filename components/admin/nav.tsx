@@ -49,7 +49,7 @@ export function AdminNav({ user }: { user: NavUser }) {
             aria-current={active ? "page" : undefined}
             onClick={close}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] transition-colors ${
-              active ? "bg-[#ebebe9] font-medium text-ink" : "text-muted hover:bg-[#efefed] hover:text-ink"
+              active ? "bg-active font-medium text-ink" : "text-muted hover:bg-hover hover:text-ink"
             }`}
           >
             {section.icon}
@@ -72,7 +72,7 @@ export function AdminNav({ user }: { user: NavUser }) {
       <Link
         href="/"
         onClick={close}
-        className="flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] text-muted transition-colors hover:bg-[#efefed] hover:text-ink"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-[15px] text-muted transition-colors hover:bg-hover hover:text-ink"
       >
         <BackIcon />
         საიტზე დაბრუნება
@@ -88,7 +88,7 @@ export function AdminNav({ user }: { user: NavUser }) {
         {footer}
       </aside>
 
-      <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-white px-4 md:hidden">
+      <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-bg px-4 md:hidden">
         <Brand />
         <button
           type="button"
@@ -126,7 +126,7 @@ export function AdminNav({ user }: { user: NavUser }) {
               type="button"
               aria-label="დახურვა"
               onClick={close}
-              className="grid size-10 cursor-pointer place-items-center rounded-lg text-ink transition-colors hover:bg-[#efefed]"
+              className="grid size-10 cursor-pointer place-items-center rounded-lg text-ink transition-colors hover:bg-hover"
             >
               <NavIcon>
                 <path d="M18 6 6 18M6 6l12 12" />

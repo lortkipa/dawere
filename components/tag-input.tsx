@@ -95,7 +95,7 @@ export function TagInput({
                   event.stopPropagation();
                   onChange(tags.filter((item) => item !== tag));
                 }}
-                className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-[#e9e9e7] hover:text-ink"
+                className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-active hover:text-ink"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -135,7 +135,7 @@ export function TagInput({
               setActive(-1);
             }}
             onKeyDown={onKeyDown}
-            className="h-8 min-w-36 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-[#b4b4b2]"
+            className="h-8 min-w-36 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-fainter"
           />
         )}
       </div>

@@ -183,7 +183,7 @@ export function AskAi({ signedIn, children }: { signedIn: boolean; children: Rea
         aria-label={title}
         inert={!open}
         style={offset ? { transform: `translateY(${offset}px)` } : undefined}
-        className={`fixed inset-x-0 bottom-0 z-40 flex h-[85dvh] flex-col rounded-t-2xl bg-white text-ink shadow-[0_-12px_30px_-14px_rgba(17,17,17,0.25)] lg:inset-x-auto lg:top-16 lg:right-0 lg:h-auto lg:w-(--chat-w) lg:rounded-none lg:border-l lg:border-line lg:shadow-none ${
+        className={`fixed inset-x-0 bottom-0 z-40 flex h-[85dvh] flex-col rounded-t-2xl bg-bg text-ink shadow-[0_-12px_30px_-14px_rgba(17,17,17,0.25)] lg:inset-x-auto lg:top-16 lg:right-0 lg:h-auto lg:w-(--chat-w) lg:rounded-none lg:border-l lg:border-line lg:shadow-none ${
           // Visibility waits for the slide out to finish but turns on at once, so the field can take focus.
           sheetDrag
             ? ""
@@ -365,7 +365,7 @@ function Conversation({ focus, onStart }: { focus: boolean; onStart: () => void 
         }}
         className="shrink-0 px-4 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
-        <div className="flex items-end gap-2 rounded-xl border border-line bg-white py-1.5 pr-1.5 pl-3.5 transition-colors focus-within:border-ink">
+        <div className="flex items-end gap-2 rounded-xl border border-line bg-bg py-1.5 pr-1.5 pl-3.5 transition-colors focus-within:border-ink">
           <textarea
             ref={field}
             rows={1}
@@ -383,7 +383,7 @@ function Conversation({ focus, onStart }: { focus: boolean; onStart: () => void 
                 send();
               }
             }}
-            className="max-h-36 min-w-0 flex-1 resize-none bg-transparent py-1 text-base leading-6 placeholder:text-[#9a9a98] focus-visible:outline-none lg:text-[15px]"
+            className="max-h-36 min-w-0 flex-1 resize-none bg-transparent py-1 text-base leading-6 placeholder:text-faint focus-visible:outline-none lg:text-[15px]"
           />
           <SendButton disabled={!draft.trim() || pending} />
         </div>
@@ -407,15 +407,15 @@ function SignInGate() {
           ))}
         </div>
         <div className="shrink-0 px-4 pt-1 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="flex items-center justify-between rounded-xl border border-line py-1.5 pr-1.5 pl-3.5 text-[15px] text-[#9a9a98]">
+          <div className="flex items-center justify-between rounded-xl border border-line py-1.5 pr-1.5 pl-3.5 text-[15px] text-faint">
             დასვი კითხვა…
             <SendButton disabled={false} />
           </div>
         </div>
       </div>
 
-      <div className="absolute inset-0 grid place-items-center bg-white/40 p-6">
-        <div className="w-full max-w-xs rounded-xl border border-line bg-white px-6 py-7 text-center shadow-lg">
+      <div className="absolute inset-0 grid place-items-center bg-bg/40 p-6">
+        <div className="w-full max-w-xs rounded-xl border border-line bg-bg px-6 py-7 text-center shadow-lg">
           <h3 className="text-lg font-semibold">ჩატისთვის ანგარიში გჭირდება</h3>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">შესვლის შემდეგ ამ სტატიაზე დაბრუნდები.</p>
           <Button href={authUrl(pathname)} className="mt-5 w-full">

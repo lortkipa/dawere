@@ -21,6 +21,7 @@ import {
 } from "@/lib/profile-rules";
 import { superadminEmail } from "@/lib/roles";
 import { deleteSession, getCurrentUser } from "@/lib/session";
+import { isTheme } from "@/lib/theme-options";
 
 type Result = { error: string } | void;
 
@@ -123,6 +124,14 @@ export async function updateFavoritesPublic(value: boolean): Promise<Result> {
   if (typeof value !== "boolean") return { error: genericError };
 
   await db.update(users).set({ favoritesPublic: value }).where(eq(users.id, user.id));
+  refresh();
+}
+
+export async function updateTheme(value: string): Promise<Result> {
+  const user = await requireUser();
+  if (!isTheme(value)) return { error: genericError };
+
+  await db.update(users).set({ theme: value }).where(eq(users.id, user.id));
   refresh();
 }
 

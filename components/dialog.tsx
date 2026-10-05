@@ -46,7 +46,7 @@ export function Dialog({
       onClick={(event) => {
         if (pressedBackdrop.current && event.target === event.currentTarget) onClose();
       }}
-      className={`m-auto w-[calc(100%-2rem)] ${wide ? "max-w-xl" : "max-w-md"} max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-xl border border-line bg-white p-0 text-ink open:flex shadow-lg backdrop:bg-black/40`}
+      className={`m-auto w-[calc(100%-2rem)] ${wide ? "max-w-xl" : "max-w-md"} max-h-[calc(100dvh-2rem)] flex-col overflow-hidden rounded-xl border border-line bg-bg p-0 text-ink open:flex shadow-lg backdrop:bg-black/40`}
     >
       {/* A flex column capped at the viewport, so a long body can scroll between a fixed title and buttons. */}
       <div className="relative flex min-h-0 flex-1 flex-col px-5 pt-6 pb-5 sm:px-6">

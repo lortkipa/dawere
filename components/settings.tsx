@@ -11,6 +11,7 @@ import {
   updateFavoritesPublic,
   updateHandle,
   updateName,
+  updateTheme,
   updateTopics,
 } from "@/app/settings/actions";
 import { maxNameLength, minTopics, type Option } from "@/lib/onboarding-options";
@@ -24,6 +25,7 @@ import {
   normalizeEmail,
   normalizeHandle,
 } from "@/lib/profile-rules";
+import type { Theme } from "@/lib/theme-options";
 import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
@@ -43,9 +45,19 @@ export type SettingsUser = {
   favoritesPublic: boolean;
 };
 
-type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "favorites" | "delete";
+type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "favorites" | "theme" | "delete";
 
-export function Settings({ user, host, topics }: { user: SettingsUser; host: string; topics: Option[] }) {
+export function Settings({
+  user,
+  host,
+  topics,
+  theme,
+}: {
+  user: SettingsUser;
+  host: string;
+  topics: Option[];
+  theme: Theme;
+}) {
   const [editing, setEditing] = useState<Field | null>(null);
   const close = () => setEditing(null);
 
@@ -78,6 +90,9 @@ export function Settings({ user, host, topics }: { user: SettingsUser; host: str
         <Row label="რჩეულები" onClick={() => setEditing("favorites")}>
           {user.favoritesPublic ? "ყველა ხედავს" : "მხოლოდ მე"}
         </Row>
+        <Row label="იერსახე" onClick={() => setEditing("theme")}>
+          {themeOptions.find((option) => option.slug === theme)?.label}
+        </Row>
       </div>
 
       <div className="mt-4 border-t border-line pt-4">
@@ -91,6 +106,7 @@ export function Settings({ user, host, topics }: { user: SettingsUser; host: str
       {editing === "bio" && <BioDialog current={user.bio ?? ""} onClose={close} />}
       {editing === "topics" && <TopicsDialog current={user.topics} topics={topics} onClose={close} />}
       {editing === "favorites" && <FavoritesDialog current={user.favoritesPublic} onClose={close} />}
+      {editing === "theme" && <ThemeDialog current={theme} onClose={close} />}
       {editing === "delete" && <DeleteDialog onClose={close} />}
     </div>
   );
@@ -112,7 +128,7 @@ function Row({
       type="button"
       onClick={onClick}
       className={`-mx-3 flex min-h-14 cursor-pointer items-center justify-between gap-6 rounded-lg px-3 py-3 text-left transition-colors ${
-        danger ? "text-red-600 hover:bg-red-50" : "text-ink hover:bg-surface"
+        danger ? "text-danger hover:bg-danger-soft" : "text-ink hover:bg-surface"
       }`}
     >
       <span className="shrink-0 font-medium">{label}</span>
@@ -251,7 +267,7 @@ function BioDialog({ current, onClose }: { current: string; onClose: () => void 
           maxLength={maxBioLength}
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className="block w-full resize-none rounded-lg border border-line bg-white px-4 py-3 text-base outline-offset-0 transition-colors focus:border-ink"
+          className="block w-full resize-none rounded-lg border border-line bg-bg px-4 py-3 text-base outline-offset-0 transition-colors focus:border-ink"
         />
       </EditForm>
     </Dialog>
@@ -300,7 +316,7 @@ function AvatarDialog({ current, onClose }: { current: string | null; onClose: (
                   setPicked(null);
                   setRemoving(true);
                 }}
-                className="text-red-600 hover:bg-red-50"
+                className="text-danger hover:bg-danger-soft"
               >
                 ფოტოს წაშლა
               </Button>
@@ -381,6 +397,37 @@ function FavoritesDialog({ current, onClose }: { current: boolean; onClose: () =
               option={option}
               selected={isPublic === (option.slug === "public")}
               onClick={() => setIsPublic(option.slug === "public")}
+            />
+          ))}
+        </div>
+      </EditForm>
+    </Dialog>
+  );
+}
+
+const themeOptions: { slug: Theme; emoji: string; label: string }[] = [
+  { slug: "system", emoji: "💻", label: "სისტემური" },
+  { slug: "light", emoji: "☀️", label: "ნათელი" },
+  { slug: "dark", emoji: "🌙", label: "მუქი" },
+];
+
+function ThemeDialog({ current, onClose }: { current: Theme; onClose: () => void }) {
+  const [theme, setTheme] = useState(current);
+
+  return (
+    <Dialog title="იერსახე" onClose={onClose}>
+      <EditForm canSave={theme !== current} save={() => updateTheme(theme)} onClose={onClose}>
+        <p className="mb-4 text-center text-sm text-muted">
+          სისტემური იერსახე მოწყობილობის პარამეტრებს მიჰყვება.
+        </p>
+        <div role="radiogroup" aria-label="იერსახე" className="flex flex-wrap justify-center gap-2">
+          {themeOptions.map((option) => (
+            <Chip
+              key={option.slug}
+              role="radio"
+              option={option}
+              selected={theme === option.slug}
+              onClick={() => setTheme(option.slug)}
             />
           ))}
         </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, type ReactNode, type RefObject } from "react";
 
 // A card that drops down from its trigger; add a side (left-0 or right-0), a width and padding.
-export const popoverClass = "absolute top-full z-20 mt-2 rounded-xl border border-line bg-white shadow-lg";
+export const popoverClass = "absolute top-full z-20 mt-2 rounded-xl border border-line bg-bg shadow-lg";
 
 export const menuClass = `${popoverClass} right-0 p-1.5`;
 
@@ -14,7 +14,7 @@ const itemBase =
 export const itemClass = `${itemBase} text-ink hover:bg-surface`;
 
 // For leaving or reporting: red text and icon, with a faint red hover.
-export const dangerItemClass = `${itemBase} text-red-600 hover:bg-red-50 [&_svg]:text-red-500`;
+export const dangerItemClass = `${itemBase} text-danger hover:bg-danger-soft [&_svg]:text-red-500`;
 
 // Closes an open menu on a pointer press outside `ref` or on Escape.
 export function useDismiss(open: boolean, ref: RefObject<HTMLElement | null>, close: () => void) {

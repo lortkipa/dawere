@@ -65,7 +65,7 @@ export function CommentList({ comments, showPost = true }: { comments: CommentRo
                   variant="outline"
                   size="sm"
                   onClick={() => setDeleting(comment)}
-                  className="text-red-600 hover:bg-red-50"
+                  className="text-danger hover:bg-danger-soft"
                 >
                   წაშლა
                 </Button>
@@ -112,7 +112,7 @@ function EditDialog({ comment, onClose }: { comment: CommentRow; onClose: () => 
           maxLength={maxCommentLength}
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          className="block w-full resize-none rounded-lg border border-line bg-white px-4 py-3 text-base outline-offset-0 transition-colors focus:border-ink"
+          className="block w-full resize-none rounded-lg border border-line bg-bg px-4 py-3 text-base outline-offset-0 transition-colors focus:border-ink"
         />
       </EditForm>
     </Dialog>

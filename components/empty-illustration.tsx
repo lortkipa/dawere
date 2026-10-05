@@ -2,8 +2,8 @@
 export function EmptyIllustration({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 150" aria-hidden="true" className={className}>
-      <circle cx="100" cy="70" r="58" fill="#eef0ff" />
-      <ellipse cx="104" cy="127" rx="78" ry="5" fill="#efefec" />
+      <circle cx="100" cy="70" r="58" className="fill-accent-soft" />
+      <ellipse cx="104" cy="127" rx="78" ry="5" className="fill-hover" />
 
       {/* Crumpled page */}
       <path d="M18 117l3-7 7-2 6 4 1 7-4 5-8 1-5-4z" fill="#fff" stroke="#dededa" strokeWidth="1.2" strokeLinejoin="round" />
@@ -46,8 +46,8 @@ export function EmptyIllustration({ className = "" }: { className?: string }) {
 export function LockedIllustration({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 150" aria-hidden="true" className={className}>
-      <circle cx="100" cy="70" r="58" fill="#eef0ff" />
-      <ellipse cx="100" cy="127" rx="70" ry="5" fill="#efefec" />
+      <circle cx="100" cy="70" r="58" className="fill-accent-soft" />
+      <ellipse cx="100" cy="127" rx="70" ry="5" className="fill-hover" />
 
       {/* Post card */}
       <g transform="rotate(-7 86 76)">

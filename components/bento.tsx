@@ -23,7 +23,7 @@ export function Bento() {
           <div className="px-6 pt-7 sm:px-8 sm:pt-8 md:col-span-2 md:self-center md:pb-8">
             <CardText title="ჰკითხე" text="დასვი კითხვები სტატიის შესახებ." />
           </div>
-          <div className="relative mt-8 ml-6 min-h-80 overflow-hidden rounded-tl-2xl border-t border-l border-line bg-white sm:ml-8 md:col-span-3 md:mt-10 md:ml-0">
+          <div className="relative mt-8 ml-6 min-h-80 overflow-hidden rounded-tl-2xl border-t border-l border-line bg-bg sm:ml-8 md:col-span-3 md:mt-10 md:ml-0">
             <AskMock />
           </div>
         </div>
@@ -39,7 +39,7 @@ function TopCard({ className, title, text, mock }: { className: string; title: s
       <div className="md:min-h-30">
         <CardText title={title} text={text} />
       </div>
-      <div className="relative mt-8 min-h-72 flex-1 overflow-hidden rounded-t-2xl border border-b-0 border-line bg-white">
+      <div className="relative mt-8 min-h-72 flex-1 overflow-hidden rounded-t-2xl border border-b-0 border-line bg-bg">
         {mock}
       </div>
     </div>

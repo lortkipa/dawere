@@ -90,7 +90,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
                       variant="outline"
                       size="sm"
                       onClick={() => setDeleting(category)}
-                      className="text-red-600 hover:bg-red-50"
+                      className="text-danger hover:bg-danger-soft"
                     >
                       წაშლა
                     </Button>

@@ -17,7 +17,7 @@ export function Chip({ option, selected, onClick, role }: ChipProps) {
       aria-checked={role ? selected : undefined}
       onClick={onClick}
       className={`inline-flex h-11 cursor-pointer items-center gap-2 rounded-full border px-4 text-[15px] font-medium transition-colors select-none ${
-        selected ? "border-ink bg-ink text-white" : "border-line bg-white text-ink hover:bg-surface"
+        selected ? "border-ink bg-ink text-bg" : "border-line bg-bg text-ink hover:bg-surface"
       }`}
     >
       <span aria-hidden="true">{option.emoji}</span>

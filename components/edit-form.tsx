@@ -3,7 +3,7 @@
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { Button } from "./button";
 
-export const errorClass = "text-[#d93025]";
+export const errorClass = "text-error";
 
 type Result = { error: string } | void;
 

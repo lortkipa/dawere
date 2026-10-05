@@ -1,16 +1,29 @@
 @import "tailwindcss";
 
+/* Each color is light-dark(light, dark); `color-scheme` on <html> picks the side. */
 @theme {
-  --color-bg: #ffffff;
-  --color-surface: #f7f7f5;
-  --color-ink: #111111;
-  --color-muted: #5f5f5f;
-  --color-line: #e5e5e3;
-  --color-accent: #4f46e5;
-  --color-accent-hover: #4338ca;
-  --color-accent-soft: #eef0ff;
+  --color-bg: light-dark(#ffffff, #191919);
+  --color-surface: light-dark(#f7f7f5, #222221);
+  --color-ink: light-dark(#111111, #ececeb);
+  --color-muted: light-dark(#5f5f5f, #a3a3a0);
+  --color-line: light-dark(#e5e5e3, #30302e);
+  --color-accent: light-dark(#4f46e5, #5b54ea);
+  --color-accent-hover: light-dark(#4338ca, #4f46e5);
+  --color-accent-soft: light-dark(#eef0ff, #25254a);
+  --color-accent-soft-hover: light-dark(#e2e5fd, #2e2e5a);
   /* The lines joining comment replies; a little darker than `line` so they read as lines. */
-  --color-thread: #d6d6d3;
+  --color-thread: light-dark(#d6d6d3, #3d3d3b);
+  /* Placeholders and other quiet text. */
+  --color-faint: light-dark(#9a9a98, #7c7c79);
+  --color-fainter: light-dark(#b4b4b2, #61615e);
+  /* Hover and pressed fills on top of `surface`-like grays. */
+  --color-hover: light-dark(#efefed, #2a2a29);
+  --color-active: light-dark(#e9e9e7, #333332);
+  --color-danger: light-dark(#dc2626, #f87171);
+  --color-danger-soft: light-dark(#fef2f2, #3a1f1f);
+  --color-error: light-dark(#d93025, #f28b82);
+  --color-avatar-bg: light-dark(#e4e6eb, #3a3b3c);
+  --color-avatar-fg: light-dark(#bcc0c4, #626568);
 
   --font-sans: var(--font-noto-sans-georgian), ui-sans-serif, system-ui, sans-serif;
 
@@ -30,6 +43,7 @@
 
 @layer base {
   html {
+    color-scheme: light dark;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
   }
@@ -39,6 +53,19 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  [data-theme="light"] {
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  /* Pages that are always light for now (landing, sign-in) carry a `LightOnly` marker. */
+  :root:has([data-light-only]) {
+    color-scheme: light;
   }
 
   :focus-visible {
@@ -60,8 +87,13 @@
   /* A loading placeholder. The band is sized and positioned against the viewport (fixed), so
      every bone on screen lights up as part of one sweep. */
   .bone {
-    background-color: #efefed;
-    background-image: linear-gradient(100deg, transparent 43%, rgb(255 255 255 / 0.9) 50%, transparent 57%);
+    background-color: var(--color-hover);
+    background-image: linear-gradient(
+      100deg,
+      transparent 43%,
+      light-dark(rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.06)) 50%,
+      transparent 57%
+    );
     background-size: 200vw 100%;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -196,7 +228,7 @@
       content: attr(data-placeholder);
       float: left;
       height: 0;
-      color: #b4b4b2;
+      color: var(--color-fainter);
       pointer-events: none;
     }
   }

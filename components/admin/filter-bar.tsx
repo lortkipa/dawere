@@ -13,7 +13,7 @@ export type FilterDef = { name: string; label: string; options: Option[] };
 type Values = Record<string, string>;
 
 const fieldClass =
-  "h-10 rounded-lg border border-line bg-white text-[15px] text-ink outline-offset-0 transition-colors focus:border-ink";
+  "h-10 rounded-lg border border-line bg-bg text-[15px] text-ink outline-offset-0 transition-colors focus:border-ink";
 
 // Spelled out by hand: browsers without Georgian locale data would render Intl's English
 // fallback and differ from the server's HTML.
@@ -103,7 +103,7 @@ export function FilterBar({
             onKeyDown={(event) => {
               if (event.key === "Enter") go({ ...values, q: query.trim() });
             }}
-            className={`${fieldClass} w-full pr-3 pl-10 placeholder:text-[#9a9a98]`}
+            className={`${fieldClass} w-full pr-3 pl-10 placeholder:text-faint`}
           />
         </div>
 
@@ -119,7 +119,7 @@ export function FilterBar({
           </Icon>
           ფილტრები
           {active.length > 0 && (
-            <span className="grid size-5 place-items-center rounded-full bg-ink text-xs font-medium text-white tabular-nums">
+            <span className="grid size-5 place-items-center rounded-full bg-ink text-xs font-medium text-bg tabular-nums">
               {active.length}
             </span>
           )}
@@ -171,7 +171,7 @@ export function FilterBar({
                 type="button"
                 aria-label={`${item.label} — მოხსნა`}
                 onClick={() => go({ ...values, q: query.trim(), ...item.clear })}
-                className="grid size-6 cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-[#e9e9e7] hover:text-ink"
+                className="grid size-6 cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-active hover:text-ink"
               >
                 <Icon small>
                   <path d="M18 6 6 18M6 6l12 12" />
@@ -285,7 +285,7 @@ function Pill({ selected, onClick, children }: { selected: boolean; onClick: () 
       aria-pressed={selected}
       onClick={onClick}
       className={`h-8 cursor-pointer rounded-full border px-3 text-sm transition-colors ${
-        selected ? "border-ink bg-ink text-white" : "border-line bg-white text-ink hover:bg-surface"
+        selected ? "border-ink bg-ink text-bg" : "border-line bg-bg text-ink hover:bg-surface"
       }`}
     >
       {children}

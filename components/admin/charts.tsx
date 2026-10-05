@@ -4,9 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 type Point = { label: string; value: number };
 
-const ink = "#111111";
-const grid = "#ececea";
-const muted = "#5f5f5f";
+// SVG attributes can't read CSS variables, so the colors go in as classes.
 
 // Up to 4 clean ticks from 0, e.g. 0 / 5 / 10 / 15.
 function ticks(max: number) {
@@ -72,15 +70,14 @@ export function LineChart({ points, height = 180 }: { points: Point[]; height?: 
         <svg width={width} height={height} role="img" aria-label="გრაფიკი" className="block overflow-visible">
           {yTicks.map((tick) => (
             <g key={tick}>
-              <line x1={left} x2={width - right} y1={y(tick)} y2={y(tick)} stroke={grid} strokeWidth="1" />
+              <line x1={left} x2={width - right} y1={y(tick)} y2={y(tick)} strokeWidth="1" className="stroke-line" />
               <text
                 x={left - 8}
                 y={y(tick)}
                 dy="0.32em"
                 textAnchor="end"
                 fontSize="11"
-                fill={muted}
-                className="tabular-nums"
+                className="fill-muted tabular-nums"
               >
                 {compact.format(tick)}
               </text>
@@ -92,18 +89,18 @@ export function LineChart({ points, height = 180 }: { points: Point[]; height?: 
               x={x(index)}
               y={height - 6}
               fontSize="11"
-              fill={muted}
+              className="fill-muted"
               textAnchor={index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}
             >
               {points[index].label}
             </text>
           ))}
-          <path d={area} fill={ink} fillOpacity="0.06" />
-          <path d={line} fill="none" stroke={ink} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={area} fillOpacity="0.06" className="fill-ink" />
+          <path d={line} fill="none" strokeWidth="2" className="stroke-ink" strokeLinejoin="round" strokeLinecap="round" />
           {point && active !== null && (
             <g>
-              <line x1={x(active)} x2={x(active)} y1={top} y2={top + plotHeight} stroke={muted} strokeWidth="1" />
-              <circle cx={x(active)} cy={y(point.value)} r="5" fill={ink} stroke="#fff" strokeWidth="2" />
+              <line x1={x(active)} x2={x(active)} y1={top} y2={top + plotHeight} strokeWidth="1" className="stroke-muted" />
+              <circle cx={x(active)} cy={y(point.value)} r="5" strokeWidth="2" className="fill-ink stroke-bg" />
             </g>
           )}
           <rect
@@ -120,7 +117,7 @@ export function LineChart({ points, height = 180 }: { points: Point[]; height?: 
       )}
       {point && active !== null && (
         <div
-          className={`pointer-events-none absolute top-0 z-10 rounded-lg border border-line bg-white px-2.5 py-1.5 shadow-sm ${
+          className={`pointer-events-none absolute top-0 z-10 rounded-lg border border-line bg-bg px-2.5 py-1.5 shadow-sm ${
             x(active) > width / 2 ? "-translate-x-full" : ""
           }`}
           // Beside the crosshair, on the side with more room, so it never covers the point.

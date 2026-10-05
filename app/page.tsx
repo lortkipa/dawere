@@ -6,10 +6,18 @@ import { Feed, FeedLoading } from "@/components/feed";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
+import { LightOnly } from "@/components/light-only";
+import type { Viewport } from "next";
 import type { User } from "@/lib/db/schema";
 import { getFeedPage } from "@/lib/feed";
 import { getCurrentUser } from "@/lib/session";
+import { themeColors } from "@/lib/theme-options";
 import { menuUser } from "@/lib/user-view";
+
+// The landing page is always light; the feed keeps the reader's theme from the root layout.
+export async function generateViewport(): Promise<Viewport> {
+  return (await getCurrentUser()) ? {} : { themeColor: themeColors.light };
+}
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -29,6 +37,7 @@ export default async function Home() {
 
   return (
     <>
+      <LightOnly />
       <Header />
       <main>
         <Hero />

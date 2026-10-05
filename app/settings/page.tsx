@@ -34,6 +34,7 @@ export default async function SettingsPage() {
           }}
           host={host}
           topics={await getCategories()}
+          theme={user.theme}
         />
       </main>
     </>

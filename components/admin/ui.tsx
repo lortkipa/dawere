@@ -83,7 +83,7 @@ export function Pagination({
                 href={href(n)}
                 aria-current={n === page ? "page" : undefined}
                 className={`grid h-8 min-w-8 place-items-center rounded-lg px-2 tabular-nums transition-colors ${
-                  n === page ? "bg-ink text-white" : "text-ink hover:bg-surface"
+                  n === page ? "bg-ink text-bg" : "text-ink hover:bg-surface"
                 }`}
               >
                 {n}
