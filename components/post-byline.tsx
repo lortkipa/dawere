@@ -6,6 +6,7 @@ import { Avatar } from "./avatar";
 import { FollowButton, useFollow } from "./follow-button";
 import { FollowedIcon } from "./followed-icon";
 import { OwnPostMenu } from "./own-post-menu";
+import { ReportMenu } from "./report";
 
 // Name over date, so on a phone the name gets the whole width next to the follow button.
 export function PostByline({
@@ -19,6 +20,7 @@ export function PostByline({
   canFollow,
   signedIn,
   own,
+  reportId,
 }: {
   href: string;
   name: string;
@@ -31,6 +33,8 @@ export function PostByline({
   signedIn: boolean;
   // The reader wrote this post: a menu to edit or delete it takes the follow button's place.
   own?: { id: string; href: string; comments: number };
+  // Set for a signed-in reader on someone else's post, which they can report.
+  reportId?: string;
 }) {
   const [followed, toggleFollow] = useFollow(authorId, initialFollowed);
   const router = useRouter();
@@ -61,6 +65,7 @@ export function PostByline({
           className="shrink-0"
         />
       )}
+      {reportId && <ReportMenu kind="post" id={reportId} label="ბლოგზე ჩივილი" className="-mr-2 shrink-0" />}
       {own && (
         <div className="-mr-2 shrink-0">
           <OwnPostMenu {...own} onDeleted={() => router.replace(href)} />

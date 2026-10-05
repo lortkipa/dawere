@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { type AnyPgColumn, boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
 import type { LegalDoc } from "../legal-docs";
+import type { ReportKind, ReportStatus } from "../report-rules";
 import type { Theme } from "../theme-options";
 
 export const roles = ["user", "admin", "superadmin"] as const;
@@ -254,6 +255,41 @@ export const bans = pgTable("bans", {
   bannedBy: uuid().references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
+
+// What readers flag for admins on /admin/reports. Each points at exactly one post, comment or user;
+// deleting that deletes its reports, since the deletion settled them.
+export const reports = pgTable(
+  "reports",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    // Null once the reader deletes their account.
+    reporterId: uuid().references(() => users.id, { onDelete: "set null" }),
+    kind: text().$type<ReportKind>().notNull(),
+    postId: text().references(() => posts.id, { onDelete: "cascade" }),
+    commentId: uuid().references(() => comments.id, { onDelete: "cascade" }),
+    userId: uuid().references(() => users.id, { onDelete: "cascade" }),
+    // A slug from lib/report-rules.ts.
+    reason: text().notNull(),
+    details: text(),
+    // "dismissed": nothing wrong; "actioned": the author was banned.
+    status: text().$type<ReportStatus>().notNull().default("open"),
+    closedBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    closedAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index().on(table.status, table.createdAt.desc()),
+    index().on(table.postId),
+    index().on(table.commentId),
+    index().on(table.userId),
+    check(
+      "reports_one_target",
+      sql`(${table.kind} = 'post' and ${table.postId} is not null and ${table.commentId} is null and ${table.userId} is null)
+        or (${table.kind} = 'comment' and ${table.commentId} is not null and ${table.postId} is null and ${table.userId} is null)
+        or (${table.kind} = 'user' and ${table.userId} is not null and ${table.postId} is null and ${table.commentId} is null)`,
+    ),
+  ],
+);
 
 export type User = typeof users.$inferSelect;
 export type Post = typeof posts.$inferSelect;

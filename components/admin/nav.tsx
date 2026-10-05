@@ -7,11 +7,15 @@ import { Avatar } from "../avatar";
 
 export type NavUser = { name: string; email: string; avatar?: string; role: string };
 
+// Shown next to a section's name, such as the open reports.
+type Counts = Partial<Record<string, number>>;
+
 const sections = [
   { href: "/admin", label: "მიმოხილვა", icon: <OverviewIcon /> },
   { href: "/admin/users", label: "მომხმარებლები", icon: <UsersIcon /> },
   { href: "/admin/blogs", label: "ბლოგები", icon: <BlogsIcon /> },
   { href: "/admin/comments", label: "კომენტარები", icon: <CommentsIcon /> },
+  { href: "/admin/reports", label: "ჩივილები", icon: <ReportsIcon /> },
   { href: "/admin/chats", label: "AI ჩატები", icon: <ChatsIcon /> },
   { href: "/admin/categories", label: "კატეგორიები", icon: <CategoriesIcon /> },
   { href: "/admin/legal", label: "დოკუმენტები", icon: <LegalIcon /> },
@@ -19,7 +23,7 @@ const sections = [
 
 // The sidebar on wide screens; under md a top bar whose button slides the same sidebar in from
 // the right.
-export function AdminNav({ user }: { user: NavUser }) {
+export function AdminNav({ user, counts = {} }: { user: NavUser; counts?: Counts }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -55,7 +59,12 @@ export function AdminNav({ user }: { user: NavUser }) {
             }`}
           >
             {section.icon}
-            {section.label}
+            <span className="min-w-0 flex-1 truncate">{section.label}</span>
+            {Boolean(counts[section.href]) && (
+              <span className="rounded-full bg-danger-soft px-2 text-xs leading-5 font-medium text-danger tabular-nums">
+                {counts[section.href]}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -209,6 +218,14 @@ function ChatsIcon() {
   return (
     <NavIcon>
       <path d="M12 2l2.2 6.3L20.5 10.5l-6.3 2.2L12 19l-2.2-6.3L3.5 10.5l6.3-2.2z" />
+    </NavIcon>
+  );
+}
+
+function ReportsIcon() {
+  return (
+    <NavIcon>
+      <path d="M4 22V4a1 1 0 0 1 1-1h13l-2.5 5L18 13H5" />
     </NavIcon>
   );
 }

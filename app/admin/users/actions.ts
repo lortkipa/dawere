@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { deleteUserAndFiles } from "@/lib/accounts";
 import { maxBanReason } from "@/lib/ban-rules";
 import { ban, isBanned, unban } from "@/lib/bans";
+import { closeReportsAbout } from "@/lib/reports";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { isUniqueViolation } from "@/lib/db/errors";
@@ -270,6 +271,7 @@ export async function banUser(id: string, reasonValue: string): Promise<Result> 
   if (reason.length > maxBanReason) return { error: genericError };
 
   await ban(access.target.email, reason, access.actor.id);
+  await closeReportsAbout(access.target.id, access.actor.id);
   refresh();
 }
 
@@ -282,9 +284,14 @@ export async function unbanUser(id: string): Promise<Result> {
   refresh();
 }
 
+async function accountOf(email: string) {
+  const [account] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return account ?? null;
+}
+
 // The account behind an address, if any, must be one this admin could ban from its own page.
 async function canBanEmail(actor: User, email: string) {
-  const [account] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const account = await accountOf(email);
   return !account || canRemove(actor, account);
 }
 
@@ -299,6 +306,8 @@ export async function banEmail(emailValue: string, reasonValue: string): Promise
   if (await isBanned(email)) return { error: "ეს ელფოსტა უკვე დაბლოკილია" };
 
   await ban(email, reason, actor.id);
+  const account = await accountOf(email);
+  if (account) await closeReportsAbout(account.id, actor.id);
   refresh();
 }
 

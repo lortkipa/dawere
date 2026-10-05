@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { isBannedSql } from "./bans";
 import { db } from "./db";
-import { commentLikes, comments, users } from "./db/schema";
+import { commentLikes, comments, reports, users } from "./db/schema";
 import { avatarUrl, formatRelative } from "./user-view";
 
 export { maxCommentLength } from "./comment-rules";
@@ -144,6 +144,8 @@ export async function retireComments(where: SQL) {
       .set({ body: null, userId: null, deletedAt: new Date() })
       .where(inArray(comments.id, ids));
     await tx.delete(commentLikes).where(inArray(commentLikes.commentId, ids));
+    // A placeholder has nothing left to report.
+    await tx.delete(reports).where(inArray(reports.commentId, ids));
 
     for (;;) {
       const removed = await tx

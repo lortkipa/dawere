@@ -16,6 +16,7 @@ import { FollowedIcon } from "./followed-icon";
 import { actionClass, LikeButton } from "./like-button";
 import { Icon, MenuItem, menuClass, useDismiss } from "./menu";
 import { OwnPostMenu } from "./own-post-menu";
+import { ReportDialog, ReportItem } from "./report";
 import { FeedSkeleton } from "./skeleton";
 import { useSeen } from "./use-seen";
 import { useWindowedList } from "./use-windowed-list";
@@ -233,7 +234,7 @@ function PostCard({
             {own ? (
               <OwnPostMenu id={post.id} href={post.href} comments={post.comments} onDeleted={onDeleted} />
             ) : (
-              <PostMenu followed={followed} onToggleFollow={onToggleFollow} />
+              <PostMenu postId={post.id} followed={followed} onToggleFollow={onToggleFollow} />
             )}
           </div>
         )}
@@ -288,8 +289,17 @@ function PostCard({
   );
 }
 
-function PostMenu({ followed, onToggleFollow }: { followed: boolean; onToggleFollow: () => void }) {
+function PostMenu({
+  postId,
+  followed,
+  onToggleFollow,
+}: {
+  postId: string;
+  followed: boolean;
+  onToggleFollow: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
   useDismiss(open, ref, close);
@@ -322,15 +332,22 @@ function PostMenu({ followed, onToggleFollow }: { followed: boolean; onToggleFol
           >
             {followed ? "გამოწერის გაუქმება" : "ავტორის გამოწერა"}
           </MenuItem>
-          {/* Muting and reporting aren't built yet; these only close the menu. */}
+          {/* Muting isn't built yet; this only closes the menu. */}
           <MenuItem icon={<MuteIcon />} onClick={close}>
             ავტორის დადუმება
           </MenuItem>
-          <MenuItem icon={<FlagIcon />} danger onClick={close}>
+          <ReportItem
+            onClick={() => {
+              close();
+              setReporting(true);
+            }}
+          >
             ბლოგზე ჩივილი
-          </MenuItem>
+          </ReportItem>
         </div>
       )}
+
+      {reporting && <ReportDialog kind="post" id={postId} onClose={() => setReporting(false)} />}
     </div>
   );
 }
@@ -361,10 +378,3 @@ function MuteIcon() {
   );
 }
 
-function FlagIcon() {
-  return (
-    <Icon>
-      <path d="M4 22V4a1 1 0 0 1 1-1h13l-2.5 5L18 13H5" />
-    </Icon>
-  );
-}

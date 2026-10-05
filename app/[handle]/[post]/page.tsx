@@ -96,6 +96,7 @@ export default async function PostPage({ params }: Props) {
                   ? { id: post.id, href: `/@${author.handle}/${post.id}`, comments: thread.total }
                   : undefined
               }
+              reportId={viewer && viewer.id !== author.id ? post.id : undefined}
             />
 
             <div className="post-body mt-8">

@@ -12,6 +12,7 @@ import { commentFilters, commentRows, listComments, listPosts, postFilters } fro
 import { chatFilters, listChats } from "@/lib/admin-chats";
 import { getUserDetail } from "@/lib/admin-users";
 import { getBan } from "@/lib/bans";
+import { openReportsAbout } from "@/lib/admin-reports";
 import { getCategories } from "@/lib/categories";
 import { uuidPattern } from "@/lib/ids";
 import { referrals } from "@/lib/onboarding-options";
@@ -28,11 +29,13 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   if (!detail) notFound();
   const { user } = detail;
   const editable = canManage(actor, user);
-  const [{ rows: latestPosts }, { rows: latestComments }, { rows: latestChats, total: chats }, ban] = await Promise.all([
+  const [{ rows: latestPosts }, { rows: latestComments }, { rows: latestChats, total: chats }, ban, reports] =
+    await Promise.all([
     listPosts(postFilters({ author: user.id }), latest),
     listComments(commentFilters({ author: user.id }), latest),
     listChats(chatFilters({ user: user.id }), latest),
     getBan(user.email),
+    openReportsAbout(user.id),
   ]);
   const referral = referrals.find((option) => option.slug === user.referral);
 
@@ -101,10 +104,11 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         <Stat label="ბლოგები" value={detail.posts} href={`/admin/blogs?author=${user.id}`} />
         <Stat label="კომენტარები" value={detail.comments} href={`/admin/comments?author=${user.id}`} />
         <Stat label="AI ჩატები" value={chats} href={`/admin/chats?user=${user.id}`} />
+        <Stat label="ღია ჩივილები" value={reports} href={`/admin/reports?author=${user.id}`} />
         <Stat label="გამომწერები" value={detail.followers} />
         <Stat label="გამოწერილი" value={detail.following} />
         <Stat label="მოწონებული" value={detail.likes} />

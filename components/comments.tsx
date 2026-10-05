@@ -24,6 +24,7 @@ import { FollowedIcon } from "./followed-icon";
 import { Button } from "./button";
 import { Dialog, DialogFooter } from "./dialog";
 import { LikeButton, useLike } from "./like-button";
+import { ReportMenu } from "./report";
 import { Icon, itemClass, MenuItem, menuClass, popoverClass, useDismiss } from "./menu";
 
 const maxLength = maxCommentLength;
@@ -236,7 +237,19 @@ function CommentRow({
                   {comment.time}
                 </time>
               </div>
-              {comment.mine && <CommentMenu id={comment.id} />}
+              {comment.mine ? (
+                <CommentMenu id={comment.id} />
+              ) : (
+                viewer && (
+                  <ReportMenu
+                    kind="comment"
+                    id={comment.id}
+                    label="კომენტარზე ჩივილი"
+                    vertical
+                    className="-my-1 -mr-2 shrink-0"
+                  />
+                )
+              )}
             </div>
             <p className="mt-0.5 text-[15px] leading-relaxed break-words whitespace-pre-wrap">
               {comment.replyTo && (

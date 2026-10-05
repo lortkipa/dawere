@@ -15,7 +15,8 @@ export type DialogArtName =
   | "role"
   | "signout"
   | "comment"
-  | "ban";
+  | "ban"
+  | "report";
 
 const paper = { fill: "#fff", stroke: "#dededa", strokeWidth: 1.2 };
 const textLine = { fill: "none", stroke: "#e2e2df", strokeWidth: 4, strokeLinecap: "round" } as const;
@@ -45,6 +46,19 @@ function Pencil({ x, y }: { x: number; y: number }) {
 }
 
 const arts: Record<DialogArtName, ReactNode> = {
+  // A flag planted beside a page.
+  report: (
+    <>
+      <g transform="rotate(-6 96 72)">
+        <rect x="66" y="34" width="60" height="76" rx="6" {...paper} />
+        <path d="M76 48h40M76 58h40M76 68h28M76 78h36" {...textLine} strokeWidth="3" />
+      </g>
+      <path d="M140 116V24" stroke="#5f68a8" strokeWidth="5" strokeLinecap="round" />
+      <path d="M142 27h42l-10 15 10 15h-42z" fill="#e07a5f" />
+      <path d="M142 27h42l-10 15h-32z" fill="#e8a48c" />
+    </>
+  ),
+
   // A profile card with a no-entry sign over its corner.
   ban: (
     <>

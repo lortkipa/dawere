@@ -14,6 +14,7 @@ export function EditForm({
   canSave,
   save,
   onClose,
+  onSaved = onClose,
   hint,
   counter,
   saveLabel = "შენახვა",
@@ -23,6 +24,8 @@ export function EditForm({
   canSave: boolean;
   save: () => Promise<Result>;
   onClose: () => void;
+  // What happens after a save; closing, unless the dialog has more to say.
+  onSaved?: () => void;
   hint?: ReactNode;
   counter?: string;
   saveLabel?: string;
@@ -39,7 +42,7 @@ export function EditForm({
     startTransition(async () => {
       const result = await save();
       if (result?.error) setError(result.error);
-      else onClose();
+      else onSaved();
     });
   }
 

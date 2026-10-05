@@ -7,6 +7,7 @@ import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { FollowButton, useFollow } from "./follow-button";
 import { FollowedIcon } from "./followed-icon";
+import { ReportMenu } from "./report";
 
 type ProfileUser = {
   id: string;
@@ -67,12 +68,15 @@ export function Profile({
             დაწერე
           </Button>
         ) : (
-          <FollowButton
-            signedIn={signedIn}
-            followed={followed}
-            onToggle={toggleFollow}
-            className="w-full sm:w-auto sm:min-w-32"
-          />
+          <div className="flex items-center gap-2">
+            <FollowButton
+              signedIn={signedIn}
+              followed={followed}
+              onToggle={toggleFollow}
+              className="min-w-0 flex-1 sm:w-auto sm:min-w-32 sm:flex-none"
+            />
+            {signedIn && <ReportMenu kind="user" id={user.id} label="მომხმარებელზე ჩივილი" className="-mr-2 shrink-0" />}
+          </div>
         )}
       </section>
 
