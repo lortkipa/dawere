@@ -4,7 +4,7 @@ import { db } from "./db";
 import { commentLikes, comments, users } from "./db/schema";
 import { avatarUrl, formatRelative } from "./user-view";
 
-export const maxCommentLength = 2000;
+export { maxCommentLength } from "./comment-rules";
 
 // `followed`: the reader follows this commenter.
 type Author = { name: string; handle: string; avatar?: string; followed: boolean };

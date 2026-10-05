@@ -35,6 +35,7 @@ export function FilterBar({
   filters,
   dateRange,
   sorts,
+  scopes = [],
 }: {
   path: string;
   values: Values;
@@ -43,6 +44,8 @@ export function FilterBar({
   // The label of a from–to date filter kept in `from` and `to`.
   dateRange?: string;
   sorts: Option[];
+  // Params set by a link from elsewhere (an author, a blog), shown as chips that can be removed.
+  scopes?: { name: string; label: string }[];
 }) {
   const router = useRouter();
   const [query, setQuery] = useState(values.q ?? "");
@@ -69,7 +72,9 @@ export function FilterBar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const active: { key: string; label: string; clear: Values }[] = [];
+  const active: { key: string; label: string; clear: Values }[] = scopes
+    .filter((scope) => values[scope.name])
+    .map((scope) => ({ key: scope.name, label: scope.label, clear: { [scope.name]: "" } }));
   for (const filter of filters) {
     const option = filter.options.find((item) => item.value && item.value === values[filter.name]);
     if (option)

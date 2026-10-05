@@ -16,6 +16,7 @@ import {
 } from "react";
 import { addComment, deleteComment } from "@/app/comments/actions";
 import { setCommentLike } from "@/app/likes/actions";
+import { maxCommentLength } from "@/lib/comment-rules";
 import type { CommentNode } from "@/lib/comments";
 import { authUrl } from "@/lib/return-to";
 import { Avatar } from "./avatar";
@@ -25,7 +26,7 @@ import { Dialog } from "./dialog";
 import { LikeButton, useLike } from "./like-button";
 import { Icon, itemClass, MenuItem, menuClass, popoverClass, useDismiss } from "./menu";
 
-const maxLength = 2000;
+const maxLength = maxCommentLength;
 
 type Thread = {
   postId: string;

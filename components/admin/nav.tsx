@@ -10,6 +10,8 @@ export type NavUser = { name: string; email: string; avatar?: string; role: stri
 const sections = [
   { href: "/admin", label: "მიმოხილვა", icon: <OverviewIcon /> },
   { href: "/admin/users", label: "მომხმარებლები", icon: <UsersIcon /> },
+  { href: "/admin/blogs", label: "ბლოგები", icon: <BlogsIcon /> },
+  { href: "/admin/comments", label: "კომენტარები", icon: <CommentsIcon /> },
 ];
 
 // The sidebar on wide screens; under md a top bar whose button slides the same sidebar in from
@@ -178,6 +180,23 @@ function UsersIcon() {
     <NavIcon>
       <circle cx="9" cy="8" r="4" />
       <path d="M2 21a7 7 0 0 1 14 0M16 4.1a4 4 0 0 1 0 7.8M18 14.5a7 7 0 0 1 4 6.5" />
+    </NavIcon>
+  );
+}
+
+function BlogsIcon() {
+  return (
+    <NavIcon>
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+      <path d="M14 3v6h6M8 13h8M8 17h5" />
+    </NavIcon>
+  );
+}
+
+function CommentsIcon() {
+  return (
+    <NavIcon>
+      <path d="M20.5 11.5a8.5 8 0 0 1-12.2 7.2L3.5 20l1.4-4.1a8.5 8 0 1 1 15.6-4.4z" />
     </NavIcon>
   );
 }

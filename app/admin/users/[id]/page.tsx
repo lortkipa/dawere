@@ -2,14 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { UserActions, UserEditor } from "@/components/admin/user-editor";
-import { RoleBadge, Stat } from "@/components/admin/ui";
+import { CommentList } from "@/components/admin/comment-list";
+import { Empty, RoleBadge, Stat } from "@/components/admin/ui";
+import { Button } from "@/components/button";
 import { Avatar } from "@/components/avatar";
 import { requireAdmin } from "@/lib/admin";
+import { commentFilters, commentRows, listComments, listPosts, postFilters } from "@/lib/admin-content";
 import { getUserDetail } from "@/lib/admin-users";
 import { uuidPattern } from "@/lib/ids";
 import { referrals } from "@/lib/onboarding-options";
 import { canManage, canRemove, canSetRole, isSuperadmin } from "@/lib/roles";
-import { avatarUrl, formatDate } from "@/lib/user-view";
+import { avatarUrl, formatDate, formatShortDate } from "@/lib/user-view";
+
+// How many of a user's blogs and comments the page shows; the rest are a link away.
+const latest = 5;
 
 export default async function AdminUser({ params }: { params: Promise<{ id: string }> }) {
   const actor = await requireAdmin();
@@ -18,6 +24,10 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   if (!detail) notFound();
   const { user } = detail;
   const editable = canManage(actor, user);
+  const [{ rows: latestPosts }, { rows: latestComments }] = await Promise.all([
+    listPosts(postFilters({ author: user.id }), latest),
+    listComments(commentFilters({ author: user.id }), latest),
+  ]);
   const referral = referrals.find((option) => option.slug === user.referral);
 
   return (
@@ -73,8 +83,8 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="ბლოგები" value={detail.posts} />
-        <Stat label="კომენტარები" value={detail.comments} />
+        <Stat label="ბლოგები" value={detail.posts} href={`/admin/blogs?author=${user.id}`} />
+        <Stat label="კომენტარები" value={detail.comments} href={`/admin/comments?author=${user.id}`} />
         <Stat label="გამომწერები" value={detail.followers} />
         <Stat label="გამოწერილი" value={detail.following} />
         <Stat label="მოწონებული" value={detail.likes} />
@@ -115,6 +125,59 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
           </dl>
         </section>
       </div>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">ბოლო ბლოგები</h2>
+          <div className="flex gap-2">
+            {editable && user.onboardedAt && (
+              <Button variant="outline" size="sm" href={`/admin/blogs/new?author=${user.id}`}>
+                ბლოგის დამატება
+              </Button>
+            )}
+            {detail.posts > 0 && (
+              <Button variant="ghost" size="sm" href={`/admin/blogs?author=${user.id}`}>
+                ყველა ({detail.posts})
+              </Button>
+            )}
+          </div>
+        </div>
+        {latestPosts.length === 0 ? (
+          <Empty>ბლოგები ჯერ არ აქვს</Empty>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line rounded-xl border border-line">
+            {latestPosts.map((post) => (
+              <li key={post.id}>
+                <Link
+                  href={`/admin/blogs/${post.id}`}
+                  className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-surface"
+                >
+                  <span className="min-w-0 truncate font-medium">{post.title}</span>
+                  <span className="shrink-0 text-sm text-muted tabular-nums">
+                    {post.opens} წაკითხვა · {formatShortDate(post.createdAt)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">ბოლო კომენტარები</h2>
+          {detail.comments > 0 && (
+            <Button variant="ghost" size="sm" href={`/admin/comments?author=${user.id}`}>
+              ყველა ({detail.comments})
+            </Button>
+          )}
+        </div>
+        {latestComments.length === 0 ? (
+          <Empty>კომენტარები ჯერ არ აქვს</Empty>
+        ) : (
+          <CommentList comments={commentRows(latestComments, actor)} />
+        )}
+      </section>
     </div>
   );
 }

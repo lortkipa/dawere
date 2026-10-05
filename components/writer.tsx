@@ -21,7 +21,19 @@ const tooBigError = "ფოტო 20 მბ-ზე დიდი არ უნდ
 const unreadableError = "ამ ფაილს ვერ ვკითხულობთ, სცადე სხვა ფოტო";
 const tooManyError = `ბლოგში ${maxImages}-ზე მეტი ფოტო არ უნდა იყოს`;
 
-type Picked = { blob: Blob; url: string };
+// A photo picked here (`blob`), or the cover a post being edited already has (no blob).
+type Picked = { blob: Blob | null; url: string };
+
+type Result = { error: string } | void;
+
+// A post to edit; its photos point at /images/… and stay unless removed.
+export type WriterPost = {
+  cover: string | null;
+  title: string;
+  description: string;
+  tags: string[];
+  body: JSONContent;
+};
 
 function walk(node: JSONContent, visit: (node: JSONContent) => void) {
   visit(node);
@@ -37,12 +49,24 @@ function countImages(view: EditorView) {
 }
 
 // Nothing is uploaded until publishing: photos live in the browser as blobs, and the editor
-// shows them from blob: URLs.
-export function Writer() {
-  const [cover, setCover] = useState<Picked | null>(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
+// shows them from blob: URLs. With `initial` it edits that post and `submit` saves it.
+export function Writer({
+  initial,
+  submit = publishPost,
+  submitLabel = "გამოქვეყნება",
+  toolbarTop = "top-16",
+}: {
+  initial?: WriterPost;
+  submit?: (data: FormData) => Promise<Result>;
+  submitLabel?: string;
+  // Where the toolbar sticks: under the site header by default.
+  toolbarTop?: string;
+} = {}) {
+  const [cover, setCover] = useState<Picked | null>(initial?.cover ? { blob: null, url: initial.cover } : null);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [tags, setTags] = useState<string[]>(initial?.tags ?? []);
+  const [bodyEdited, setBodyEdited] = useState(false);
   // Problems with photos in the body show under the toolbar, cover problems under the cover.
   const [notice, setNotice] = useState("");
   const [coverError, setCoverError] = useState("");
@@ -113,6 +137,7 @@ export function Writer() {
 
   const editor = useEditor({
     immediatelyRender: false,
+    content: initial?.body,
     extensions: [...postExtensions, Placeholder.configure({ placeholder: "დაწერე ტექსტი…" })],
     editorProps: {
       attributes: { class: "post-body min-h-[40vh] outline-none", "aria-label": "ტექსტი" },
@@ -132,7 +157,10 @@ export function Writer() {
         return true;
       },
     },
-    onUpdate: () => setNotice(""),
+    onUpdate: () => {
+      setNotice("");
+      setBodyEdited(true);
+    },
   });
 
   const bodyHasText = useEditorState({
@@ -144,9 +172,18 @@ export function Writer() {
     selector: ({ editor }) => (editor ? countImages(editor.view) > 0 : false),
   });
 
+  // These start out false and only update on an edit, so a post loaded for editing counts as
+  // having text until its body is touched.
+  const hasText = initial && !bodyEdited ? true : Boolean(bodyHasText);
   const canPublish =
-    title.trim() !== "" && description.trim() !== "" && tags.length >= minTags && Boolean(bodyHasText) && !pending;
-  const dirty = Boolean(title.trim() || description.trim() || tags.length || cover || bodyHasText || bodyHasImages);
+    title.trim() !== "" && description.trim() !== "" && tags.length >= minTags && hasText && !pending;
+  const dirty = initial
+    ? title !== initial.title ||
+      description !== initial.description ||
+      tags.join() !== initial.tags.join() ||
+      cover?.url !== (initial.cover ?? undefined) ||
+      bodyEdited
+    : Boolean(title.trim() || description.trim() || tags.length || cover || bodyHasText || bodyHasImages);
   useLeaveWarning(dirty && !pending);
 
   function pickCover(file: File | undefined) {
@@ -173,14 +210,17 @@ export function Writer() {
     if (!editor || !canPublish) return;
     setError("");
 
-    // Each photo goes as a file, and its node points at it as `upload:<n>`. A blob: URL that
-    // isn't ours (pasted from another tab) is dropped.
+    // Each new photo goes as a file, and its node points at it as `upload:<n>`. A blob: URL that
+    // isn't ours (pasted from another tab) is dropped; saved photos keep their /images/ src.
     const data = new FormData();
     const body = editor.getJSON();
     const index = new Map<string, number>();
+    const saved = (src: unknown) => typeof src === "string" && src.startsWith("/images/");
     walk(body, (node) => {
-      node.content = node.content?.filter((child) => child.type !== "image" || blobs.current.has(child.attrs?.src));
-      if (node.type !== "image") return;
+      node.content = node.content?.filter(
+        (child) => child.type !== "image" || blobs.current.has(child.attrs?.src) || saved(child.attrs?.src),
+      );
+      if (node.type !== "image" || saved(node.attrs?.src)) return;
       const url = node.attrs!.src as string;
       if (!index.has(url)) {
         index.set(url, index.size);
@@ -193,11 +233,12 @@ export function Writer() {
     data.set("description", description.trim());
     data.set("tags", JSON.stringify(tags));
     data.set("body", JSON.stringify(body));
-    if (cover) data.set("cover", cover.blob);
+    if (cover?.blob) data.set("cover", cover.blob);
+    else if (cover) data.set("keepCover", "1");
 
     startTransition(async () => {
       try {
-        const result = await publishPost(data);
+        const result = await submit(data);
         if (result?.error) setError(result.error);
       } catch (caught) {
         // The action ends with redirect(), which reaches here as an error while the post page
@@ -322,7 +363,7 @@ export function Writer() {
         <TagInput ref={tagsRef} tags={tags} onChange={setTags} onDone={() => editor?.commands.focus("start")} />
       </div>
 
-      <div className="sticky top-16 z-40 border-y border-line bg-white">
+      <div className={`sticky ${toolbarTop} z-40 border-y border-line bg-white`}>
         <Toolbar editor={editor} onPickImage={() => imageInput.current?.click()} />
         {notice && (
           <p aria-live="polite" className={`mx-auto max-w-2xl px-4 pb-2 text-sm sm:px-6 ${errorClass}`}>
@@ -365,7 +406,7 @@ export function Writer() {
             onClick={publish}
             className="shadow-lg disabled:opacity-100 disabled:bg-[#a5a1f0]"
           >
-            გამოქვეყნება
+            {submitLabel}
           </Button>
         </div>
       </div>

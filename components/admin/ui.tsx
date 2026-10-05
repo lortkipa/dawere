@@ -131,11 +131,20 @@ function PageLink({ href, label, children }: { href?: string; label: string; chi
   );
 }
 
-export function Stat({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-xl border border-line px-4 py-3">
+// With `href` the tile links to the list behind the number.
+export function Stat({ label, value, href }: { label: string; value: ReactNode; href?: string }) {
+  const content = (
+    <>
       <p className="text-sm text-muted">{label}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-    </div>
+    </>
   );
+  if (href) {
+    return (
+      <Link href={href} className="rounded-xl border border-line px-4 py-3 transition-colors hover:bg-surface">
+        {content}
+      </Link>
+    );
+  }
+  return <div className="rounded-xl border border-line px-4 py-3">{content}</div>;
 }
