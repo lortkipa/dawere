@@ -45,3 +45,8 @@ export async function logout(next?: unknown) {
   await deleteSession();
   redirect(authUrl(safeNext(next)));
 }
+
+export async function logoutToLanding() {
+  await deleteSession();
+  redirect("/");
+}

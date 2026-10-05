@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { logout } from "@/app/auth/actions";
+import { logoutToLanding } from "@/app/auth/actions";
 import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { dangerItemClass, Icon, MenuItem, menuClass, useDismiss } from "./menu";
@@ -52,7 +52,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
           </MenuItem>
 
           <div className="my-1 border-t border-line" />
-          <form action={logout}>
+          <form action={logoutToLanding}>
             <button type="submit" role="menuitem" className={dangerItemClass}>
               <LogoutIcon />
               გასვლა
