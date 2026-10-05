@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { deletePost } from "@/app/admin/blogs/actions";
 import { Button } from "../button";
-import { Dialog } from "../dialog";
-import { EditForm } from "../edit-form";
+import { DeletePostDialog } from "../own-post-menu";
 
 export function BlogActions({
   id,
@@ -35,15 +34,7 @@ export function BlogActions({
           </Button>
         </>
       )}
-      {confirming && (
-        <Dialog title="ბლოგის წაშლა" onClose={close}>
-          <EditForm canSave save={() => deletePost(id)} onClose={close} saveLabel="წაშლა" danger>
-            <p className="text-center text-muted">
-              ბლოგი, მისი ფოტოები{comments > 0 ? `, ${comments} კომენტარი` : ""} და მოწონებები სამუდამოდ წაიშლება.
-            </p>
-          </EditForm>
-        </Dialog>
-      )}
+      {confirming && <DeletePostDialog comments={comments} remove={() => deletePost(id)} onClose={close} />}
     </div>
   );
 }

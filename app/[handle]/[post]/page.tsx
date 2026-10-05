@@ -90,6 +90,11 @@ export default async function PostPage({ params }: Props) {
               followed={followed}
               canFollow={canFollow}
               signedIn={Boolean(viewer)}
+              own={
+                viewer?.id === author.id
+                  ? { id: post.id, href: `/@${author.handle}/${post.id}`, comments: thread.total }
+                  : undefined
+              }
             />
 
             <div className="post-body mt-8">

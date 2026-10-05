@@ -160,3 +160,9 @@ export async function savePost(
   await deleteImages(existing.images.filter((name) => !images.includes(name)));
   return { id: existing.id };
 }
+
+// Comments, likes, favorites and views go with the row through ON DELETE CASCADE.
+export async function removePost(post: Post) {
+  await db.delete(posts).where(eq(posts.id, post.id));
+  await deleteImages(post.images);
+}

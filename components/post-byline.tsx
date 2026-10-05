@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Avatar } from "./avatar";
 import { FollowButton, useFollow } from "./follow-button";
 import { FollowedIcon } from "./followed-icon";
+import { OwnPostMenu } from "./own-post-menu";
 
 // Name over date, so on a phone the name gets the whole width next to the follow button.
 export function PostByline({
@@ -16,6 +18,7 @@ export function PostByline({
   followed: initialFollowed,
   canFollow,
   signedIn,
+  own,
 }: {
   href: string;
   name: string;
@@ -26,8 +29,11 @@ export function PostByline({
   followed: boolean;
   canFollow: boolean;
   signedIn: boolean;
+  // The reader wrote this post: a menu to edit or delete it takes the follow button's place.
+  own?: { id: string; href: string; comments: number };
 }) {
   const [followed, toggleFollow] = useFollow(authorId, initialFollowed);
+  const router = useRouter();
 
   return (
     <div className="mt-6 flex items-center gap-3 border-b border-line pb-6">
@@ -54,6 +60,11 @@ export function PostByline({
           size="sm"
           className="shrink-0"
         />
+      )}
+      {own && (
+        <div className="-mr-2 shrink-0">
+          <OwnPostMenu {...own} onDeleted={() => router.replace(href)} />
+        </div>
       )}
     </div>
   );

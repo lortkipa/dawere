@@ -9,9 +9,8 @@ import { maxCommentLength, retireComments } from "@/lib/comments";
 import { db } from "@/lib/db";
 import { comments, posts, users, type User } from "@/lib/db/schema";
 import { postIdPattern, uuidPattern } from "@/lib/ids";
-import { genericError, savePost } from "@/lib/post-save";
+import { genericError, removePost, savePost } from "@/lib/post-save";
 import { canManage } from "@/lib/roles";
-import { deleteImages } from "@/lib/uploads";
 
 type Result = { error: string } | void;
 
@@ -84,13 +83,11 @@ export async function updatePost(id: string, formData: FormData): Promise<Result
   redirect(`/admin/blogs/${id}`);
 }
 
-// Comments, likes, favorites and views go with the row through ON DELETE CASCADE.
 export async function deletePost(id: string): Promise<Result> {
   const row = await managedPost(id);
   if ("error" in row) return row;
 
-  await db.delete(posts).where(eq(posts.id, id));
-  await deleteImages(row.post.images);
+  await removePost(row.post);
   redirect("/admin/blogs");
 }
 

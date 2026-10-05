@@ -15,6 +15,7 @@ import { FavoriteButton } from "./favorite-button";
 import { FollowedIcon } from "./followed-icon";
 import { actionClass, LikeButton } from "./like-button";
 import { Icon, MenuItem, menuClass, useDismiss } from "./menu";
+import { OwnPostMenu } from "./own-post-menu";
 import { FeedSkeleton } from "./skeleton";
 import { useSeen } from "./use-seen";
 import { useWindowedList } from "./use-windowed-list";
@@ -110,6 +111,8 @@ export function PostList({
   // Likes and favorites changed during this visit, by post id.
   const [likes, setLikes] = useState<Map<string, Like>>(() => new Map());
   const [favorites, setFavorites] = useState<Map<string, boolean>>(() => new Map());
+  // The reader's own posts deleted from this list.
+  const [deleted, setDeleted] = useState<Set<string>>(() => new Set());
 
   const toggleFollow = (authorId: string, followed: boolean) => {
     const update = (value: boolean) => setFollows((current) => new Map(current).set(authorId, value));
@@ -129,7 +132,13 @@ export function PostList({
     setPostFavorite(postId, !favorited).catch(() => update(favorited));
   };
 
-  if (empty && done) return emptyState;
+  // Also once the reader has deleted every post the list had.
+  const allDeleted =
+    deleted.size > 0 &&
+    above === 0 &&
+    below === 0 &&
+    groups.every((group) => group.items.every((post) => deleted.has(post.id)));
+  if ((empty || allDeleted) && done) return emptyState;
 
   return (
     // The browser's own scroll anchoring stays off: useWindowedList keeps the position itself.
@@ -139,6 +148,7 @@ export function PostList({
         {groups.map((group) => (
           <div key={group.index} ref={groupRef} data-group={group.index}>
             {group.items.map((post) => {
+              if (deleted.has(post.id)) return null;
               const followed = follows.get(post.author.id) ?? post.followed;
               const like = likes.get(post.id) ?? { liked: post.liked, count: post.likes };
               const favorited = favorites.get(post.id) ?? post.favorited;
@@ -155,6 +165,7 @@ export function PostList({
                   onToggleLike={() => toggleLike(post.id, like)}
                   favorited={favorited}
                   onToggleFavorite={() => toggleFavorite(post.id, favorited)}
+                  onDeleted={() => setDeleted((current) => new Set(current).add(post.id))}
                 />
               );
             })}
@@ -188,11 +199,12 @@ function PostCard({
   onToggleLike,
   favorited,
   onToggleFavorite,
+  onDeleted,
   seenRef,
 }: {
   post: FeedPost;
   signedIn: boolean;
-  // The reader's own post: nothing in the menu applies to it.
+  // The reader's own post, whose menu edits or deletes it.
   own: boolean;
   followed: boolean;
   onToggleFollow: () => void;
@@ -200,6 +212,7 @@ function PostCard({
   onToggleLike: () => void;
   favorited: boolean;
   onToggleFavorite: () => void;
+  onDeleted: () => void;
   seenRef: (element: HTMLElement | null) => void;
 }) {
   const profile = `/@${post.author.handle}`;
@@ -215,9 +228,13 @@ function PostCard({
         <time dateTime={post.dateTime} className="shrink-0 text-muted">
           · {post.date}
         </time>
-        {signedIn && !own && (
+        {signedIn && (
           <div className="-my-2 -mr-2 ml-auto">
-            <PostMenu followed={followed} onToggleFollow={onToggleFollow} />
+            {own ? (
+              <OwnPostMenu id={post.id} href={post.href} comments={post.comments} onDeleted={onDeleted} />
+            ) : (
+              <PostMenu followed={followed} onToggleFollow={onToggleFollow} />
+            )}
           </div>
         )}
       </div>
