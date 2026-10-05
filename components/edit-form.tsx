@@ -2,6 +2,7 @@
 
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { Button } from "./button";
+import { DialogFooter } from "./dialog";
 
 export const errorClass = "text-error";
 
@@ -54,14 +55,14 @@ export function EditForm({
           {counter && <span className="shrink-0 text-muted tabular-nums">{counter}</span>}
         </div>
       )}
-      <div className="mt-6 flex shrink-0 justify-end gap-2">
+      <DialogFooter>
         <Button variant="outline" onClick={onClose}>
           გაუქმება
         </Button>
         <Button type="submit" variant={danger ? "danger" : "primary"} disabled={!canSave || pending}>
           {saveLabel}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }

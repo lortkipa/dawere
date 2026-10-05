@@ -77,7 +77,7 @@ export function CommentList({ comments, showPost = true }: { comments: CommentRo
 
       {editing && <EditDialog comment={editing} onClose={() => setEditing(null)} />}
       {deleting && (
-        <Dialog title="კომენტარის წაშლა" onClose={() => setDeleting(null)}>
+        <Dialog title="კომენტარის წაშლა" art="delete" onClose={() => setDeleting(null)}>
           <EditForm
             canSave
             save={() => deleteComment(deleting.id)}
@@ -85,7 +85,7 @@ export function CommentList({ comments, showPost = true }: { comments: CommentRo
             saveLabel="წაშლა"
             danger
           >
-            <p className="text-center text-muted">კომენტარი სამუდამოდ წაიშლება. მასზე პასუხები დარჩება.</p>
+            <p className="text-muted">კომენტარი სამუდამოდ წაიშლება. მასზე პასუხები დარჩება.</p>
           </EditForm>
         </Dialog>
       )}
@@ -98,7 +98,7 @@ function EditDialog({ comment, onClose }: { comment: CommentRow; onClose: () => 
   const body = value.trim();
 
   return (
-    <Dialog title="კომენტარი" wide onClose={onClose}>
+    <Dialog title="კომენტარი" art="comment" wide onClose={onClose}>
       <EditForm
         canSave={body.length > 0 && body !== comment.body}
         save={() => updateComment(comment.id, body)}

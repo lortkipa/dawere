@@ -173,7 +173,7 @@ function EmailDialog({ user, onClose }: DialogProps) {
   const email = normalizeEmail(value);
 
   return (
-    <Dialog title="ელფოსტა" onClose={onClose}>
+    <Dialog title="ელფოსტა" art="email" onClose={onClose}>
       <EditForm
         canSave={emailPattern.test(email) && email !== user.email}
         save={() => updateUserEmail(user.id, email)}
@@ -216,7 +216,7 @@ function HandleDialog({ user, onClose }: DialogProps) {
   const taken = valid && changed && available === false;
 
   return (
-    <Dialog title="მომხმარებლის სახელი" onClose={onClose}>
+    <Dialog title="მომხმარებლის სახელი" art="profile" onClose={onClose}>
       <EditForm
         canSave={valid && changed && available === true}
         save={() => updateUserHandle(user.id, handle)}
@@ -260,7 +260,7 @@ function NameDialog({ user, onClose }: DialogProps) {
   const name = value.trim();
 
   return (
-    <Dialog title="სახელი" onClose={onClose}>
+    <Dialog title="სახელი" art="profile" onClose={onClose}>
       <EditForm
         canSave={name.length > 0 && name !== user.name}
         save={() => updateUserName(user.id, name)}
@@ -284,7 +284,7 @@ function BioDialog({ user, onClose }: DialogProps) {
   const bio = value.trim();
 
   return (
-    <Dialog title="აღწერა" onClose={onClose}>
+    <Dialog title="აღწერა" art="write" onClose={onClose}>
       <EditForm
         canSave={bio !== (user.bio ?? "")}
         save={() => updateUserBio(user.id, bio)}
@@ -325,7 +325,7 @@ function AvatarDialog({ user, onClose }: DialogProps) {
   }
 
   return (
-    <Dialog title="ფოტო" onClose={onClose}>
+    <Dialog title="ფოტო" art="photo" onClose={onClose}>
       <EditForm
         canSave={picked !== null || (removing && user.avatar !== null)}
         save={save}
@@ -381,13 +381,13 @@ function TopicsDialog({ user, topics, onClose }: DialogProps & { topics: Option[
   }
 
   return (
-    <Dialog title="თემები" wide onClose={onClose}>
+    <Dialog title="თემები" art="topics" wide onClose={onClose}>
       <EditForm
         canSave={chosen.length >= minTopics && changed}
         save={() => updateUserTopics(user.id, chosen)}
         onClose={onClose}
       >
-        <p className="mb-4 text-center text-sm text-muted">
+        <p className="mb-4 text-sm text-muted">
           აირჩიე მინიმუმ {minTopics}. ამ თემების ბლოგები მის მთავარ გვერდზე უფრო მაღლა გამოჩნდება.
         </p>
         <div role="group" aria-label="თემები" className="flex flex-wrap gap-2">
@@ -414,13 +414,13 @@ function FavoritesDialog({ user, onClose }: DialogProps) {
   const [isPublic, setIsPublic] = useState(user.favoritesPublic);
 
   return (
-    <Dialog title="რჩეულები" onClose={onClose}>
+    <Dialog title="რჩეულები" art="favorites" onClose={onClose}>
       <EditForm
         canSave={isPublic !== user.favoritesPublic}
         save={() => updateUserFavoritesPublic(user.id, isPublic)}
         onClose={onClose}
       >
-        <div role="radiogroup" aria-label="რჩეულები" className="flex flex-wrap justify-center gap-2">
+        <div role="radiogroup" aria-label="რჩეულები" className="flex flex-wrap gap-2">
           {favoritesOptions.map((option) => (
             <Chip
               key={option.slug}
@@ -440,10 +440,10 @@ function RoleDialog({ user, onClose }: DialogProps) {
   const [role, setRole] = useState<Role>(user.role);
 
   return (
-    <Dialog title="როლი" onClose={onClose}>
+    <Dialog title="როლი" art="role" onClose={onClose}>
       <EditForm canSave={role !== user.role} save={() => setUserRole(user.id, role)} onClose={onClose}>
-        <p className="mb-4 text-center text-sm text-muted">ადმინი ხედავს ადმინის გვერდს და მართავს მომხმარებლებს.</p>
-        <div role="radiogroup" aria-label="როლი" className="flex flex-wrap justify-center gap-2">
+        <p className="mb-4 text-sm text-muted">ადმინი ხედავს ადმინის გვერდს და მართავს მომხმარებლებს.</p>
+        <div role="radiogroup" aria-label="როლი" className="flex flex-wrap gap-2">
           {(["user", "admin"] as const).map((value) => (
             <Chip
               key={value}
@@ -500,18 +500,18 @@ export function UserActions({
       )}
 
       {confirming === "signout" && (
-        <Dialog title="ყველგან გასვლა" onClose={close}>
+        <Dialog title="ყველგან გასვლა" art="signout" onClose={close}>
           <EditForm canSave save={() => signOutUser(id)} onClose={close} saveLabel="გასვლა" danger>
-            <p className="text-center text-muted">
+            <p className="text-muted">
               მომხმარებელი ყველა მოწყობილობაზე გავა ანგარიშიდან ({sessions} სესია).
             </p>
           </EditForm>
         </Dialog>
       )}
       {confirming === "delete" && (
-        <Dialog title="მომხმარებლის წაშლა" onClose={close}>
+        <Dialog title="მომხმარებლის წაშლა" art="delete" onClose={close}>
           <EditForm canSave save={() => deleteUser(id)} onClose={close} saveLabel="წაშლა" danger>
-            <p className="text-center text-muted">
+            <p className="text-muted">
               ანგარიში, {posts} ბლოგი და {comments} კომენტარი სამუდამოდ წაიშლება.
             </p>
           </EditForm>

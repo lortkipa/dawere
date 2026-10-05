@@ -189,7 +189,7 @@ function LinkDialog({ editor, onClose }: { editor: Editor; onClose: () => void }
   }
 
   return (
-    <Dialog title="ბმული" onClose={onClose}>
+    <Dialog title="ბმული" art="link" onClose={onClose}>
       <form noValidate onSubmit={handleSubmit}>
         <TextInput
           type="url"

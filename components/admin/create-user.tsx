@@ -79,7 +79,7 @@ function CreateUserDialog({
   }
 
   return (
-    <Dialog title="ახალი მომხმარებელი" wide onClose={onClose}>
+    <Dialog title="ახალი მომხმარებელი" art="profile" wide onClose={onClose}>
       <form noValidate onSubmit={handleSubmit} onChange={() => setError("")} className="flex min-h-0 flex-1 flex-col">
         <div
           role="progressbar"

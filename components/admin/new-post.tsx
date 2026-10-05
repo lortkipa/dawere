@@ -40,7 +40,7 @@ function AuthorDialog({ onClose }: { onClose: () => void }) {
   }, [query]);
 
   return (
-    <Dialog title="ვის სახელით?" onClose={onClose}>
+    <Dialog title="ვის სახელით?" art="write" onClose={onClose}>
       <TextInput
         autoFocus
         type="search"

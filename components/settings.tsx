@@ -142,7 +142,7 @@ function EmailDialog({ current, onClose }: { current: string; onClose: () => voi
   const email = normalizeEmail(value);
 
   return (
-    <Dialog title="ელფოსტა" onClose={onClose}>
+    <Dialog title="ელფოსტა" art="email" onClose={onClose}>
       <EditForm
         canSave={emailPattern.test(email) && email !== current}
         save={() => updateEmail(email)}
@@ -188,7 +188,7 @@ function HandleDialog({ current, host, onClose }: { current: string; host: strin
   const taken = valid && changed && available === false;
 
   return (
-    <Dialog title="მომხმარებლის სახელი" onClose={onClose}>
+    <Dialog title="მომხმარებლის სახელი" art="profile" onClose={onClose}>
       <EditForm
         canSave={valid && changed && available === true}
         save={() => updateHandle(handle)}
@@ -229,7 +229,7 @@ function NameDialog({ current, onClose }: { current: string; onClose: () => void
   const name = value.trim();
 
   return (
-    <Dialog title="სახელი" onClose={onClose}>
+    <Dialog title="სახელი" art="profile" onClose={onClose}>
       <EditForm
         canSave={name.length > 0 && name !== current}
         save={() => updateName(name)}
@@ -254,7 +254,7 @@ function BioDialog({ current, onClose }: { current: string; onClose: () => void 
   const bio = value.trim();
 
   return (
-    <Dialog title="აღწერა" onClose={onClose}>
+    <Dialog title="აღწერა" art="write" onClose={onClose}>
       <EditForm
         canSave={bio !== current}
         save={() => updateBio(bio)}
@@ -296,7 +296,7 @@ function AvatarDialog({ current, onClose }: { current: string | null; onClose: (
   }
 
   return (
-    <Dialog title="ფოტო" onClose={onClose}>
+    <Dialog title="ფოტო" art="photo" onClose={onClose}>
       <EditForm
         canSave={picked !== null || (removing && current !== null)}
         save={save}
@@ -353,13 +353,13 @@ function TopicsDialog({ current, topics, onClose }: { current: string[]; topics:
   }
 
   return (
-    <Dialog title="თემები" wide onClose={onClose}>
+    <Dialog title="თემები" art="topics" wide onClose={onClose}>
       <EditForm
         canSave={chosen.length >= minTopics && changed}
         save={() => updateTopics(chosen)}
         onClose={onClose}
       >
-        <p className="mb-4 text-center text-sm text-muted">
+        <p className="mb-4 text-sm text-muted">
           აირჩიე მინიმუმ {minTopics}. ამ თემების ბლოგები მთავარ გვერდზე უფრო მაღლა გამოჩნდება.
         </p>
         <div role="group" aria-label="თემები" className="flex flex-wrap gap-2">
@@ -386,10 +386,10 @@ function FavoritesDialog({ current, onClose }: { current: boolean; onClose: () =
   const [isPublic, setIsPublic] = useState(current);
 
   return (
-    <Dialog title="რჩეულები" onClose={onClose}>
+    <Dialog title="რჩეულები" art="favorites" onClose={onClose}>
       <EditForm canSave={isPublic !== current} save={() => updateFavoritesPublic(isPublic)} onClose={onClose}>
-        <p className="mb-4 text-center text-sm text-muted">აირჩიე, ვინ ნახავს რჩეულებს შენს პროფილზე.</p>
-        <div role="radiogroup" aria-label="რჩეულები" className="flex flex-wrap justify-center gap-2">
+        <p className="mb-4 text-sm text-muted">აირჩიე, ვინ ნახავს რჩეულებს შენს პროფილზე.</p>
+        <div role="radiogroup" aria-label="რჩეულები" className="flex flex-wrap gap-2">
           {favoritesOptions.map((option) => (
             <Chip
               key={option.slug}
@@ -415,12 +415,12 @@ function ThemeDialog({ current, onClose }: { current: Theme; onClose: () => void
   const [theme, setTheme] = useState(current);
 
   return (
-    <Dialog title="იერსახე" onClose={onClose}>
+    <Dialog title="იერსახე" art="theme" onClose={onClose}>
       <EditForm canSave={theme !== current} save={() => updateTheme(theme)} onClose={onClose}>
-        <p className="mb-4 text-center text-sm text-muted">
+        <p className="mb-4 text-sm text-muted">
           სისტემური იერსახე მოწყობილობის პარამეტრებს მიჰყვება.
         </p>
-        <div role="radiogroup" aria-label="იერსახე" className="flex flex-wrap justify-center gap-2">
+        <div role="radiogroup" aria-label="იერსახე" className="flex flex-wrap gap-2">
           {themeOptions.map((option) => (
             <Chip
               key={option.slug}
@@ -438,9 +438,9 @@ function ThemeDialog({ current, onClose }: { current: Theme; onClose: () => void
 
 function DeleteDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Dialog title="ანგარიშის წაშლა" onClose={onClose}>
+    <Dialog title="ანგარიშის წაშლა" art="delete" onClose={onClose}>
       <EditForm canSave save={() => deleteAccount()} onClose={onClose} saveLabel="წაშლა" danger>
-        <p className="text-center text-muted">
+        <p className="text-muted">
           პროფილი, ბლოგები და ფოტო სამუდამოდ წაიშლება და მათ ვეღარ აღადგენ.
         </p>
       </EditForm>

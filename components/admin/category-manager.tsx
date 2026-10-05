@@ -105,7 +105,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
       {adding && <CategoryDialog onClose={() => setAdding(false)} />}
       {editing && <CategoryDialog category={editing} onClose={() => setEditing(null)} />}
       {deleting && (
-        <Dialog title="კატეგორიის წაშლა" onClose={() => setDeleting(null)}>
+        <Dialog title="კატეგორიის წაშლა" art="delete" onClose={() => setDeleting(null)}>
           <EditForm
             canSave
             save={() => deleteCategory(deleting.slug)}
@@ -113,7 +113,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
             saveLabel="წაშლა"
             danger
           >
-            <p className="text-center text-muted">
+            <p className="text-muted">
               „{deleting.label}“ {deleting.readers} მკითხველის თემებიდან ამოიშლება. {deleting.posts} ბლოგს თეგად დარჩება
               „{deleting.label.toLowerCase()}“.
             </p>
@@ -136,7 +136,7 @@ function CategoryDialog({ category, onClose }: { category?: Category; onClose: (
   const changed = !category || cleanLabel !== category.label || emoji.trim() !== category.emoji;
 
   return (
-    <Dialog title={category ? "კატეგორია" : "ახალი კატეგორია"} onClose={onClose}>
+    <Dialog title={category ? "კატეგორია" : "ახალი კატეგორია"} art="topics" onClose={onClose}>
       <EditForm
         canSave={labelValid && emojiValid && (!!category || slugValid) && changed}
         save={() =>

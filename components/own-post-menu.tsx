@@ -88,9 +88,9 @@ export function DeletePostDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog title="ბლოგის წაშლა" onClose={onClose}>
+    <Dialog title="ბლოგის წაშლა" art="delete" onClose={onClose}>
       <EditForm canSave save={remove} onClose={onClose} saveLabel="წაშლა" danger>
-        <p className="text-center text-muted">
+        <p className="text-muted">
           ბლოგი, მისი ფოტოები{comments > 0 ? `, ${comments} კომენტარი` : ""} და მოწონებები სამუდამოდ წაიშლება.
         </p>
       </EditForm>

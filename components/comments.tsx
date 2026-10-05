@@ -22,7 +22,7 @@ import { authUrl } from "@/lib/return-to";
 import { Avatar } from "./avatar";
 import { FollowedIcon } from "./followed-icon";
 import { Button } from "./button";
-import { Dialog } from "./dialog";
+import { Dialog, DialogFooter } from "./dialog";
 import { LikeButton, useLike } from "./like-button";
 import { Icon, itemClass, MenuItem, menuClass, popoverClass, useDismiss } from "./menu";
 
@@ -472,9 +472,9 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <Dialog title="კომენტარის წაშლა" onClose={onClose}>
-      <p className="text-center text-muted">კომენტარი სამუდამოდ წაიშლება.</p>
-      <div className="mt-6 flex justify-end gap-2">
+    <Dialog title="კომენტარის წაშლა" art="delete" onClose={onClose}>
+      <p className="text-muted">კომენტარი სამუდამოდ წაიშლება.</p>
+      <DialogFooter>
         <Button variant="outline" onClick={onClose}>
           გაუქმება
         </Button>
@@ -490,7 +490,7 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
         >
           წაშლა
         </Button>
-      </div>
+      </DialogFooter>
     </Dialog>
   );
 }
