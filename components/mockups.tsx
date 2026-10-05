@@ -21,8 +21,9 @@ const article = {
   start: "დააჭირე ღილაკს „დაიწყე წერა“, შექმენი ანგარიში და დაწერე პირველი სტატია.",
 };
 
-// Doubles as a FAQ: the questions a visitor would ask about dawere itself.
-const chat = [
+// Doubles as a FAQ: the questions a visitor would ask about dawere itself. The real chat shows it
+// blurred behind the sign-in card.
+export const sampleChat = [
   {
     question: "რისთვის მჭირდება ეს ჩატი?",
     answer: "თუ სტატიაში რამე გაუგებარია, აქ ჰკითხე. პასუხს სტატიის ტექსტზე დაყრდნობით მიიღებ.",
@@ -72,7 +73,7 @@ export function ReadingDesktopMock() {
         <div className="flex w-[38%] shrink-0 flex-col border-l border-line">
           <PanelHeader />
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 pt-1 pb-4">
-            {chat.map((m) => (
+            {sampleChat.map((m) => (
               <div key={m.question} className="flex flex-col gap-3">
                 <Question>{m.question}</Question>
                 <Answer>{m.answer}</Answer>
@@ -108,7 +109,7 @@ export function ReadingPhoneMock() {
           <Close />
         </div>
         <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden text-[11.5px]">
-          {chat.slice(0, 1).map((m) => (
+          {sampleChat.slice(0, 1).map((m) => (
             <div key={m.question} className="flex flex-col gap-2.5">
               <Question small>{m.question}</Question>
               <Answer small>{m.answer}</Answer>
@@ -267,11 +268,17 @@ function Answer({ children, small }: { children: ReactNode; small?: boolean }) {
 function AiLabel() {
   return (
     <div className="flex items-center gap-1.5 text-[11.5px] font-semibold">
-      <svg viewBox="0 0 24 24" className="size-3.5 text-accent" fill="currentColor" aria-hidden="true">
-        <path d="M12 2l2.2 6.3L20.5 10.5l-6.3 2.2L12 19l-2.2-6.3L3.5 10.5l6.3-2.2z" />
-      </svg>
+      <SparkleIcon className="size-3.5 text-accent" />
       dawere AI
     </div>
+  );
+}
+
+export function SparkleIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2l2.2 6.3L20.5 10.5l-6.3 2.2L12 19l-2.2-6.3L3.5 10.5l6.3-2.2z" />
+    </svg>
   );
 }
 
