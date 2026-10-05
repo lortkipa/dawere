@@ -24,6 +24,7 @@ services:
     environment:
       DATABASE_URL: postgres://dawere:${POSTGRES_PASSWORD}@db/dawere
       SITE_URL: ${SITE_URL:-http://localhost:3000}
+      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL:-}
     volumes:
       - ./data/uploads:/data/uploads
     ports:

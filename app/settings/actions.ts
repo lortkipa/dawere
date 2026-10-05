@@ -3,11 +3,11 @@
 import { and, eq, ne } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { retireComments } from "@/lib/comments";
-import { deleteAvatar, deleteImages, saveAvatar } from "@/lib/uploads";
+import { deleteUserAndFiles } from "@/lib/accounts";
+import { deleteAvatar, saveAvatar } from "@/lib/uploads";
 import { db } from "@/lib/db";
 import { isUniqueViolation } from "@/lib/db/errors";
-import { comments, posts, users } from "@/lib/db/schema";
+import { users } from "@/lib/db/schema";
 import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
 import {
   emailPattern,
@@ -18,6 +18,7 @@ import {
   normalizeEmail,
   normalizeHandle,
 } from "@/lib/profile-rules";
+import { superadminEmail } from "@/lib/roles";
 import { deleteSession, getCurrentUser } from "@/lib/session";
 
 type Result = { error: string } | void;
@@ -37,6 +38,8 @@ export async function updateEmail(value: string): Promise<Result> {
   const email = normalizeEmail(value);
   if (!emailPattern.test(email)) return { error: "ელფოსტა არასწორია" };
   if (email === user.email) return;
+  // Only signing in with it gives the superadmin seat, so the address isn't free to take.
+  if (email === superadminEmail()) return { error: emailTakenError };
 
   try {
     await db.update(users).set({ email }).where(eq(users.id, user.id));
@@ -146,15 +149,9 @@ export async function removeAvatar(): Promise<Result> {
   refresh();
 }
 
-// Sessions, posts and likes go with the row through ON DELETE CASCADE; photos live on disk.
-// Comments are retired first, so the ones with replies stay as placeholders.
 export async function deleteAccount() {
   const user = await requireUser();
-  await retireComments(eq(comments.userId, user.id));
-  const owned = await db.select({ images: posts.images }).from(posts).where(eq(posts.userId, user.id));
-  await db.delete(users).where(eq(users.id, user.id));
-  await deleteAvatar(user.avatar);
-  await deleteImages(owned.flatMap((post) => post.images));
+  await deleteUserAndFiles(user);
   await deleteSession();
   redirect("/");
 }

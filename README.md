@@ -4,6 +4,8 @@ Georgian blogging platform with an AI chat for asking questions about the articl
 
 Email codes aren't sent yet: `123456` always signs in.
 
+Signing in with `SUPERADMIN_EMAIL` (set it in `.env` / `.env.local`) makes you the superadmin; the admin panel is at `/admin`.
+
 ## Run with Docker (production / NAS)
 
 Needs Docker with Compose. Everything runs in containers: the app, PostgreSQL, and a daily database backup.

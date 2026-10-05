@@ -2,6 +2,9 @@ import { sql } from "drizzle-orm";
 import { type AnyPgColumn, boolean, check, index, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
 
+export const roles = ["user", "admin", "superadmin"] as const;
+export type Role = (typeof roles)[number];
+
 export const users = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),
   email: text().notNull().unique(),
@@ -30,6 +33,8 @@ export const users = pgTable("users", {
   // Whether other people can open the favorites tab on this user's profile.
   favoritesPublic: boolean().notNull().default(true),
   onboardedAt: timestamp({ withTimezone: true }),
+  // Who can open /admin; see lib/admin.ts. Only signing in with SUPERADMIN_EMAIL makes a superadmin.
+  role: text().$type<Role>().notNull().default("user"),
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -1,4 +1,5 @@
 import type { User } from "./db/schema";
+import { isAdmin } from "./roles";
 
 export function avatarUrl(avatar: string | null) {
   return avatar ? `/avatars/${avatar}` : undefined;
@@ -10,7 +11,7 @@ export function imageUrl(name: string) {
 
 // What the header's avatar menu needs to know about the signed-in user.
 export function menuUser(user: User) {
-  return { name: user.name, email: user.email, handle: user.handle, avatar: user.avatar };
+  return { name: user.name, email: user.email, handle: user.handle, avatar: user.avatar, admin: isAdmin(user) };
 }
 
 const dateFormat = new Intl.DateTimeFormat("ka-GE", { day: "numeric", month: "long", year: "numeric" });
@@ -18,6 +19,13 @@ const dateFormat = new Intl.DateTimeFormat("ka-GE", { day: "numeric", month: "lo
 // "4 ოქტომბერი, 2026". Formatted on the server, so the client never renders another day.
 export function formatDate(date: Date) {
   return dateFormat.format(date);
+}
+
+const shortDateFormat = new Intl.DateTimeFormat("ka-GE", { day: "numeric", month: "short", year: "numeric" });
+
+// "4 ოქტ. 2026", for tables.
+export function formatShortDate(date: Date) {
+  return shortDateFormat.format(date);
 }
 
 const relativeFormat = new Intl.RelativeTimeFormat("ka", { numeric: "auto" });
