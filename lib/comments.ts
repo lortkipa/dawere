@@ -1,5 +1,6 @@
 import "server-only";
 import { and, asc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
+import { isBannedSql } from "./bans";
 import { db } from "./db";
 import { commentLikes, comments, users } from "./db/schema";
 import { avatarUrl, formatRelative } from "./user-view";
@@ -40,6 +41,7 @@ export async function getPostComments(postId: string, viewerId: string | undefin
       name: users.name,
       handle: users.handle,
       avatar: users.avatar,
+      banned: isBannedSql,
       likes: sql<number>`(select count(*) from comment_likes cl where cl.comment_id = ${comments.id})`.mapWith(
         Number,
       ),
@@ -59,7 +61,8 @@ export async function getPostComments(postId: string, viewerId: string | undefin
   const nodes = new Map<string, CommentNode>();
   const parentOf = new Map<string, string | null>();
   for (const row of rows) {
-    const live = row.body !== null && row.handle !== null;
+    // A banned author's comment shows as deleted, so readers don't see it.
+    const live = row.body !== null && row.handle !== null && !row.banned;
     parentOf.set(row.id, row.parentId);
     nodes.set(row.id, {
       id: row.id,
@@ -112,11 +115,19 @@ export async function getPostComments(postId: string, viewerId: string | undefin
   };
   top.forEach(countReplies);
 
+  // Deleted comments are kept in the database only while they have replies, but a banned
+  // author's can have none left to show; those go, all the way up the thread.
+  const prune = (list: CommentNode[]): CommentNode[] =>
+    list
+      .filter((node) => node.author || node.replyCount > 0)
+      .map((node) => ({ ...node, replies: prune(node.replies) }));
+  const shown = prune(top);
+
   // Newest comments first (the page can sort them by popularity); replies stay in the order
   // they were written.
-  top.reverse();
+  shown.reverse();
   const total = [...nodes.values()].filter((node) => node.author).length;
-  return { comments: top, total };
+  return { comments: shown, total };
 }
 
 // Deletes the matching comments. One with replies stays as an empty placeholder so the replies

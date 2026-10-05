@@ -1,5 +1,5 @@
 import { renderToReactElement } from "@tiptap/static-renderer/pm/react";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
@@ -9,6 +9,7 @@ import { Header } from "@/components/header";
 import { PostActions } from "@/components/post-actions";
 import { PostByline } from "@/components/post-byline";
 import { getPostComments } from "@/lib/comments";
+import { notBanned } from "@/lib/bans";
 import { db } from "@/lib/db";
 import { isFavorite } from "@/lib/favorites";
 import { isFollowing } from "@/lib/follows";
@@ -27,7 +28,7 @@ const getPost = cache(async (id: string) => {
     .select({ post: posts, author: users })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
-    .where(eq(posts.id, id))
+    .where(and(eq(posts.id, id), notBanned))
     .limit(1);
   return row ?? null;
 });

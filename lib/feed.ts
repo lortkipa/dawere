@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { and, desc, eq, lte, ne, or, sql, type SQL } from "drizzle-orm";
+import { notBanned } from "./bans";
 import { db } from "./db";
 import { postFavorites, posts, users, type User } from "./db/schema";
 import { getInterests, isLearnedWeights, learnedWeights, tuneTopics } from "./interests";
@@ -65,8 +66,8 @@ function textArray(values: string[]) {
     : sql`'{}'::text[]`;
 }
 
-// Live comments only, the same rule as the count on the post page.
-const commentCount = sql<number>`(select count(*) from comments c where c.post_id = ${posts.id} and c.body is not null and c.user_id is not null)::int`;
+// Live comments by accounts that aren't banned, the same rule as the count on the post page.
+const commentCount = sql<number>`(select count(*) from comments c join users cu on cu.id = c.user_id where c.post_id = ${posts.id} and c.body is not null and not exists (select 1 from bans b where b.email = cu.email))::int`;
 const likeCount = sql<number>`(select count(*) from post_likes pl where pl.post_id = ${posts.id})::int`;
 
 // What a post card shows, the same on the home feed and on profiles.
@@ -197,7 +198,7 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
     .select({ ...cardFields(viewer.id), score })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
-    .where(and(ne(posts.userId, viewer.id), lte(posts.createdAt, asOf), keyset))
+    .where(and(ne(posts.userId, viewer.id), lte(posts.createdAt, asOf), notBanned, keyset))
     .orderBy(desc(score), desc(posts.id))
     .limit(feedPageSize + 1);
 
@@ -240,7 +241,7 @@ export async function getProfilePage(
     .select({ ...cardFields(viewer?.id ?? null), exactCreatedAt: sql<string>`${posts.createdAt}::text` })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
-    .where(and(eq(posts.userId, authorId), keyset))
+    .where(and(eq(posts.userId, authorId), notBanned, keyset))
     .orderBy(desc(posts.createdAt), desc(posts.id))
     .limit(feedPageSize + 1);
 
@@ -279,7 +280,7 @@ export async function getFavoritesPage(
     .from(postFavorites)
     .innerJoin(posts, eq(posts.id, postFavorites.postId))
     .innerJoin(users, eq(users.id, posts.userId))
-    .where(and(eq(postFavorites.userId, ownerId), keyset))
+    .where(and(eq(postFavorites.userId, ownerId), notBanned, keyset))
     .orderBy(desc(postFavorites.createdAt), desc(posts.id))
     .limit(feedPageSize + 1);
 

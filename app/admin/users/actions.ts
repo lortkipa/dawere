@@ -4,6 +4,8 @@ import { and, eq, ne, or } from "drizzle-orm";
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteUserAndFiles } from "@/lib/accounts";
+import { maxBanReason } from "@/lib/ban-rules";
+import { ban, isBanned, unban } from "@/lib/bans";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { isUniqueViolation } from "@/lib/db/errors";
@@ -28,6 +30,7 @@ type Result = { error: string } | void;
 const genericError = "რაღაც შეცდომაა, სცადე თავიდან";
 const forbiddenError = "ამის უფლება არ გაქვს";
 const emailTakenError = "ეს ელფოსტა უკვე გამოყენებულია";
+const bannedEmailError = "ეს ელფოსტა დაბლოკილია";
 
 // The signed-in admin and the user they act on, or an error when they may not.
 async function managed(id: string): Promise<{ actor: User; target: User } | { error: string }> {
@@ -40,9 +43,10 @@ async function managed(id: string): Promise<{ actor: User; target: User } | { er
 }
 
 // The superadmin's address comes from SUPERADMIN_EMAIL and is only taken by signing in with it.
-function checkEmail(email: string): Result {
+async function checkEmail(email: string): Promise<Result> {
   if (!emailPattern.test(email)) return { error: "ელფოსტა არასწორია" };
   if (email === superadminEmail()) return { error: emailTakenError };
+  if (await isBanned(email)) return { error: bannedEmailError };
 }
 
 async function validTopics(slugs: string[]) {
@@ -56,7 +60,7 @@ export async function checkNewUser(emailValue: string, handleValue: string): Pro
   await requireAdmin();
   const email = normalizeEmail(emailValue);
   const handle = normalizeHandle(handleValue);
-  const emailError = checkEmail(email);
+  const emailError = await checkEmail(email);
   if (emailError) return emailError;
   if (handle && !isValidHandle(handle)) return { error: genericError };
 
@@ -82,7 +86,7 @@ export async function createUser(input: {
   const name = input.name.trim();
   const handle = normalizeHandle(input.handle);
   const chosen = await validTopics(input.topics);
-  const emailError = checkEmail(email);
+  const emailError = await checkEmail(email);
   if (emailError) return emailError;
   if (!name || name.length > maxNameLength || (handle && !isValidHandle(handle)) || !chosen) {
     return { error: genericError };
@@ -107,9 +111,11 @@ export async function updateUserEmail(id: string, value: string): Promise<Result
   if ("error" in access) return access;
   // Changing it would hand the seat to nobody; SUPERADMIN_EMAIL decides.
   if (isSuperadmin(access.target)) return { error: forbiddenError };
+  // The ban is on the address, so changing it would lift the ban.
+  if (await isBanned(access.target.email)) return { error: "დაბლოკილი მომხმარებლის ელფოსტა არ იცვლება" };
   const email = normalizeEmail(value);
   if (email === access.target.email) return;
-  const emailError = checkEmail(email);
+  const emailError = await checkEmail(email);
   if (emailError) return emailError;
 
   try {
@@ -253,4 +259,54 @@ export async function deleteUser(id: string): Promise<Result> {
 
   await deleteUserAndFiles(access.target);
   redirect("/admin/users");
+}
+
+// Signs the user out, blocks their email and hides them from readers; see lib/bans.ts.
+export async function banUser(id: string, reasonValue: string): Promise<Result> {
+  const access = await managed(id);
+  if ("error" in access) return access;
+  if (!canRemove(access.actor, access.target)) return { error: forbiddenError };
+  const reason = reasonValue.trim();
+  if (reason.length > maxBanReason) return { error: genericError };
+
+  await ban(access.target.email, reason, access.actor.id);
+  refresh();
+}
+
+export async function unbanUser(id: string): Promise<Result> {
+  const access = await managed(id);
+  if ("error" in access) return access;
+  if (!canRemove(access.actor, access.target)) return { error: forbiddenError };
+
+  await unban(access.target.email);
+  refresh();
+}
+
+// The account behind an address, if any, must be one this admin could ban from its own page.
+async function canBanEmail(actor: User, email: string) {
+  const [account] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return !account || canRemove(actor, account);
+}
+
+// For an address with no account yet, or one whose account was deleted.
+export async function banEmail(emailValue: string, reasonValue: string): Promise<Result> {
+  const actor = await requireAdmin();
+  const email = normalizeEmail(emailValue);
+  const reason = reasonValue.trim();
+  if (!emailPattern.test(email)) return { error: "ელფოსტა არასწორია" };
+  if (reason.length > maxBanReason) return { error: genericError };
+  if (email === superadminEmail() || !(await canBanEmail(actor, email))) return { error: forbiddenError };
+  if (await isBanned(email)) return { error: "ეს ელფოსტა უკვე დაბლოკილია" };
+
+  await ban(email, reason, actor.id);
+  refresh();
+}
+
+export async function unbanEmail(emailValue: string): Promise<Result> {
+  const actor = await requireAdmin();
+  const email = normalizeEmail(emailValue);
+  if (!(await canBanEmail(actor, email))) return { error: forbiddenError };
+
+  await unban(email);
+  refresh();
 }

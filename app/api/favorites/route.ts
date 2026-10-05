@@ -1,5 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import { notBanned } from "@/lib/bans";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { getFavoritesPage } from "@/lib/feed";
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   const [owner] = await db
     .select({ favoritesPublic: users.favoritesPublic })
     .from(users)
-    .where(eq(users.id, ownerId))
+    .where(and(eq(users.id, ownerId), notBanned))
     .limit(1);
   const viewer = await getCurrentUser();
   const reader = viewer?.onboardedAt ? viewer : null;

@@ -1,11 +1,12 @@
 import "server-only";
 import { and, asc, count, desc, eq, gte, ilike, isNotNull, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { adminPageSize, choice, dayParam, likePattern, pageParam, param, type SearchParams } from "./admin-list";
+import { isBannedSql } from "./bans";
 import { db } from "./db";
 import { roles, sessions, users } from "./db/schema";
 
 export const userSorts = ["new", "old", "posts", "followers", "comments"] as const;
-export const userStatuses = ["", "onboarded", "pending"] as const;
+export const userStatuses = ["", "onboarded", "pending", "banned"] as const;
 export const userRoles = ["", ...roles] as const;
 export const userPostFilters = ["", "with", "without"] as const;
 
@@ -42,6 +43,7 @@ export async function listUsers(filters: UserFilters) {
   if (filters.role) conditions.push(eq(users.role, filters.role));
   if (filters.status === "onboarded") conditions.push(isNotNull(users.onboardedAt));
   if (filters.status === "pending") conditions.push(isNull(users.onboardedAt));
+  if (filters.status === "banned") conditions.push(isBannedSql);
   if (filters.posts === "with") conditions.push(sql`exists (select 1 from posts p where p.user_id = ${userId})`);
   if (filters.posts === "without") conditions.push(sql`not exists (select 1 from posts p where p.user_id = ${userId})`);
   if (filters.from) conditions.push(gte(users.createdAt, sql`${filters.from}::date`));
@@ -67,6 +69,7 @@ export async function listUsers(filters: UserFilters) {
         role: users.role,
         onboardedAt: users.onboardedAt,
         createdAt: users.createdAt,
+        banned: isBannedSql,
         posts: postCount,
         comments: commentCount,
         followers: followerCount,

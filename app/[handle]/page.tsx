@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { cache, Suspense } from "react";
@@ -8,6 +8,7 @@ import { EmptyState, PostList } from "@/components/feed";
 import { LockedIllustration } from "@/components/empty-illustration";
 import { Profile, type ProfileTab } from "@/components/profile";
 import { FeedSkeleton } from "@/components/skeleton";
+import { notBanned } from "@/lib/bans";
 import { db } from "@/lib/db";
 import { type User, users } from "@/lib/db/schema";
 import { getFavoritesPage, getProfilePage } from "@/lib/feed";
@@ -30,10 +31,10 @@ const getProfile = cache(async (segment: string) => {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.handle, decoded.slice(1).toLowerCase()))
+    .where(and(eq(users.handle, decoded.slice(1).toLowerCase()), notBanned))
     .limit(1);
 
-  // Users who haven't finished onboarding have no name to show yet.
+  // Users who haven't finished onboarding have no name to show yet; banned ones are hidden.
   return user?.onboardedAt ? user : null;
 });
 

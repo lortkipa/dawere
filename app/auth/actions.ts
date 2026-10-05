@@ -2,6 +2,7 @@
 
 import { and, eq, ne } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { isBanned } from "@/lib/bans";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { emailPattern, normalizeEmail } from "@/lib/profile-rules";
@@ -18,6 +19,8 @@ export async function verifyCode(email: string, code: string, next?: string | nu
   if (!emailPattern.test(normalized) || code !== testCode) {
     return { error: "კოდი არასწორია" };
   }
+
+  if (await isBanned(normalized)) return { error: "ეს ანგარიში დაბლოკილია" };
 
   // Signing in with SUPERADMIN_EMAIL is the only way to become the superadmin, and there is one.
   // Otherwise the no-op update makes `returning` give back the existing row too.

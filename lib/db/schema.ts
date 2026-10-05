@@ -244,5 +244,16 @@ export const legalVersions = pgTable(
   (table) => [index().on(table.doc, table.createdAt.desc())],
 );
 
+// Emails that can't sign in. Keyed by address rather than account, so the block outlives a
+// deleted account. A banned account stays, but readers no longer see it; see lib/bans.ts.
+export const bans = pgTable("bans", {
+  email: text().primaryKey(),
+  // The admin's note on why.
+  reason: text(),
+  // Null once that admin deletes their account.
+  bannedBy: uuid().references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Post = typeof posts.$inferSelect;

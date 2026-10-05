@@ -20,6 +20,7 @@ import {
   normalizeHandle,
 } from "@/lib/profile-rules";
 import { superadminEmail } from "@/lib/roles";
+import { isBanned } from "@/lib/bans";
 import { deleteSession, getCurrentUser } from "@/lib/session";
 import { isTheme } from "@/lib/theme-options";
 
@@ -42,6 +43,8 @@ export async function updateEmail(value: string): Promise<Result> {
   if (email === user.email) return;
   // Only signing in with it gives the superadmin seat, so the address isn't free to take.
   if (email === superadminEmail()) return { error: emailTakenError };
+  // A banned address stays blocked for everyone.
+  if (await isBanned(email)) return { error: emailTakenError };
 
   try {
     await db.update(users).set({ email }).where(eq(users.id, user.id));

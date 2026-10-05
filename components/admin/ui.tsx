@@ -39,6 +39,14 @@ export function RoleBadge({ role }: { role: Role }) {
   );
 }
 
+export function BannedBadge() {
+  return (
+    <span className="inline-flex h-6 items-center rounded-full bg-danger-soft px-2.5 text-xs font-medium text-danger">
+      დაბლოკილი
+    </span>
+  );
+}
+
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="rounded-xl border border-line px-4 py-12 text-center text-muted">{children}</p>;
 }

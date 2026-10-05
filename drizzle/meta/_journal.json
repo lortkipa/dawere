@@ -113,6 +113,13 @@
       "when": 1791212781881,
       "tag": "0015_legal_versions",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791230401721,
+      "tag": "0016_bans",
+      "breakpoints": true
     }
   ]
 }

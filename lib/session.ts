@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { notBanned } from "./bans";
 import { db } from "./db";
 import { sessions, users } from "./db/schema";
 
@@ -43,7 +44,8 @@ export async function getCurrentUser() {
     .select({ user: users })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(eq(sessions.id, hashToken(token)), gt(sessions.expiresAt, new Date())))
+    // A banned account counts as signed out, should a session outlive the ban.
+    .where(and(eq(sessions.id, hashToken(token)), gt(sessions.expiresAt, new Date()), notBanned))
     .limit(1);
 
   return row?.user ?? null;

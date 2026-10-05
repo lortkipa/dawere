@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
+  banUser,
   checkUserHandle,
   deleteUser,
   removeUserAvatar,
   setUserRole,
   signOutUser,
+  unbanUser,
   updateUserBio,
   updateUserEmail,
   updateUserFavoritesPublic,
@@ -15,6 +17,7 @@ import {
   updateUserName,
   updateUserTopics,
 } from "@/app/admin/users/actions";
+import { maxBanReason } from "@/lib/ban-rules";
 import type { Role } from "@/lib/db/schema";
 import { maxNameLength, minTopics, type Option } from "@/lib/onboarding-options";
 import {
@@ -466,6 +469,7 @@ export function UserActions({
   sessions,
   canSignOut,
   canDelete,
+  banned,
   posts,
   comments,
 }: {
@@ -474,23 +478,30 @@ export function UserActions({
   onboarded: boolean;
   sessions: number;
   canSignOut: boolean;
+  // Banning takes the same rights as deleting.
   canDelete: boolean;
+  banned: boolean;
   posts: number;
   comments: number;
 }) {
-  const [confirming, setConfirming] = useState<"signout" | "delete" | null>(null);
+  const [confirming, setConfirming] = useState<"signout" | "ban" | "unban" | "delete" | null>(null);
   const close = () => setConfirming(null);
 
   return (
     <div className="flex flex-wrap gap-2">
-      {onboarded && (
+      {onboarded && !banned && (
         <Button variant="outline" href={`/@${handle}`}>
           პროფილი საიტზე
         </Button>
       )}
-      {canSignOut && sessions > 0 && (
+      {canSignOut && sessions > 0 && !banned && (
         <Button variant="outline" onClick={() => setConfirming("signout")}>
           ყველგან გასვლა
+        </Button>
+      )}
+      {canDelete && (
+        <Button variant="outline" onClick={() => setConfirming(banned ? "unban" : "ban")}>
+          {banned ? "განბლოკვა" : "დაბლოკვა"}
         </Button>
       )}
       {canDelete && (
@@ -508,15 +519,71 @@ export function UserActions({
           </EditForm>
         </Dialog>
       )}
+      {confirming === "ban" && <BanDialog save={(reason) => banUser(id, reason)} onClose={close} />}
+      {confirming === "unban" && (
+        <Dialog title="განბლოკვა" art="ban" onClose={close}>
+          <EditForm canSave save={() => unbanUser(id)} onClose={close} saveLabel="განბლოკვა">
+            <p className="text-muted">მომხმარებელი ისევ შეძლებს შესვლას. მისი პროფილი, ბლოგები და კომენტარები საიტზე დაბრუნდება.</p>
+          </EditForm>
+        </Dialog>
+      )}
       {confirming === "delete" && (
         <Dialog title="მომხმარებლის წაშლა" art="delete" onClose={close}>
           <EditForm canSave save={() => deleteUser(id)} onClose={close} saveLabel="წაშლა" danger>
             <p className="text-muted">
               ანგარიში, {posts} ბლოგი და {comments} კომენტარი სამუდამოდ წაიშლება.
+              {banned && " ელფოსტა დაბლოკილი დარჩება."}
             </p>
           </EditForm>
         </Dialog>
       )}
     </div>
+  );
+}
+
+// Shared with the banned list, which also bans an address with no account. `children` goes above
+// the reason, for the email field there.
+export function BanDialog({
+  save,
+  onClose,
+  canSave = true,
+  children,
+}: {
+  save: (reason: string) => Promise<{ error: string } | void>;
+  onClose: () => void;
+  canSave?: boolean;
+  children?: ReactNode;
+}) {
+  const [reason, setReason] = useState("");
+
+  return (
+    <Dialog title="დაბლოკვა" art="ban" onClose={onClose}>
+      <EditForm
+        canSave={canSave}
+        save={() => save(reason)}
+        onClose={onClose}
+        saveLabel="დაბლოკვა"
+        danger
+        counter={`${reason.length}/${maxBanReason}`}
+      >
+        <p className="text-muted">
+          მომხმარებელი ყველგან გავა ანგარიშიდან და ამ ელფოსტით ვეღარ შევა. მისი პროფილი, ბლოგები და კომენტარები
+          საიტზე დაიმალება.
+        </p>
+        {children}
+        <label htmlFor="ban-reason" className="mt-4 mb-1.5 block text-sm font-medium">
+          მიზეზი
+        </label>
+        <textarea
+          id="ban-reason"
+          rows={3}
+          maxLength={maxBanReason}
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          placeholder="ჩანს მხოლოდ ადმინებისთვის"
+          className="block w-full resize-none rounded-lg border border-line bg-bg px-4 py-3 text-base outline-offset-0 transition-colors placeholder:text-muted focus:border-ink"
+        />
+      </EditForm>
+    </Dialog>
   );
 }

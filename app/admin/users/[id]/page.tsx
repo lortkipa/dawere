@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 import { UserActions, UserEditor } from "@/components/admin/user-editor";
 import { ChatList } from "@/components/admin/chat-list";
 import { CommentList } from "@/components/admin/comment-list";
-import { Empty, RoleBadge, Stat } from "@/components/admin/ui";
+import { BannedBadge, Empty, RoleBadge, Stat } from "@/components/admin/ui";
 import { Button } from "@/components/button";
 import { Avatar } from "@/components/avatar";
 import { requireAdmin } from "@/lib/admin";
 import { commentFilters, commentRows, listComments, listPosts, postFilters } from "@/lib/admin-content";
 import { chatFilters, listChats } from "@/lib/admin-chats";
 import { getUserDetail } from "@/lib/admin-users";
+import { getBan } from "@/lib/bans";
 import { getCategories } from "@/lib/categories";
 import { uuidPattern } from "@/lib/ids";
 import { referrals } from "@/lib/onboarding-options";
@@ -27,10 +28,11 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   if (!detail) notFound();
   const { user } = detail;
   const editable = canManage(actor, user);
-  const [{ rows: latestPosts }, { rows: latestComments }, { rows: latestChats, total: chats }] = await Promise.all([
+  const [{ rows: latestPosts }, { rows: latestComments }, { rows: latestChats, total: chats }, ban] = await Promise.all([
     listPosts(postFilters({ author: user.id }), latest),
     listComments(commentFilters({ author: user.id }), latest),
     listChats(chatFilters({ user: user.id }), latest),
+    getBan(user.email),
   ]);
   const referral = referrals.find((option) => option.slug === user.referral);
 
@@ -62,6 +64,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="truncate text-2xl font-bold tracking-[-0.01em]">{user.name || "უსახელო"}</h1>
               <RoleBadge role={user.role} />
+              {ban && <BannedBadge />}
             </div>
             <p className="mt-0.5 truncate text-muted">
               @{user.handle} · {user.email}
@@ -75,10 +78,22 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
           sessions={detail.sessions}
           canSignOut={editable}
           canDelete={canRemove(actor, user)}
+          banned={Boolean(ban)}
           posts={detail.posts}
           comments={detail.comments}
         />
       </div>
+
+      {ban && (
+        <div className="rounded-xl border border-line bg-danger-soft px-4 py-3 text-[15px]">
+          <p>
+            დაბლოკილია {formatDate(ban.createdAt)}
+            {ban.byHandle && `, დაბლოკა ${ban.byName || `@${ban.byHandle}`}`}. საიტზე მისი პროფილი, ბლოგები და
+            კომენტარები არ ჩანს.
+          </p>
+          {ban.reason && <p className="mt-1 break-words whitespace-pre-line text-muted">მიზეზი: {ban.reason}</p>}
+        </div>
+      )}
 
       {!editable && (
         <p className="rounded-xl border border-line bg-surface px-4 py-3 text-[15px] text-muted">

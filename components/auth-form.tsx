@@ -103,7 +103,9 @@ export function AuthForm() {
 
 function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   const [digits, setDigits] = useState(emptyCode);
-  const [invalid, setInvalid] = useState(false);
+  // What the check returned: a wrong code, or a blocked address.
+  const [error, setError] = useState("");
+  const invalid = Boolean(error);
   const [pending, startTransition] = useTransition();
   const returnTo = useSearchParams().get("next");
   const [sends, setSends] = useState(1);
@@ -122,14 +124,14 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
       next[index + offset] = digit;
     });
     setDigits(next);
-    setInvalid(false);
+    setError("");
     focusBox(index + typed.length);
 
     if (next.every(Boolean)) {
       // On success the action redirects, so only a failure comes back.
       startTransition(async () => {
         const result = await verifyCode(email, next.join(""), returnTo);
-        if (result?.error) setInvalid(true);
+        if (result?.error) setError(result.error);
       });
     }
   }
@@ -140,7 +142,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
       const next = [...digits];
       next[index - 1] = "";
       setDigits(next);
-      setInvalid(false);
+      setError("");
       focusBox(index - 1);
     } else if (event.key === "ArrowLeft") {
       event.preventDefault();
@@ -167,7 +169,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   function resend() {
     // Resending comes with the backend.
     setDigits(emptyCode);
-    setInvalid(false);
+    setError("");
     setSends((count) => count + 1);
     setSecondsLeft(resendCooldown);
     focusBox(0);
@@ -226,7 +228,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
                   const next = [...digits];
                   next[index] = "";
                   setDigits(next);
-                  setInvalid(false);
+                  setError("");
                   return;
                 }
                 // One keystroke into a filled box keeps the new digit; longer input is autofill.
@@ -248,7 +250,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
       </div>
 
       <p aria-live="polite" className="mt-3 min-h-5 text-sm text-error">
-        {invalid && "კოდი არასწორია"}
+        {error}
       </p>
 
       <p className="mt-5 text-sm text-muted">

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { CreateUserButton } from "@/components/admin/create-user";
 import { FilterBar } from "@/components/admin/filter-bar";
-import { Empty, PageTitle, Pagination, RoleBadge, Table, rowClass, tdClass, thClass } from "@/components/admin/ui";
+import { BannedBadge, Empty, PageTitle, Pagination, RoleBadge, Table, rowClass, tdClass, thClass } from "@/components/admin/ui";
 import { Avatar } from "@/components/avatar";
+import { Button } from "@/components/button";
 import { requireAdmin } from "@/lib/admin";
 import { adminPageSize, type SearchParams } from "@/lib/admin-list";
 import { listUsers, userFilters } from "@/lib/admin-users";
@@ -22,6 +23,9 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   return (
     <div className="flex flex-col gap-5">
       <PageTitle title="მომხმარებლები" count={total}>
+        <Button variant="outline" href={`${path}/bans`}>
+          დაბლოკილები
+        </Button>
         <CreateUserButton canCreateAdmin={isSuperadmin(actor)} topics={await getCategories()} />
       </PageTitle>
 
@@ -49,10 +53,11 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
           },
           {
             name: "status",
-            label: "რეგისტრაცია",
+            label: "სტატუსი",
             options: [
               { value: "onboarded", label: "დასრულებული" },
               { value: "pending", label: "დაუსრულებელი" },
+              { value: "banned", label: "დაბლოკილი" },
             ],
           },
           {
@@ -91,6 +96,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                     <span className="flex items-center gap-2">
                       <span className="truncate font-medium">{user.name || "უსახელო"}</span>
                       {user.role !== "user" && <RoleBadge role={user.role} />}
+                      {user.banned && <BannedBadge />}
                     </span>
                     <span className="block truncate text-sm text-muted">{user.email}</span>
                     <span className="block text-sm text-muted tabular-nums">
@@ -133,7 +139,10 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
                       <span className="block max-w-60 truncate">{user.email}</span>
                     </td>
                     <td className={tdClass}>
-                      <RoleBadge role={user.role} />
+                      <span className="flex items-center gap-2">
+                        <RoleBadge role={user.role} />
+                        {user.banned && <BannedBadge />}
+                      </span>
                     </td>
                     <td className={`${tdClass} text-right tabular-nums`}>{user.posts}</td>
                     <td className={`${tdClass} text-right tabular-nums`}>{user.comments}</td>

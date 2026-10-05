@@ -1,6 +1,7 @@
 import "server-only";
 import { and, desc, eq, ilike, isNotNull, ne, or, sql, type SQL } from "drizzle-orm";
 import { likePattern } from "./admin-list";
+import { notBanned } from "./bans";
 import { db } from "./db";
 import { posts, users } from "./db/schema";
 
@@ -78,6 +79,7 @@ export async function searchDawere(query: string, author: string | null, exclude
       .where(
         and(
           ne(posts.id, excludePostId),
+          notBanned,
           author ? eq(users.handle, author.replace(/^@/, "").toLowerCase()) : sql`${postScore} > 0`,
         ),
       )
@@ -88,7 +90,7 @@ export async function searchDawere(query: string, author: string | null, exclude
       : db
           .select({ handle: users.handle, name: users.name, posts: postCount })
           .from(users)
-          .where(and(isNotNull(users.onboardedAt), sql`${postCount} > 0`, sql`${authorScore} > 0`))
+          .where(and(isNotNull(users.onboardedAt), notBanned, sql`${postCount} > 0`, sql`${authorScore} > 0`))
           .orderBy(desc(authorScore), desc(postCount))
           .limit(authorLimit),
   ]);

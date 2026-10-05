@@ -14,7 +14,8 @@ export type DialogArtName =
   | "link"
   | "role"
   | "signout"
-  | "comment";
+  | "comment"
+  | "ban";
 
 const paper = { fill: "#fff", stroke: "#dededa", strokeWidth: 1.2 };
 const textLine = { fill: "none", stroke: "#e2e2df", strokeWidth: 4, strokeLinecap: "round" } as const;
@@ -44,6 +45,20 @@ function Pencil({ x, y }: { x: number; y: number }) {
 }
 
 const arts: Record<DialogArtName, ReactNode> = {
+  // A profile card with a no-entry sign over its corner.
+  ban: (
+    <>
+      <rect x="62" y="30" width="104" height="72" rx="8" {...paper} />
+      <path d="M62 38a8 8 0 0 1 8-8h88a8 8 0 0 1 8 8v6H62z" fill="#7d86c4" />
+      <circle cx="90" cy="70" r="15" fill="#e5e8ff" />
+      <circle cx="90" cy="65" r="5.5" fill="#7d86c4" />
+      <path d="M80 80a10 10 0 0 1 20 0" fill="#7d86c4" />
+      <path d="M114 62h36M114 72h22" {...textLine} />
+      <circle cx="160" cy="88" r="21" fill="#fff" stroke="#e07a5f" strokeWidth="7" />
+      <path d="m145.5 73.5 29 29" stroke="#e07a5f" strokeWidth="7" strokeLinecap="round" />
+    </>
+  ),
+
   // A bin with its lid lifted, a page on its way in and a crumpled one beside it.
   delete: (
     <>

@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { openChat, saveMessage } from "@/lib/ai-chats";
 import { aiConfigured, askAboutPost, maxMessageLength, maxMessages, type ChatMessage } from "@/lib/ask-ai";
+import { notBanned } from "@/lib/bans";
 import { db } from "@/lib/db";
 import { posts, users } from "@/lib/db/schema";
 import { postIdPattern } from "@/lib/ids";
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
     })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
-    .where(eq(posts.id, postId))
+    .where(and(eq(posts.id, postId), notBanned))
     .limit(1);
   if (!post) return Response.json({ error: "not found" }, { status: 404 });
 
