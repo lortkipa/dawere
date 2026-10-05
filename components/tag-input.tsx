@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from "react";
-import { topics } from "@/lib/onboarding-options";
+import type { Option } from "@/lib/onboarding-options";
 import { maxTagLength, maxTags, normalizeTag, tagView } from "@/lib/tags";
 import { popoverClass } from "./menu";
 
@@ -14,12 +14,14 @@ export function TagInput({
   tags,
   onChange,
   onDone,
+  topics,
 }: {
   ref: RefObject<HTMLInputElement | null>;
   tags: string[];
   onChange: (tags: string[]) => void;
   // Enter in the empty field: the author is done with tags.
   onDone: () => void;
+  topics: Option[];
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -29,7 +31,7 @@ export function TagInput({
   const list = useRef<HTMLUListElement>(null);
 
   const typed = query.trim().replace(/^#+/, "").toLowerCase();
-  const normalized = normalizeTag(query);
+  const normalized = normalizeTag(query, topics);
   const suggestions: Suggestion[] = topics
     .filter((topic) => !tags.includes(topic.slug))
     .filter((topic) => !typed || topic.label.toLowerCase().includes(typed) || topic.slug.startsWith(typed))
@@ -76,7 +78,7 @@ export function TagInput({
       <div className="flex flex-wrap items-center gap-2" onClick={() => ref.current?.focus()}>
         <TagIcon />
         {tags.map((tag) => {
-          const view = tagView(tag);
+          const view = tagView(tag, topics);
           return (
             <span
               key={tag}

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/header";
 import { Settings } from "@/components/settings";
+import { getCategories } from "@/lib/categories";
 import { getCurrentUser } from "@/lib/session";
 import { menuUser } from "@/lib/user-view";
 
@@ -32,6 +33,7 @@ export default async function SettingsPage() {
             favoritesPublic: user.favoritesPublic,
           }}
           host={host}
+          topics={await getCategories()}
         />
       </main>
     </>

@@ -17,10 +17,11 @@ export function PageTitle({ title, count, children }: { title: string; count?: n
 }
 
 // Tables scroll sideways on narrow screens instead of squeezing their columns.
-export function Table({ children }: { children: ReactNode }) {
+// `fit` drops the minimum width, for tables that hide columns on phones instead.
+export function Table({ fit = false, children }: { fit?: boolean; children: ReactNode }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-line">
-      <table className="w-full min-w-[720px] border-collapse text-left text-[15px]">{children}</table>
+      <table className={`w-full ${fit ? "" : "min-w-[720px]"} border-collapse text-left text-[15px]`}>{children}</table>
     </div>
   );
 }

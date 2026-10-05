@@ -3,9 +3,9 @@ import { NewPostButton } from "@/components/admin/new-post";
 import { FilterBar } from "@/components/admin/filter-bar";
 import { Empty, PageTitle, Pagination, Table, rowClass, tdClass, thClass } from "@/components/admin/ui";
 import { requireAdmin } from "@/lib/admin";
+import { getCategories } from "@/lib/categories";
 import { listPosts, postFilters, scopeLabels } from "@/lib/admin-content";
 import { adminPageSize, type SearchParams } from "@/lib/admin-list";
-import { topics } from "@/lib/onboarding-options";
 import { tagView } from "@/lib/tags";
 import { formatShortDate, imageUrl } from "@/lib/user-view";
 
@@ -14,7 +14,8 @@ const path = "/admin/blogs";
 export default async function AdminBlogs({ searchParams }: { searchParams: Promise<SearchParams> }) {
   await requireAdmin();
   const params = await searchParams;
-  const filters = postFilters(params);
+  const categories = await getCategories();
+  const filters = postFilters(params, categories);
   const [{ rows, total }, labels] = await Promise.all([listPosts(filters), scopeLabels(filters.author, "")]);
   const filtered = Object.values(params).some(Boolean);
 
@@ -41,7 +42,10 @@ export default async function AdminBlogs({ searchParams }: { searchParams: Promi
           {
             name: "tag",
             label: "თემა",
-            options: topics.map((topic) => ({ value: topic.slug, label: `${topic.emoji} ${topic.label}` })),
+            options: categories.map((category) => ({
+              value: category.slug,
+              label: `${category.emoji} ${category.label}`,
+            })),
           },
           {
             name: "cover",
@@ -121,7 +125,7 @@ export default async function AdminBlogs({ searchParams }: { searchParams: Promi
                       <span className="line-clamp-2 max-w-52">
                         {post.tags
                           .map((tag) => {
-                            const view = tagView(tag);
+                            const view = tagView(tag, categories);
                             return view.emoji ? view.label : `#${view.label}`;
                           })
                           .join(", ")}

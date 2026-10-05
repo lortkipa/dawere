@@ -9,6 +9,7 @@ import { Avatar } from "@/components/avatar";
 import { requireAdmin } from "@/lib/admin";
 import { commentFilters, commentRows, listComments, listPosts, postFilters } from "@/lib/admin-content";
 import { getUserDetail } from "@/lib/admin-users";
+import { getCategories } from "@/lib/categories";
 import { uuidPattern } from "@/lib/ids";
 import { referrals } from "@/lib/onboarding-options";
 import { canManage, canRemove, canSetRole, isSuperadmin } from "@/lib/roles";
@@ -107,6 +108,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
           editable={editable}
           emailLocked={isSuperadmin(user)}
           canSetRole={canSetRole(actor, user)}
+          topics={await getCategories()}
         />
 
         <section className="h-fit rounded-xl border border-line">

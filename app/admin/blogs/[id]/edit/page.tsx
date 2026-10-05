@@ -4,6 +4,7 @@ import { BackLink } from "@/components/admin/back-link";
 import { Writer } from "@/components/writer";
 import { requireAdmin } from "@/lib/admin";
 import { getPostDetail } from "@/lib/admin-content";
+import { getCategories } from "@/lib/categories";
 import { canManage } from "@/lib/roles";
 import { imageUrl } from "@/lib/user-view";
 
@@ -20,6 +21,7 @@ export default async function EditAdminBlog({ params }: { params: Promise<{ id: 
         <h1 className="text-2xl font-bold tracking-[-0.01em]">ბლოგის რედაქტირება</h1>
       </div>
       <Writer
+        topics={await getCategories()}
         initial={{
           cover: post.cover ? imageUrl(post.cover) : null,
           title: post.title,

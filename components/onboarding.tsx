@@ -9,7 +9,7 @@ import {
   maxReferralOtherLength,
   minTopics,
   referrals,
-  topics,
+  type Option,
 } from "@/lib/onboarding-options";
 import { Button } from "./button";
 import { Chip } from "./chip";
@@ -18,7 +18,7 @@ import { TextInput } from "./text-input";
 
 const steps = ["name", "topics", "referral"] as const;
 
-export function Onboarding() {
+export function Onboarding({ topics }: { topics: Option[] }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [chosenTopics, setChosenTopics] = useState<string[]>([]);

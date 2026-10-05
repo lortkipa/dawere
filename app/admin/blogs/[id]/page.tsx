@@ -7,6 +7,7 @@ import { CommentList } from "@/components/admin/comment-list";
 import { Empty, Stat } from "@/components/admin/ui";
 import { Avatar } from "@/components/avatar";
 import { requireAdmin } from "@/lib/admin";
+import { getCategories } from "@/lib/categories";
 import { commentFilters, commentRows, getPostDetail, listComments } from "@/lib/admin-content";
 import { postExtensions } from "@/lib/post-schema";
 import { canManage } from "@/lib/roles";
@@ -21,6 +22,7 @@ export default async function AdminBlog({ params }: { params: Promise<{ id: stri
   const detail = await getPostDetail((await params).id);
   if (!detail) notFound();
   const { post, author } = detail;
+  const categories = await getCategories();
   const { rows } = await listComments(commentFilters({ post: post.id, sort: "old" }), maxComments);
 
   return (
@@ -63,7 +65,7 @@ export default async function AdminBlog({ params }: { params: Promise<{ id: stri
           <p className="mt-2 text-lg leading-relaxed break-words text-muted">{post.description}</p>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {post.tags.map((tag) => {
-              const view = tagView(tag);
+              const view = tagView(tag, categories);
               return (
                 <span key={tag} className="rounded-full border border-line px-2.5 py-0.5 text-sm">
                   {view.emoji ? `${view.emoji} ${view.label}` : `#${view.label}`}

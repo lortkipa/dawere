@@ -16,7 +16,7 @@ import {
   updateUserTopics,
 } from "@/app/admin/users/actions";
 import type { Role } from "@/lib/db/schema";
-import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
+import { maxNameLength, minTopics, type Option } from "@/lib/onboarding-options";
 import {
   emailPattern,
   handleTakenError,
@@ -50,7 +50,7 @@ type EditedUser = {
 
 type Field = "email" | "handle" | "name" | "bio" | "avatar" | "favorites" | "role" | "topics";
 
-const topicLabels = (slugs: string[]) =>
+const topicLabels = (topics: Option[], slugs: string[]) =>
   topics
     .filter((topic) => slugs.includes(topic.slug))
     .map((topic) => `${topic.emoji} ${topic.label}`)
@@ -62,11 +62,13 @@ export function UserEditor({
   editable,
   emailLocked,
   canSetRole,
+  topics,
 }: {
   user: EditedUser;
   editable: boolean;
   emailLocked: boolean;
   canSetRole: boolean;
+  topics: Option[];
 }) {
   const [editing, setEditing] = useState<Field | null>(null);
   const close = () => setEditing(null);
@@ -98,7 +100,7 @@ export function UserEditor({
 
       <Card title="ალგორითმი">
         <Row label="თემები" onEdit={edit("topics")} wrap>
-          {topicLabels(user.topics) || "—"}
+          {topicLabels(topics, user.topics) || "—"}
         </Row>
       </Card>
 
@@ -118,7 +120,7 @@ export function UserEditor({
       {editing === "avatar" && <AvatarDialog user={user} onClose={close} />}
       {editing === "favorites" && <FavoritesDialog user={user} onClose={close} />}
       {editing === "role" && <RoleDialog user={user} onClose={close} />}
-      {editing === "topics" && <TopicsDialog user={user} onClose={close} />}
+      {editing === "topics" && <TopicsDialog user={user} topics={topics} onClose={close} />}
     </div>
   );
 }
@@ -370,7 +372,7 @@ function AvatarDialog({ user, onClose }: DialogProps) {
   );
 }
 
-function TopicsDialog({ user, onClose }: DialogProps) {
+function TopicsDialog({ user, topics, onClose }: DialogProps & { topics: Option[] }) {
   const [chosen, setChosen] = useState(user.topics);
   const changed = chosen.length !== user.topics.length || chosen.some((slug) => !user.topics.includes(slug));
 

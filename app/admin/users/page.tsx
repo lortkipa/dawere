@@ -6,6 +6,7 @@ import { Avatar } from "@/components/avatar";
 import { requireAdmin } from "@/lib/admin";
 import { adminPageSize, type SearchParams } from "@/lib/admin-list";
 import { listUsers, userFilters } from "@/lib/admin-users";
+import { getCategories } from "@/lib/categories";
 import { isSuperadmin, roleLabels } from "@/lib/roles";
 import { avatarUrl, formatShortDate } from "@/lib/user-view";
 
@@ -21,7 +22,7 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   return (
     <div className="flex flex-col gap-5">
       <PageTitle title="მომხმარებლები" count={total}>
-        <CreateUserButton canCreateAdmin={isSuperadmin(actor)} />
+        <CreateUserButton canCreateAdmin={isSuperadmin(actor)} topics={await getCategories()} />
       </PageTitle>
 
       <FilterBar

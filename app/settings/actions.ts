@@ -8,7 +8,8 @@ import { deleteAvatar, saveAvatar } from "@/lib/uploads";
 import { db } from "@/lib/db";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { users } from "@/lib/db/schema";
-import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
+import { getCategories, isCategory } from "@/lib/categories";
+import { maxNameLength, minTopics } from "@/lib/onboarding-options";
 import {
   emailPattern,
   handleTakenError,
@@ -103,7 +104,8 @@ export async function updateBio(value: string): Promise<Result> {
 export async function updateTopics(slugs: string[]): Promise<Result> {
   const user = await requireUser();
   const chosen = [...new Set(slugs)];
-  const valid = chosen.length >= minTopics && chosen.every((slug) => topics.some((topic) => topic.slug === slug));
+  const categories = await getCategories();
+  const valid = chosen.length >= minTopics && chosen.every((slug) => isCategory(categories, slug));
   if (!valid) return { error: genericError };
 
   // Topics taken out by hand stay out of the automatic adjustments in lib/interests.ts.

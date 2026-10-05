@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { type AnyPgColumn, boolean, check, index, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
 
 export const roles = ["user", "admin", "superadmin"] as const;
@@ -178,6 +178,17 @@ export const postViews = pgTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.postId] })],
 );
+
+// The topics readers pick in onboarding and settings and authors tag posts with. Posts and
+// readers store the slug, so it never changes; admins edit the rest on /admin/categories.
+export const categories = pgTable("categories", {
+  slug: text().primaryKey(),
+  label: text().notNull(),
+  emoji: text().notNull(),
+  // Order in pickers, lowest first.
+  position: integer().notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 export type User = typeof users.$inferSelect;
 export type Post = typeof posts.$inferSelect;

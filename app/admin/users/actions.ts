@@ -9,7 +9,8 @@ import { db } from "@/lib/db";
 import { isUniqueViolation } from "@/lib/db/errors";
 import { sessions, users, type Role, type User } from "@/lib/db/schema";
 import { uuidPattern } from "@/lib/ids";
-import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
+import { getCategories, isCategory } from "@/lib/categories";
+import { maxNameLength, minTopics } from "@/lib/onboarding-options";
 import {
   emailPattern,
   handleTakenError,
@@ -44,11 +45,10 @@ function checkEmail(email: string): Result {
   if (email === superadminEmail()) return { error: emailTakenError };
 }
 
-function validTopics(slugs: string[]) {
+async function validTopics(slugs: string[]) {
   const chosen = [...new Set(slugs)];
-  return chosen.length >= minTopics && chosen.every((slug) => topics.some((topic) => topic.slug === slug))
-    ? chosen
-    : null;
+  const categories = await getCategories();
+  return chosen.length >= minTopics && chosen.every((slug) => isCategory(categories, slug)) ? chosen : null;
 }
 
 // The first step of adding a user, so a taken address or handle shows before picking topics.
@@ -81,7 +81,7 @@ export async function createUser(input: {
   const email = normalizeEmail(input.email);
   const name = input.name.trim();
   const handle = normalizeHandle(input.handle);
-  const chosen = validTopics(input.topics);
+  const chosen = await validTopics(input.topics);
   const emailError = checkEmail(email);
   if (emailError) return emailError;
   if (!name || name.length > maxNameLength || (handle && !isValidHandle(handle)) || !chosen) {
@@ -185,7 +185,7 @@ export async function updateUserFavoritesPublic(id: string, value: boolean): Pro
 export async function updateUserTopics(id: string, slugs: string[]): Promise<Result> {
   const access = await managed(id);
   if ("error" in access) return access;
-  const chosen = validTopics(slugs);
+  const chosen = await validTopics(slugs);
   if (!chosen) return { error: genericError };
 
   await db

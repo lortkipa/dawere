@@ -1,7 +1,8 @@
 import "server-only";
 import { sql, type SQL } from "drizzle-orm";
 import { db } from "./db";
-import { referrals, topics } from "./onboarding-options";
+import { getCategories } from "./categories";
+import { referrals } from "./onboarding-options";
 import { tagView } from "./tags";
 
 // The overview's time range: the last N days, or everything since the first sign-up.
@@ -86,6 +87,7 @@ export async function getOverview(range: StatRange) {
   const tileSources: Source[] = ["signups", "posts", "comments", "likes", "favorites", "follows", "opens", "readers"];
   const chartSources: Source[] = ["signups", "readers", "posts", "opens", "comments", "likes"];
 
+  const categories = await getCategories();
   const [tiles, charts, totals, topicRows, tagRows, referralRows, topPosts, topAuthors] = await Promise.all([
     Promise.all(tileSources.map(async (source) => [source, await total(source, days)] as const)),
     Promise.all(chartSources.map(async (source) => [source, await series(source, start, unit)] as const)),
@@ -127,11 +129,11 @@ export async function getOverview(range: StatRange) {
     charts: Object.fromEntries(charts) as Record<Source, Point[]>,
     totals: totals[0],
     topics: topicRows.map((row) => {
-      const topic = topics.find((item) => item.slug === row.slug);
+      const topic = categories.find((item) => item.slug === row.slug);
       return { label: topic ? `${topic.emoji} ${topic.label}` : row.slug, value: Number(row.value) };
     }),
     tags: tagRows.map((row) => {
-      const view = tagView(row.tag);
+      const view = tagView(row.tag, categories);
       return { label: view.emoji ? `${view.emoji} ${view.label}` : `#${view.label}`, value: Number(row.value) };
     }),
     referrals: referralRows.map((row) => {

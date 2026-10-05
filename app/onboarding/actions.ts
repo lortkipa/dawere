@@ -2,6 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { getCategories, isCategory } from "@/lib/categories";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import {
@@ -9,7 +10,6 @@ import {
   maxReferralOtherLength,
   minTopics,
   referrals,
-  topics,
 } from "@/lib/onboarding-options";
 import { safeNext } from "@/lib/return-to";
 import { getCurrentUser } from "@/lib/session";
@@ -23,11 +23,12 @@ export async function completeOnboarding(answers: Answers, next?: string | null)
   const name = answers.name.trim();
   const chosen = [...new Set(answers.topics)];
   const referralOther = answers.referral === "other" ? answers.referralOther.trim() : "";
+  const categories = await getCategories();
   const valid =
     name.length > 0 &&
     name.length <= maxNameLength &&
     chosen.length >= minTopics &&
-    chosen.every((slug) => topics.some((topic) => topic.slug === slug)) &&
+    chosen.every((slug) => isCategory(categories, slug)) &&
     referrals.some((referral) => referral.slug === answers.referral) &&
     (answers.referral !== "other" || referralOther.length > 0) &&
     referralOther.length <= maxReferralOtherLength;

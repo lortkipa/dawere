@@ -13,7 +13,7 @@ import {
   updateName,
   updateTopics,
 } from "@/app/settings/actions";
-import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
+import { maxNameLength, minTopics, type Option } from "@/lib/onboarding-options";
 import {
   emailPattern,
   handleTakenError,
@@ -45,7 +45,7 @@ export type SettingsUser = {
 
 type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "favorites" | "delete";
 
-export function Settings({ user, host }: { user: SettingsUser; host: string }) {
+export function Settings({ user, host, topics }: { user: SettingsUser; host: string; topics: Option[] }) {
   const [editing, setEditing] = useState<Field | null>(null);
   const close = () => setEditing(null);
 
@@ -89,7 +89,7 @@ export function Settings({ user, host }: { user: SettingsUser; host: string }) {
       {editing === "name" && <NameDialog current={user.name} onClose={close} />}
       {editing === "avatar" && <AvatarDialog current={user.avatar} onClose={close} />}
       {editing === "bio" && <BioDialog current={user.bio ?? ""} onClose={close} />}
-      {editing === "topics" && <TopicsDialog current={user.topics} onClose={close} />}
+      {editing === "topics" && <TopicsDialog current={user.topics} topics={topics} onClose={close} />}
       {editing === "favorites" && <FavoritesDialog current={user.favoritesPublic} onClose={close} />}
       {editing === "delete" && <DeleteDialog onClose={close} />}
     </div>
@@ -328,7 +328,7 @@ function AvatarDialog({ current, onClose }: { current: string | null; onClose: (
   );
 }
 
-function TopicsDialog({ current, onClose }: { current: string[]; onClose: () => void }) {
+function TopicsDialog({ current, topics, onClose }: { current: string[]; topics: Option[]; onClose: () => void }) {
   const [chosen, setChosen] = useState(current);
   const changed = chosen.length !== current.length || chosen.some((slug) => !current.includes(slug));
 

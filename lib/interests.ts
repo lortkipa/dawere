@@ -2,7 +2,8 @@ import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import { users, type User } from "./db/schema";
-import { minTopics, topics } from "./onboarding-options";
+import { getCategories } from "./categories";
+import { minTopics } from "./onboarding-options";
 
 // What a reader actually reads, learned per tag from the last 90 days. Every event is worth
 // points, spread evenly over the post's tags, and halves in weight every 14 days.
@@ -111,7 +112,7 @@ export async function tuneTopics(user: User, interests: Interest[], now: Date): 
   }
 
   const byTag = new Map(interests.map((interest) => [interest.tag, interest]));
-  const added = topics
+  const added = (await getCategories())
     .map((topic) => byTag.get(topic.slug))
     .filter(
       (interest): interest is Interest =>

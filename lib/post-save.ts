@@ -14,6 +14,8 @@ import {
   maxUploadBytes,
 } from "./post-rules";
 import { postExtensions } from "./post-schema";
+import { getCategories } from "./categories";
+import type { Option } from "./onboarding-options";
 import { maxTags, minTags, normalizeTag } from "./tags";
 import { deleteImages, saveImage } from "./uploads";
 import { imageUrl } from "./user-view";
@@ -33,7 +35,7 @@ function walk(node: JSONContent, visit: (node: JSONContent) => void) {
 }
 
 // The editor sends the tags as a JSON array of what the author picked or typed.
-function parseTags(value: FormDataEntryValue | null) {
+function parseTags(value: FormDataEntryValue | null, categories: Option[]) {
   let list: unknown;
   try {
     list = JSON.parse(String(value));
@@ -41,7 +43,7 @@ function parseTags(value: FormDataEntryValue | null) {
     return null;
   }
   if (!Array.isArray(list) || !list.every((item) => typeof item === "string")) return null;
-  const tags = list.map(normalizeTag);
+  const tags = list.map((item) => normalizeTag(item, categories));
   if (tags.some((tag) => tag === null)) return null;
   const unique = [...new Set(tags as string[])];
   return unique.length >= minTags && unique.length <= maxTags ? unique : null;
@@ -63,7 +65,7 @@ export async function savePost(
   const description = String(formData.get("description") ?? "").trim();
   if (!title || title.length > maxTitleLength) return { error: genericError };
   if (!description || description.length > maxDescriptionLength) return { error: genericError };
-  const tags = parseTags(formData.get("tags"));
+  const tags = parseTags(formData.get("tags"), await getCategories());
   if (!tags) return { error: genericError };
 
   // fromJSON throws on node types, marks or nesting the schema doesn't allow and drops

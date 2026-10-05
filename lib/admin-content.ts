@@ -4,7 +4,7 @@ import { adminPageSize, choice, dayParam, likePattern, pageParam, param, type Se
 import { db } from "./db";
 import { comments, posts, users, type User } from "./db/schema";
 import { postIdPattern, uuidPattern } from "./ids";
-import { topics } from "./onboarding-options";
+import type { Option } from "./onboarding-options";
 import { canManage } from "./roles";
 import { avatarUrl, formatShortDate } from "./user-view";
 
@@ -13,13 +13,13 @@ import { avatarUrl, formatShortDate } from "./user-view";
 export const postSorts = ["new", "old", "likes", "comments", "opens"] as const;
 const coverFilters = ["", "with", "without"] as const;
 
-export function postFilters(params: SearchParams) {
+export function postFilters(params: SearchParams, categories: Option[] = []) {
   const author = param(params, "author");
   const tag = param(params, "tag");
   return {
     q: param(params, "q"),
     author: uuidPattern.test(author) ? author : "",
-    tag: topics.some((topic) => topic.slug === tag) ? tag : "",
+    tag: categories.some((category) => category.slug === tag) ? tag : "",
     cover: choice(params, "cover", coverFilters),
     from: dayParam(params, "from"),
     to: dayParam(params, "to"),

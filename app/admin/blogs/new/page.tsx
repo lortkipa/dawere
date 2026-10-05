@@ -5,6 +5,7 @@ import { BackLink } from "@/components/admin/back-link";
 import { Writer } from "@/components/writer";
 import { requireAdmin } from "@/lib/admin";
 import { param, type SearchParams } from "@/lib/admin-list";
+import { getCategories } from "@/lib/categories";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { uuidPattern } from "@/lib/ids";
@@ -26,7 +27,7 @@ export default async function NewAdminBlog({ searchParams }: { searchParams: Pro
           ახალი ბლოგი <span className="font-normal text-muted">· {author.name || `@${author.handle}`}</span>
         </h1>
       </div>
-      <Writer submit={createPostAs.bind(null, author.id)} toolbarTop="top-14 md:top-0" />
+      <Writer topics={await getCategories()} submit={createPostAs.bind(null, author.id)} toolbarTop="top-14 md:top-0" />
     </div>
   );
 }

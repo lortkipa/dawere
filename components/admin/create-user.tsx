@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { checkNewUser, createUser } from "@/app/admin/users/actions";
 import type { Role } from "@/lib/db/schema";
-import { maxNameLength, minTopics, topics } from "@/lib/onboarding-options";
+import { maxNameLength, minTopics, type Option } from "@/lib/onboarding-options";
 import { emailPattern, isValidHandle, maxHandleLength, normalizeEmail, normalizeHandle } from "@/lib/profile-rules";
 import { roleLabels } from "@/lib/roles";
 import { Button } from "../button";
@@ -15,18 +15,26 @@ import { TextInput } from "../text-input";
 
 const labelClass = "mb-1.5 block text-sm font-medium";
 
-export function CreateUserButton({ canCreateAdmin }: { canCreateAdmin: boolean }) {
+export function CreateUserButton({ canCreateAdmin, topics }: { canCreateAdmin: boolean; topics: Option[] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button onClick={() => setOpen(true)}>დამატება</Button>
-      {open && <CreateUserDialog canCreateAdmin={canCreateAdmin} onClose={() => setOpen(false)} />}
+      {open && <CreateUserDialog canCreateAdmin={canCreateAdmin} topics={topics} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
 // Two steps, like onboarding: who it is, then their topics. The account is ready to use at once.
-function CreateUserDialog({ canCreateAdmin, onClose }: { canCreateAdmin: boolean; onClose: () => void }) {
+function CreateUserDialog({
+  canCreateAdmin,
+  topics,
+  onClose,
+}: {
+  canCreateAdmin: boolean;
+  topics: Option[];
+  onClose: () => void;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<"account" | "topics">("account");
   const [email, setEmail] = useState("");

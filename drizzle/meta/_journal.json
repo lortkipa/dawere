@@ -85,6 +85,13 @@
       "when": 1791172530563,
       "tag": "0011_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791177115031,
+      "tag": "0012_categories",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { unstable_rethrow } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, useTransition, type KeyboardEvent, type RefObject } from "react";
 import { publishPost } from "@/app/write/actions";
+import type { Option } from "@/lib/onboarding-options";
 import { imageTypes, maxDescriptionLength, maxImages, maxPickedImageBytes, maxTitleLength } from "@/lib/post-rules";
 import { postExtensions } from "@/lib/post-schema";
 import { shrinkImage } from "@/lib/shrink-image";
@@ -51,17 +52,19 @@ function countImages(view: EditorView) {
 // Nothing is uploaded until publishing: photos live in the browser as blobs, and the editor
 // shows them from blob: URLs. With `initial` it edits that post and `submit` saves it.
 export function Writer({
+  topics,
   initial,
   submit = publishPost,
   submitLabel = "გამოქვეყნება",
   toolbarTop = "top-16",
 }: {
+  topics: Option[];
   initial?: WriterPost;
   submit?: (data: FormData) => Promise<Result>;
   submitLabel?: string;
   // Where the toolbar sticks: under the site header by default.
   toolbarTop?: string;
-} = {}) {
+}) {
   const [cover, setCover] = useState<Picked | null>(initial?.cover ? { blob: null, url: initial.cover } : null);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
@@ -360,7 +363,7 @@ export function Writer({
           }
           className="mt-3 text-lg leading-relaxed text-muted"
         />
-        <TagInput ref={tagsRef} tags={tags} onChange={setTags} onDone={() => editor?.commands.focus("start")} />
+        <TagInput ref={tagsRef} tags={tags} onChange={setTags} onDone={() => editor?.commands.focus("start")} topics={topics} />
       </div>
 
       <div className={`sticky ${toolbarTop} z-40 border-y border-line bg-white`}>
