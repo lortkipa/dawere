@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { openChat, saveMessage } from "@/lib/ai-chats";
 import { aiConfigured, askAboutPost, maxMessageLength, maxMessages, type ChatMessage } from "@/lib/ask-ai";
 import { db } from "@/lib/db";
-import { posts } from "@/lib/db/schema";
+import { posts, users } from "@/lib/db/schema";
 import { postIdPattern } from "@/lib/ids";
 import { getCurrentUser } from "@/lib/session";
 
@@ -41,8 +41,16 @@ export async function POST(request: Request) {
   }
 
   const [post] = await db
-    .select({ title: posts.title, description: posts.description, body: posts.body })
+    .select({
+      id: posts.id,
+      title: posts.title,
+      description: posts.description,
+      body: posts.body,
+      authorName: users.name,
+      authorHandle: users.handle,
+    })
     .from(posts)
+    .innerJoin(users, eq(users.id, posts.userId))
     .where(eq(posts.id, postId))
     .limit(1);
   if (!post) return Response.json({ error: "not found" }, { status: 404 });

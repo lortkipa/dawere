@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   useEffect,
@@ -408,7 +409,7 @@ function Conversation({ postId, focus, onStart }: { postId: string; focus: boole
             <Question key={index}>{message.text}</Question>
           ) : (
             <Answer key={index} failed={message.failed}>
-              {message.text}
+              <AnswerText text={message.text} />
             </Answer>
           ),
         )}
@@ -506,6 +507,30 @@ function Answer({ failed = false, children }: { failed?: boolean; children: Reac
       {children}
     </div>
   );
+}
+
+// Links the model writes to Dawere posts and profiles, like [title](/@handle/id). Anything else,
+// including a link still being streamed, stays as text.
+const dawereLink = /\[([^\]\n]+)\]\((\/@[a-z0-9._~-]+(?:\/[0-9a-f]{12})?)\)/g;
+
+function AnswerText({ text }: { text: string }) {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(dawereLink)) {
+    parts.push(text.slice(last, match.index));
+    parts.push(
+      <Link
+        key={match.index}
+        href={match[2]}
+        className="font-medium underline decoration-faint underline-offset-2 hover:decoration-ink"
+      >
+        {match[1]}
+      </Link>,
+    );
+    last = match.index + match[0].length;
+  }
+  parts.push(text.slice(last));
+  return parts;
 }
 
 function Dot({ className = "" }: { className?: string }) {
