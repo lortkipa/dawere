@@ -63,7 +63,7 @@
     color-scheme: dark;
   }
 
-  /* Pages that are always light for now (landing, sign-in) carry a `LightOnly` marker. */
+  /* Pages that are always light for now (landing, sign-in, and terms/privacy for visitors) carry a `LightOnly` marker. */
   :root:has([data-light-only]) {
     color-scheme: light;
   }

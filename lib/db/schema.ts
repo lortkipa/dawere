@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { type AnyPgColumn, boolean, check, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import type { JSONContent } from "@tiptap/core";
+import type { LegalDoc } from "../legal-docs";
 import type { Theme } from "../theme-options";
 
 export const roles = ["user", "admin", "superadmin"] as const;
@@ -224,6 +225,23 @@ export const aiMessages = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index().on(table.chatId, table.createdAt)],
+);
+
+// Every saved version of the privacy policy and the terms. Readers see the newest one; admins
+// edit and restore them on /admin/legal. Until the first save the text in lib/legal-defaults.ts
+// is shown.
+export const legalVersions = pgTable(
+  "legal_versions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    doc: text().$type<LegalDoc>().notNull(),
+    title: text().notNull(),
+    body: jsonb().$type<JSONContent>().notNull(),
+    // Null once the admin who saved it deletes their account.
+    editorId: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index().on(table.doc, table.createdAt.desc())],
 );
 
 export type User = typeof users.$inferSelect;

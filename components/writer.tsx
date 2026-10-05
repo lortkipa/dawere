@@ -450,7 +450,7 @@ function CoverButton({ label, onClick, children }: { label: string; onClick: () 
 }
 
 // A one-line field that wraps and grows instead of scrolling. Pasted line breaks become spaces.
-function AutoTextarea({
+export function AutoTextarea({
   ref,
   value,
   onChange,
@@ -493,7 +493,7 @@ function AutoTextarea({
 
 // Warns before a reload, closing the tab or following a link while something is written. The
 // browser's back button can't be caught reliably, so it isn't.
-function useLeaveWarning(active: boolean) {
+export function useLeaveWarning(active: boolean, message = "ბლოგი არ შეინახება. მაინც გახვალ?") {
   useEffect(() => {
     if (!active) return;
     const onBeforeUnload = (event: BeforeUnloadEvent) => event.preventDefault();
@@ -502,7 +502,7 @@ function useLeaveWarning(active: boolean) {
       const link = (event.target as Element).closest?.("a[href]");
       if (!link || link.closest("[contenteditable]") || link.getAttribute("target") === "_blank") return;
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      if (!window.confirm("ბლოგი არ შეინახება. მაინც გახვალ?")) {
+      if (!window.confirm(message)) {
         event.preventDefault();
         event.stopPropagation();
       }
@@ -513,5 +513,5 @@ function useLeaveWarning(active: boolean) {
       window.removeEventListener("beforeunload", onBeforeUnload);
       document.removeEventListener("click", onClick, true);
     };
-  }, [active]);
+  }, [active, message]);
 }

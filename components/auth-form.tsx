@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { verifyCode } from "@/app/auth/actions";
 import { emailPattern } from "@/lib/profile-rules";
@@ -87,13 +88,13 @@ export function AuthForm() {
 
       <p className="mt-6 text-center text-sm leading-relaxed text-muted">
         გაგრძელებით ეთანხმები{" "}
-        <span className="text-ink underline underline-offset-2">
+        <Link href="/terms" className="text-ink underline underline-offset-2">
           წესებსა
-        </span>{" "}
+        </Link>{" "}
         და{" "}
-        <span className="text-ink underline underline-offset-2">
+        <Link href="/privacy" className="text-ink underline underline-offset-2">
           კონფიდენციალურობის პოლიტიკას
-        </span>
+        </Link>
         .
       </p>
     </div>
