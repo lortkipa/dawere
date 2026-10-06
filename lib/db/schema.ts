@@ -42,6 +42,8 @@ export const users = pgTable(
     onboardedAt: timestamp({ withTimezone: true }),
     // Who can open /admin; see lib/admin.ts. Only signing in with SUPERADMIN_EMAIL makes a superadmin.
     role: text().$type<Role>().notNull().default("user"),
+    // Notifications after this are unread; opening /notifications moves it forward.
+    notificationsSeenAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -160,7 +162,12 @@ export const comments = pgTable(
     deletedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index().on(table.postId, table.createdAt), index().on(table.parentId)],
+  (table) => [
+    index().on(table.postId, table.createdAt),
+    index().on(table.parentId),
+    // Finds a reader's own comments, for replies and likes in their notifications.
+    index().on(table.userId),
+  ],
 );
 
 export const commentLikes = pgTable(

@@ -6,6 +6,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -37,6 +38,8 @@ type Thread = {
   setOpen: (id: string, open: boolean) => void;
   replyingTo: string | null;
   setReplyingTo: (id: string | null) => void;
+  // The comment a #c-<id> link pointed at, highlighted for a moment.
+  target: string | null;
 };
 
 const ThreadContext = createContext<Thread | null>(null);
@@ -61,6 +64,16 @@ function rank(comments: CommentNode[], sort: Sort) {
 
 function score(comment: CommentNode) {
   return comment.likes + comment.replyCount;
+}
+
+// The comments from the top of the list down to `id`, as they are shown, or null if it isn't there.
+function pathTo(comments: CommentNode[], id: string): string[] | null {
+  for (const comment of comments) {
+    if (comment.id === id) return [id];
+    const below = pathTo(comment.replies, id);
+    if (below) return [comment.id, ...below];
+  }
+  return null;
 }
 
 // Open threads and the open reply box live here, keyed by comment id, so they survive the
@@ -91,6 +104,36 @@ export function Comments({
     ];
   }, [comments, order]);
 
+  // A notification links to /@handle/post#c-<id>: open the threads the comment is in, then bring it
+  // into view. Only once per visit, not when a new comment refreshes the list.
+  const [target, setTarget] = useState<string | null>(null);
+  const linked = useRef(false);
+  useEffect(() => {
+    if (linked.current) return;
+    const id = window.location.hash.startsWith("#c-") ? window.location.hash.slice(3) : "";
+    const path = id ? pathTo(comments, id) : null;
+    if (!path) return;
+    // After the first paint, so the server-rendered list hydrates as it was.
+    const frame = requestAnimationFrame(() => {
+      linked.current = true;
+      setOpenIds((current) => new Set([...current, ...path.slice(0, -1)]));
+      setTarget(id);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [comments]);
+
+  useEffect(() => {
+    if (!target) return;
+    const frame = requestAnimationFrame(() =>
+      document.getElementById(`c-${target}`)?.scrollIntoView({ block: "center" }),
+    );
+    const timer = setTimeout(() => setTarget(null), 2500);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [target]);
+
   const changeSort = (value: Sort) => {
     setSort(value);
     setOrder(rank(comments, value));
@@ -109,7 +152,7 @@ export function Comments({
   );
 
   return (
-    <ThreadContext value={{ postId, viewer, isOpen: (id) => open.has(id), setOpen, replyingTo, setReplyingTo }}>
+    <ThreadContext value={{ postId, viewer, isOpen: (id) => open.has(id), setOpen, replyingTo, setReplyingTo, target }}>
       <section id="comments" className="mt-10 scroll-mt-20">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <h2 className="text-lg font-bold">{total ? `${total} კომენტარი` : "კომენტარები"}</h2>
@@ -206,12 +249,19 @@ function CommentRow({
   holderId: string;
   stem: boolean;
 }) {
-  const { viewer, replyingTo, setReplyingTo } = useThread();
+  const { viewer, replyingTo, setReplyingTo, target } = useThread();
   const style = levels[level];
   const { author } = comment;
 
   return (
-    <div className="relative flex gap-3">
+    <div
+      id={`c-${comment.id}`}
+      className={`relative flex scroll-mt-20 gap-3 ${
+        target === comment.id
+          ? "isolate before:pointer-events-none before:absolute before:-inset-x-2 before:-inset-y-1 before:-z-10 before:animate-flash before:rounded-xl before:bg-hover"
+          : ""
+      }`}
+    >
       {stem && <span aria-hidden="true" className={`absolute bottom-0 border-l border-thread ${style.stem}`} />}
 
       {author ? (

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { authUrl } from "@/lib/return-to";
 import { Button } from "./button";
 import { Logo } from "./logo";
+import { NotificationBell } from "./notification-bell";
 import { SearchBox } from "./search-box";
 import { UserMenu, type MenuUser } from "./user-menu";
 
@@ -61,6 +62,7 @@ export function Header({
                 დაწერე
               </Button>
             )}
+            <NotificationBell />
             <UserMenu user={user} />
           </div>
         )}

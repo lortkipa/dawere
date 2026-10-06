@@ -52,3 +52,25 @@ export function FeedSkeleton({ count = 3 }: { count?: number }) {
     </Loading>
   );
 }
+
+// Mirrors a row of /notifications: avatar, name, what happened and the time.
+export function NotificationSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <Loading>
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          className="flex animate-rise gap-3 py-3"
+          style={{ animationDelay: `${index * 120}ms` }}
+        >
+          <Bone className="size-10 rounded-full" />
+          <div className="min-w-0 flex-1">
+            <Bone className="h-4 w-32" />
+            <Bone className={`mt-2 h-4 ${titleWidths[index % 3]}`} />
+            <Bone className="mt-2 h-3.5 w-16" />
+          </div>
+        </div>
+      ))}
+    </Loading>
+  );
+}

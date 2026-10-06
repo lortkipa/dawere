@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "notifications_seen_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+CREATE INDEX "comments_user_id_index" ON "comments" USING btree ("user_id");
