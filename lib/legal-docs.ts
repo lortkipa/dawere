@@ -1,10 +1,12 @@
-// The two documents everyone agrees to on /auth. Each one's URL is its key.
-export const legalDocs = ["terms", "privacy"] as const;
+// The site's public documents, edited on /admin/legal. Each one's URL is its key. Everyone agrees
+// to the terms and the privacy policy on /auth; the help page is only for reading.
+export const legalDocs = ["terms", "privacy", "help"] as const;
 export type LegalDoc = (typeof legalDocs)[number];
 
 export const legalNames: Record<LegalDoc, string> = {
   terms: "გამოყენების წესები",
   privacy: "კონფიდენციალურობის პოლიტიკა",
+  help: "დახმარება",
 };
 
 export function isLegalDoc(value: string): value is LegalDoc {

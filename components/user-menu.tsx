@@ -46,8 +46,7 @@ export function UserMenu({ user }: { user: MenuUser }) {
               ადმინი
             </MenuItem>
           )}
-          {/* The help page doesn't exist yet; this only closes the menu. */}
-          <MenuItem icon={<HelpIcon />} onClick={close}>
+          <MenuItem icon={<HelpIcon />} href="/help" onClick={close}>
             დახმარება
           </MenuItem>
 

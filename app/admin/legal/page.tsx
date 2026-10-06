@@ -17,7 +17,7 @@ export default async function AdminLegal() {
   return (
     <div className="flex flex-col gap-5">
       <PageTitle title="დოკუმენტები" />
-      <p className="-mt-2 text-[15px] text-muted">რეგისტრაციისას ყველა ამ დოკუმენტს ეთანხმება.</p>
+      <p className="-mt-2 text-[15px] text-muted">წესებს და კონფიდენციალურობის პოლიტიკას რეგისტრაციისას ეთანხმებიან.</p>
       <Table fit>
         <thead>
           <tr>

@@ -17,7 +17,8 @@ export type DialogArtName =
   | "comment"
   | "ban"
   | "report"
-  | "export";
+  | "export"
+  | "help";
 
 const paper = { fill: "#fff", stroke: "#dededa", strokeWidth: 1.2 };
 const textLine = { fill: "none", stroke: "#e2e2df", strokeWidth: 4, strokeLinecap: "round" } as const;
@@ -247,6 +248,26 @@ const arts: Record<DialogArtName, ReactNode> = {
       <circle cx="134" cy="85" r="3" fill="#e5e8ff" />
       <circle cx="146" cy="85" r="3" fill="#e5e8ff" />
       <circle cx="158" cy="85" r="3" fill="#e5e8ff" />
+    </>
+  ),
+
+  // A page with a question mark beside it.
+  help: (
+    <>
+      <g transform="rotate(-6 104 68)">
+        <rect x="72" y="26" width="64" height="84" rx="6" {...paper} />
+        <path d="M82 42h44M82 52h44M82 62h30M82 72h38M82 82h24" {...textLine} strokeWidth="3" />
+      </g>
+      <circle cx="156" cy="64" r="22" fill="#7d86c4" />
+      <path
+        d="M149 58a7 7 0 1 1 10 6.3c-2 1-3 2.4-3 4.2v1.5"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="156" cy="77" r="2.3" fill="#fff" />
     </>
   ),
 };

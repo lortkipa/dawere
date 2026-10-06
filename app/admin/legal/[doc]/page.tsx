@@ -23,6 +23,9 @@ export default async function AdminLegalDoc({ params }: { params: Promise<{ doc:
             საიტზე ნახვა
           </Link>
         </div>
+        {doc === "help" && (
+          <p className="text-[15px] text-muted">თითოეული H2 სათაური დახმარების გვერდზე ცალკე თემად გამოჩნდება.</p>
+        )}
         {!current.saved && (
           <p className="text-[15px] text-muted">ახლა საწყისი ტექსტი ჩანს. პირველი შენახვის შემდეგ ის ისტორიაში გამოჩნდება.</p>
         )}
