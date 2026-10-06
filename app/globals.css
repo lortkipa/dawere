@@ -22,6 +22,8 @@
   --color-danger: light-dark(#dc2626, #f87171);
   --color-danger-soft: light-dark(#fef2f2, #3a1f1f);
   --color-error: light-dark(#d93025, #f28b82);
+  --color-warning: light-dark(#92400e, #fcd34d);
+  --color-warning-soft: light-dark(#fffbeb, #3a2e14);
   --color-avatar-bg: light-dark(#e4e6eb, #3a3b3c);
   --color-avatar-fg: light-dark(#bcc0c4, #626568);
 

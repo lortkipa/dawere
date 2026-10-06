@@ -203,12 +203,34 @@ function HandleDialog({ current, host, onClose }: { current: string; host: strin
           )
         }
       >
+        <div role="note" className="mb-4 flex gap-3 rounded-xl border border-warning/25 bg-warning-soft p-4 text-sm">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-0.5 size-5 shrink-0 text-warning"
+          >
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+          </svg>
+          <div className="min-w-0">
+            <p className="font-semibold text-warning">ძველი ბმულები აღარ იმუშავებს</p>
+            <p className="mt-1 text-ink/80">
+              პროფილისა და ბლოგების მისამართები შეიცვლება, ამიტომ ძველი სახელით გაზიარებული ბმულები აღარ გაიხსნება.
+            </p>
+          </div>
+        </div>
         <div className="relative">
           <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-muted">
             @
           </span>
           <TextInput
-              autoCapitalize="none"
+            autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
             aria-label="მომხმარებლის სახელი"
