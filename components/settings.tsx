@@ -30,7 +30,7 @@ import { avatarUrl } from "@/lib/user-view";
 import { Avatar } from "./avatar";
 import { Button } from "./button";
 import { Chip } from "./chip";
-import { Dialog } from "./dialog";
+import { Dialog, DialogFooter } from "./dialog";
 import { EditForm, errorClass } from "./edit-form";
 import { headingClasses } from "./heading";
 import { TextInput } from "./text-input";
@@ -45,7 +45,7 @@ export type SettingsUser = {
   favoritesPublic: boolean;
 };
 
-type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "favorites" | "theme" | "delete";
+type Field = "email" | "handle" | "name" | "avatar" | "bio" | "topics" | "favorites" | "theme" | "export" | "delete";
 
 export function Settings({
   user,
@@ -95,7 +95,8 @@ export function Settings({
         </Row>
       </div>
 
-      <div className="mt-4 border-t border-line pt-4">
+      <div className="mt-4 flex flex-col border-t border-line pt-4">
+        <Row label="მონაცემების ჩამოტვირთვა" onClick={() => setEditing("export")} />
         <Row label="ანგარიშის წაშლა" danger onClick={() => setEditing("delete")} />
       </div>
 
@@ -107,6 +108,7 @@ export function Settings({
       {editing === "topics" && <TopicsDialog current={user.topics} topics={topics} onClose={close} />}
       {editing === "favorites" && <FavoritesDialog current={user.favoritesPublic} onClose={close} />}
       {editing === "theme" && <ThemeDialog current={theme} onClose={close} />}
+      {editing === "export" && <ExportDialog onClose={close} />}
       {editing === "delete" && <DeleteDialog onClose={close} />}
     </div>
   );
@@ -454,6 +456,31 @@ function ThemeDialog({ current, onClose }: { current: Theme; onClose: () => void
           ))}
         </div>
       </EditForm>
+    </Dialog>
+  );
+}
+
+function ExportDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <Dialog title="მონაცემების ჩამოტვირთვა" art="export" onClose={onClose}>
+      <p className="text-muted">
+        მიიღებ JSON ფაილს, რომელშიც შენი პროფილი, ბლოგები, კომენტარები, მოწონებები, რჩეულები, გამოწერები და AI
+        საუბრებია.
+      </p>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
+          გაუქმება
+        </Button>
+        {/* A plain link, so the browser saves the file the route sends rather than navigating. */}
+        <a
+          href="/settings/export"
+          download
+          onClick={onClose}
+          className="inline-flex h-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-lg bg-accent px-4 text-[15px] font-medium text-white shadow-sm transition-colors hover:bg-accent-hover"
+        >
+          ჩამოტვირთვა
+        </a>
+      </DialogFooter>
     </Dialog>
   );
 }

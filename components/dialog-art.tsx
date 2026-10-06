@@ -16,7 +16,8 @@ export type DialogArtName =
   | "signout"
   | "comment"
   | "ban"
-  | "report";
+  | "report"
+  | "export";
 
 const paper = { fill: "#fff", stroke: "#dededa", strokeWidth: 1.2 };
 const textLine = { fill: "none", stroke: "#e2e2df", strokeWidth: 4, strokeLinecap: "round" } as const;
@@ -88,6 +89,20 @@ const arts: Record<DialogArtName, ReactNode> = {
         <rect x="88" y="44" width="64" height="9" rx="3.5" fill="#5f68a8" />
         <rect x="111" y="37" width="18" height="9" rx="3.5" fill="none" stroke="#5f68a8" strokeWidth="3.5" />
       </g>
+    </>
+  ),
+
+  // A page dropping into an open box, with a download arrow.
+  export: (
+    <>
+      <g transform="rotate(-6 120 48)">
+        <rect x="94" y="16" width="52" height="64" rx="4" {...paper} />
+        <path d="M103 28h34M103 37h34M103 46h22" {...textLine} strokeWidth="3" />
+      </g>
+      <path d="M72 70h96l-8 40a6 6 0 0 1-6 5H86a6 6 0 0 1-6-5z" fill="#7d86c4" />
+      <path d="M72 70l12-12h72l12 12" fill="#6a73b5" />
+      <circle cx="162" cy="50" r="13" fill="#f2c94c" />
+      <path d="M162 43v13M156.5 51l5.5 5.5 5.5-5.5" fill="none" stroke="#8a5a3b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </>
   ),
 
