@@ -97,7 +97,7 @@ export function Profile({
   );
 }
 
-function Tab({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
+export function Tab({ href, active, children }: { href: string; active: boolean; children: ReactNode }) {
   return (
     <Link
       href={href}

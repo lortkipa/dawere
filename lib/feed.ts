@@ -29,11 +29,11 @@ export type FeedPost = {
 };
 
 // Cursors are opaque to the browser: base64url JSON, checked field by field on the way back.
-function encodeCursor(value: object) {
+export function encodeCursor(value: object) {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
-function decodeCursor(cursor: string | null): Record<string, unknown> | null {
+export function decodeCursor(cursor: string | null): Record<string, unknown> | null {
   if (!cursor) return null;
   try {
     const value = JSON.parse(Buffer.from(cursor, "base64url").toString());
@@ -43,10 +43,10 @@ function decodeCursor(cursor: string | null): Record<string, unknown> | null {
   }
 }
 
-const postId = /^[0-9a-f]{12}$/;
+export const postId = /^[0-9a-f]{12}$/;
 const visitSeed = /^[0-9a-f]{16}$/;
 // How Postgres prints a timestamptz: "2026-10-04 09:15:02.123456+04".
-const pgTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}(:\d{2})?$/;
+export const pgTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?[+-]\d{2}(:\d{2})?$/;
 
 function floatArray(values: number[]) {
   return values.length
@@ -71,7 +71,7 @@ const commentCount = sql<number>`(select count(*) from comments c join users cu 
 const likeCount = sql<number>`(select count(*) from post_likes pl where pl.post_id = ${posts.id})::int`;
 
 // What a post card shows, the same on the home feed and on profiles.
-function cardFields(viewerId: string | null) {
+export function cardFields(viewerId: string | null) {
   return {
     id: posts.id,
     title: posts.title,
@@ -113,7 +113,7 @@ type CardRow = {
   favorited: boolean;
 };
 
-function toFeedPost(row: CardRow, now: Date): FeedPost {
+export function toFeedPost(row: CardRow, now: Date): FeedPost {
   return {
     id: row.id,
     href: `/@${row.handle}/${row.id}`,

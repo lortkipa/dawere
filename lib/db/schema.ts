@@ -8,40 +8,48 @@ import type { Theme } from "../theme-options";
 export const roles = ["user", "admin", "superadmin"] as const;
 export type Role = (typeof roles)[number];
 
-export const users = pgTable("users", {
-  id: uuid().primaryKey().defaultRandom(),
-  email: text().notNull().unique(),
-  // Random until users can pick their own. A volatile default also backfills existing rows.
-  handle: text()
-    .notNull()
-    .unique()
-    .default(sql`substr(md5(random()::text), 1, 10)`),
-  name: text(),
-  bio: text(),
-  // File name under UPLOAD_DIR/avatars; a new upload always gets a new name.
-  avatar: text(),
-  topics: text().array(),
-  // When the reader last picked topics by hand; automatic removals wait a while after that.
-  topicsEditedAt: timestamp({ withTimezone: true }),
-  // When lib/interests.ts last changed the topics, so it changes them at most once a day.
-  topicsTunedAt: timestamp({ withTimezone: true }),
-  // Topics the reader removed by hand, which are never added back automatically.
-  dismissedTopics: text()
-    .array()
-    .notNull()
-    .default(sql`'{}'`),
-  referral: text(),
-  // What the user typed when they picked "other" as the referral.
-  referralOther: text(),
-  // Whether other people can open the favorites tab on this user's profile.
-  favoritesPublic: boolean().notNull().default(true),
-  // "system" follows the device's own light or dark setting.
-  theme: text().$type<Theme>().notNull().default("system"),
-  onboardedAt: timestamp({ withTimezone: true }),
-  // Who can open /admin; see lib/admin.ts. Only signing in with SUPERADMIN_EMAIL makes a superadmin.
-  role: text().$type<Role>().notNull().default("user"),
-  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    email: text().notNull().unique(),
+    // Random until users can pick their own. A volatile default also backfills existing rows.
+    handle: text()
+      .notNull()
+      .unique()
+      .default(sql`substr(md5(random()::text), 1, 10)`),
+    name: text(),
+    bio: text(),
+    // File name under UPLOAD_DIR/avatars; a new upload always gets a new name.
+    avatar: text(),
+    topics: text().array(),
+    // When the reader last picked topics by hand; automatic removals wait a while after that.
+    topicsEditedAt: timestamp({ withTimezone: true }),
+    // When lib/interests.ts last changed the topics, so it changes them at most once a day.
+    topicsTunedAt: timestamp({ withTimezone: true }),
+    // Topics the reader removed by hand, which are never added back automatically.
+    dismissedTopics: text()
+      .array()
+      .notNull()
+      .default(sql`'{}'`),
+    referral: text(),
+    // What the user typed when they picked "other" as the referral.
+    referralOther: text(),
+    // Whether other people can open the favorites tab on this user's profile.
+    favoritesPublic: boolean().notNull().default(true),
+    // "system" follows the device's own light or dark setting.
+    theme: text().$type<Theme>().notNull().default("system"),
+    onboardedAt: timestamp({ withTimezone: true }),
+    // Who can open /admin; see lib/admin.ts. Only signing in with SUPERADMIN_EMAIL makes a superadmin.
+    role: text().$type<Role>().notNull().default("user"),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Trigram indexes, so search's `ilike '%word%'` (lib/search.ts) doesn't read every row.
+    index("users_name_trgm_index").using("gin", sql`${table.name} gin_trgm_ops`),
+    index("users_handle_trgm_index").using("gin", sql`${table.handle} gin_trgm_ops`),
+  ],
+);
 
 export const sessions = pgTable("sessions", {
   // sha256 hex of the token in the cookie, so a leaked table can't sign anyone in.
@@ -83,6 +91,9 @@ export const posts = pgTable(
     index().on(table.userId, table.createdAt.desc()),
     // Matches posts against a reader's topics with `&&`.
     index().using("gin", table.tags),
+    // For search, as on users.
+    index("posts_title_trgm_index").using("gin", sql`${table.title} gin_trgm_ops`),
+    index("posts_description_trgm_index").using("gin", sql`${table.description} gin_trgm_ops`),
   ],
 );
 

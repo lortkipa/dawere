@@ -5,9 +5,19 @@ import { useEffect, useState } from "react";
 import { authUrl } from "@/lib/return-to";
 import { Button } from "./button";
 import { Logo } from "./logo";
+import { SearchBox } from "./search-box";
 import { UserMenu, type MenuUser } from "./user-menu";
 
-export function Header({ bare = false, user }: { bare?: boolean; user?: MenuUser }) {
+export function Header({
+  bare = false,
+  user,
+  query,
+}: {
+  bare?: boolean;
+  user?: MenuUser;
+  // What /search is showing, so the search box opens with it.
+  query?: string;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const writing = pathname === "/write";
@@ -29,10 +39,11 @@ export function Header({ bare = false, user }: { bare?: boolean; user?: MenuUser
           : "border-transparent bg-transparent in-data-chat-open:border-line! in-data-chat-open:bg-bg!"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="relative mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo />
         {!bare && user && (
           <div className="flex items-center gap-2 sm:gap-3">
+            {!writing && <SearchBox key={query} initialQuery={query} />}
             {!writing && (
               <Button variant="ghost" href="/write" className="gap-2 px-3">
                 <svg
@@ -55,6 +66,7 @@ export function Header({ bare = false, user }: { bare?: boolean; user?: MenuUser
         )}
         {!bare && !user && (
           <div className="flex items-center gap-1 sm:gap-2">
+            <SearchBox key={query} initialQuery={query} />
             <Button variant="ghost" href={signIn}>
               შესვლა
             </Button>
