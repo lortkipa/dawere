@@ -20,7 +20,7 @@ export function Hero() {
           <Button size="lg" href="/auth">
             დაიწყე წერა
           </Button>
-          <Button size="lg" variant="secondary">
+          <Button size="lg" variant="secondary" href="/feed">
             წაიკითხე ბლოგები
           </Button>
         </div>

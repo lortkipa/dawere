@@ -26,8 +26,8 @@ const feedClass = "mx-auto max-w-2xl px-4 pb-16 pt-4 sm:px-6";
 // Posts per page, as feedPageSize in lib/feed.ts. Pages far from the screen leave the page.
 const step = 25;
 
-// The home feed: every post but the reader's own.
-export function Feed({ first, viewerId }: { first: Page<FeedPost>; viewerId: string }) {
+// The home feed: every post but the reader's own. Signed-out readers see it at /feed.
+export function Feed({ first, viewerId }: { first: Page<FeedPost>; viewerId?: string }) {
   return (
     <div className={feedClass}>
       <PostList
@@ -106,7 +106,7 @@ export function PostList({
     endpoint,
     step,
   );
-  const seenRef = useSeen();
+  const seenRef = useSeen(Boolean(viewerId));
   // Follows changed during this visit, by author id. They apply to every card by that author.
   const [follows, setFollows] = useState<Map<string, boolean>>(() => new Map());
   // Likes and favorites changed during this visit, by post id.

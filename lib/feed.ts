@@ -143,16 +143,19 @@ function toFeedPost(row: CardRow, now: Date): FeedPost {
 // leads with what they haven't seen; on a small site the seen ones still follow. A ±20% shuffle,
 // seeded per visit, keeps close scores from always coming out in the same order.
 //
+// Signed-out readers get the same list with only freshness and the shuffle: no topics, follows,
+// learned tags or views.
+//
 // The first page fixes `asOf` and the seed, and every later page scores against them (views from
 // before `asOf` only), so the order can't shift while the reader scrolls. Posts published since
 // then wait for the next visit.
-export async function getFeedPage(viewer: User, cursor: string | null): Promise<Page<FeedPost>> {
+export async function getFeedPage(viewer: User | null, cursor: string | null): Promise<Page<FeedPost>> {
   const after = decodeCursor(cursor);
   if (cursor && !after) return { items: [], next: null };
   let asOf = new Date();
   let seed = randomBytes(8).toString("hex");
   let learned: Record<string, number>;
-  let topics = viewer.topics ?? [];
+  let topics = viewer?.topics ?? [];
   let keyset: SQL | undefined;
 
   if (after) {
@@ -169,19 +172,25 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
     asOf = date;
     seed = String(after.seed);
     learned = after.learned;
-  } else {
+  } else if (viewer) {
     const interests = await getInterests(viewer.id, asOf);
     topics = await tuneTopics(viewer, interests, asOf);
     learned = learnedWeights(interests);
+  } else {
+    learned = {};
   }
 
-  const followed = sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewer.id} and f.following_id = ${posts.userId})`;
+  const followed = viewer
+    ? sql<boolean>`exists (select 1 from follows f where f.follower_id = ${viewer.id} and f.following_id = ${posts.userId})`
+    : sql<boolean>`false`;
   const inTopics = sql`${posts.tags} && ${textArray(topics)}`;
   const learnedBoost = sql`least(3, coalesce((select sum(l.weight) from unnest(${textArray(Object.keys(learned))}, ${floatArray(Object.values(learned))}) as l(tag, weight) where l.tag = any(${posts.tags})), 0) / 2)`;
 
   const at = sql`${asOf.toISOString()}::timestamptz`;
   const ageInDays = sql`extract(epoch from (${at} - ${posts.createdAt})) / 86400`;
-  const seenFactor = sql`coalesce((select case when pv.opened_at < ${at} then 0.05 when pv.seen_at < ${at} then 0.25 else 1 end from post_views pv where pv.user_id = ${viewer.id} and pv.post_id = ${posts.id}), 1)`;
+  const seenFactor = viewer
+    ? sql`coalesce((select case when pv.opened_at < ${at} then 0.05 when pv.seen_at < ${at} then 0.25 else 1 end from post_views pv where pv.user_id = ${viewer.id} and pv.post_id = ${posts.id}), 1)`
+    : sql`1`;
   // 0.8–1.2, from the first 32 bits of md5(id + seed).
   const shuffle = sql`(0.8 + 0.4 * ('x' || substr(md5(${posts.id} || ${seed}), 1, 8))::bit(32)::bigint / 4294967296.0)`;
   // float8, so the score survives the trip through the cursor exactly.
@@ -195,10 +204,10 @@ export async function getFeedPage(viewer: User, cursor: string | null): Promise<
   }
 
   const rows = await db
-    .select({ ...cardFields(viewer.id), score })
+    .select({ ...cardFields(viewer?.id ?? null), score })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.userId))
-    .where(and(ne(posts.userId, viewer.id), lte(posts.createdAt, asOf), notBanned, keyset))
+    .where(and(viewer ? ne(posts.userId, viewer.id) : undefined, lte(posts.createdAt, asOf), notBanned, keyset))
     .orderBy(desc(score), desc(posts.id))
     .limit(feedPageSize + 1);
 

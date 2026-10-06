@@ -7,8 +7,9 @@ const dwellMs = 1000;
 const flushMs = 4000;
 
 // Reports feed cards the reader actually had on screen to /api/seen, in batches. Returns a ref
-// callback for each card; the card's element needs a `data-post-id`.
-export function useSeen() {
+// callback for each card; the card's element needs a `data-post-id`. Signed-out readers have
+// nothing to record, so `enabled` is false for them.
+export function useSeen(enabled = true) {
   const queue = useRef(new Set<string>());
   const reported = useRef(new Set<string>());
   const timers = useRef(new Map<string, number>());
@@ -32,6 +33,7 @@ export function useSeen() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     const pending = timers.current;
     observer.current = new IntersectionObserver(
       (entries) => {
@@ -70,7 +72,7 @@ export function useSeen() {
       window.removeEventListener("pagehide", onHide);
       flush(true);
     };
-  }, [flush]);
+  }, [enabled, flush]);
 
   return useCallback((element: HTMLElement | null) => {
     if (!element) return;
