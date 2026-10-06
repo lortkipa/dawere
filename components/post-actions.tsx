@@ -4,6 +4,7 @@ import { setPostLike } from "@/app/likes/actions";
 import { formatCount } from "@/lib/format-count";
 import { FavoriteButton, useFavorite } from "./favorite-button";
 import { actionClass, LikeButton, useLike } from "./like-button";
+import { ShareButton } from "./share-button";
 
 export function PostActions({
   postId,
@@ -12,6 +13,8 @@ export function PostActions({
   likes,
   favorited: storedFavorited,
   comments,
+  path,
+  title,
 }: {
   postId: string;
   signedIn: boolean;
@@ -19,6 +22,8 @@ export function PostActions({
   likes: number;
   favorited: boolean;
   comments: number;
+  path: string;
+  title: string;
 }) {
   const [like, toggle] = useLike(liked, likes, (value) => setPostLike(postId, value));
   const [favorited, toggleFavorite] = useFavorite(postId, storedFavorited);
@@ -45,6 +50,7 @@ export function PostActions({
         {comments > 0 && <span className="text-sm tabular-nums">{formatCount(comments)}</span>}
       </a>
       <FavoriteButton signedIn={signedIn} favorited={favorited} onToggle={toggleFavorite} />
+      <ShareButton path={path} title={title} />
     </div>
   );
 }

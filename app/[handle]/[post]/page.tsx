@@ -111,6 +111,8 @@ export default async function PostPage({ params }: Props) {
             likes={likes.count}
             favorited={favorited}
             comments={thread.total}
+            path={`/@${author.handle}/${post.id}`}
+            title={post.title}
           />
           <Comments
             postId={post.id}
