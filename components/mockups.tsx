@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
+import { Avatar } from "./avatar";
+import { SearchIcon } from "./search-box";
 
 /*
   Static pictures of the product built in HTML. `inert` + select-none make them behave
@@ -9,13 +11,14 @@ import type { ReactNode } from "react";
 
 const article = {
   title: "რა არის dawere",
+  description: "ქართული ბლოგების პლატფორმა და ჩატი, რომელიც სტატიის შესახებ კითხვებს პასუხობს.",
   author: "dawere გუნდი",
   initial: "d",
-  minutes: "2 წუთის საკითხავი",
+  date: "2 ოქტომბერი, 2026",
   intro:
     "dawere ქართული ბლოგების პლატფორმაა. აქ ნებისმიერს შეუძლია დაწეროს სტატია და წაიკითხოს სხვების ნაწერი.",
+  chat: "ყველა სტატიას აქვს ჩატი, სადაც ხელოვნურ ინტელექტს შეგიძლია ჰკითხო ის, რაც ტექსტში გაუგებარია. პასუხს სტატიის გვერდიდან გაუსვლელად მიიღებ.",
   highlight: "ყველა სტატიას აქვს ჩატი, სადაც ხელოვნურ ინტელექტს შეგიძლია ჰკითხო ის, რაც ტექსტში გაუგებარია.",
-  afterHighlight: " პასუხს სტატიის გვერდიდან გაუსვლელად მიიღებ.",
   account: "სტატიის დასაწერად ანგარიში გჭირდება. შეგიძლია შეხვიდე ელფოსტით, Google-ით ან Facebook-ით.",
   startHeading: "როგორ დავიწყო?",
   start: "დააჭირე ღილაკს „დაიწყე წერა“, შექმენი ანგარიში და დაწერე პირველი სტატია.",
@@ -46,38 +49,38 @@ function Mock({ className, children }: { className: string; children: ReactNode 
   );
 }
 
-/* Hero, desktop: article with the AI panel docked beside it. */
+/*
+  Hero, desktop: a signed-in reader on a post page with the chat docked beside it, as the real
+  page looks (Header, PostByline, AskAi), at about 70% scale.
+*/
 export function ReadingDesktopMock() {
   return (
     <Mock className="absolute inset-0 flex flex-col bg-bg text-ink">
-      <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-5">
-        <span className="text-[15px] font-extrabold tracking-tight">dawere</span>
-        <Avatar initial="ლ" tone="bg-[color:light-dark(#e4e2ee,#35334a)]" />
-      </div>
+      <SiteHeader />
       <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 overflow-hidden px-6 pt-7 lg:px-12 lg:pt-10">
+        <div className="min-w-0 flex-1 overflow-hidden px-6 pt-7 lg:px-12 lg:pt-8">
           <div className="mx-auto max-w-[480px]">
-            <ArticleHead />
-            <div className="mt-5 space-y-3 text-[13px] leading-relaxed lg:space-y-4 lg:text-[14.5px]">
+            <p className="text-[22px] leading-tight font-extrabold tracking-[-0.015em] lg:text-[26px]">{article.title}</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-muted lg:text-[14px]">{article.description}</p>
+            <Byline />
+            <div className="mt-5 space-y-3 text-[13px] leading-[1.75] lg:space-y-3.5 lg:text-[13.5px]">
               <p>{article.intro}</p>
-              <p>
-                <span className="box-decoration-clone rounded-sm bg-accent-soft">{article.highlight}</span>
-                {article.afterHighlight}
+              <p>{article.chat}</p>
+              <p className="pt-1 text-[16px] leading-[1.3] font-extrabold tracking-[-0.01em] lg:text-[18px]">
+                {article.startHeading}
               </p>
-              <p>{article.account}</p>
-              <p className="pt-2 text-[15px] font-bold lg:text-[17px]">{article.startHeading}</p>
               <p>{article.start}</p>
             </div>
           </div>
         </div>
         <div className="flex w-[38%] shrink-0 flex-col border-l border-line">
           <PanelHeader />
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 pt-1 pb-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-hidden px-4 pt-1 pb-4">
             {sampleChat.map((m) => (
-              <div key={m.question} className="flex flex-col gap-3">
+              <Fragment key={m.question}>
                 <Question>{m.question}</Question>
                 <Answer>{m.answer}</Answer>
-              </div>
+              </Fragment>
             ))}
           </div>
           <div className="shrink-0 px-4 pb-4">
@@ -89,35 +92,34 @@ export function ReadingDesktopMock() {
   );
 }
 
-/* Hero, phone: the same article with the chat as a bottom sheet. */
+/* Hero, phone: the same page with the chat open as a bottom sheet over the dimmed post. */
 export function ReadingPhoneMock() {
   return (
-    <Mock className="absolute inset-0 bg-bg text-ink">
-      <div className="px-4 pt-12">
-        <div className="flex items-center gap-2 text-muted">
-          <ChevronLeft />
-          <span className="text-[13px] font-extrabold tracking-tight text-ink">dawere</span>
+    <Mock className="absolute inset-0 flex flex-col bg-bg pt-11 text-ink">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <SiteHeader small />
+        <div className="px-3 pt-4">
+          <p className="text-[19px] leading-tight font-extrabold tracking-[-0.015em]">{article.title}</p>
+          <p className="mt-2 text-[11.5px] leading-relaxed text-muted">{article.description}</p>
+          <Byline small />
         </div>
-        <p className="mt-4 text-[17px] leading-snug font-extrabold">{article.title}</p>
-        <Byline small />
-        <p className="mt-3 text-[11.5px] leading-relaxed">{article.intro}</p>
-      </div>
-      <div className="absolute inset-x-0 bottom-0 flex h-[58%] flex-col rounded-t-[1.25rem] border-t border-line bg-bg px-4 pt-2 shadow-[0_-12px_30px_-14px_rgba(17,17,17,0.25)]">
-        <span className="mx-auto h-1 w-9 rounded-full bg-line" />
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[12px] font-semibold">ჰკითხე სტატიას</span>
-          <Close />
-        </div>
-        <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden text-[11.5px]">
-          {sampleChat.slice(0, 1).map((m) => (
-            <div key={m.question} className="flex flex-col gap-2.5">
-              <Question small>{m.question}</Question>
-              <Answer small>{m.answer}</Answer>
-            </div>
-          ))}
-        </div>
-        <div className="pt-2 pb-6">
-          <ChatInput small />
+        <span className="absolute inset-x-0 top-10 bottom-0 bg-black/40" />
+        <div className="absolute inset-x-0 bottom-0 flex h-[85%] flex-col rounded-t-[1.1rem] bg-bg shadow-[0_-12px_30px_-14px_rgba(17,17,17,0.25)]">
+          <div className="flex h-3.5 shrink-0 items-end justify-center">
+            <span className="h-1 w-7 rounded-full bg-line" />
+          </div>
+          <PanelHeader small />
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-3 pt-0.5 text-[11.5px]">
+            {sampleChat.slice(0, 2).map((m) => (
+              <Fragment key={m.question}>
+                <Question small>{m.question}</Question>
+                <Answer small>{m.answer}</Answer>
+              </Fragment>
+            ))}
+          </div>
+          <div className="px-3 pt-1 pb-5">
+            <ChatInput small />
+          </div>
         </div>
       </div>
     </Mock>
@@ -177,7 +179,7 @@ export function FeedMock() {
         {posts.map((p) => (
           <div key={p.title} className="py-4">
             <div className="flex items-center gap-2 text-[12px] text-muted">
-              <Avatar initial={article.initial} tone="bg-[color:light-dark(#e9e4da,#3b362d)]" />
+              <InitialAvatar initial={article.initial} tone="bg-[color:light-dark(#e9e4da,#3b362d)]" />
               {article.author}
             </div>
             <p className="mt-2 text-[15px] leading-snug font-bold">{p.title}</p>
@@ -211,35 +213,67 @@ export function AskMock() {
   );
 }
 
-function ArticleHead() {
+/* The site header for a signed-in reader: logo, search, „დაწერე“, notifications and avatar. */
+function SiteHeader({ small }: { small?: boolean }) {
+  const icon = small ? "size-3.5" : "size-4";
   return (
-    <>
-      <p className="text-[22px] leading-snug font-extrabold lg:text-[26px]">{article.title}</p>
-      <Byline />
-    </>
-  );
-}
-
-function Byline({ small }: { small?: boolean }) {
-  return (
-    <div className={`flex items-center gap-2 text-muted ${small ? "mt-2.5 text-[10.5px]" : "mt-4 text-[12px]"}`}>
-      <Avatar initial={article.initial} tone="bg-[color:light-dark(#e9e4da,#3b362d)]" />
-      <span className="whitespace-nowrap text-ink">{article.author}</span>
-      {!small && (
-        <>
-          <span>·</span>
-          <span>{article.minutes}</span>
-        </>
-      )}
+    <div
+      className={`flex shrink-0 items-center justify-between border-b border-line bg-bg ${
+        small ? "relative z-10 h-10 px-3" : "h-11 px-5"
+      }`}
+    >
+      <span className={`font-extrabold tracking-tight ${small ? "text-[14px]" : "text-[15px]"}`}>dawere</span>
+      <div className={`flex items-center ${small ? "gap-1" : "gap-1.5"}`}>
+        <span className="grid size-7 place-items-center">
+          <SearchIcon className={icon} />
+        </span>
+        <span className={`flex items-center gap-1.5 px-2 font-medium ${small ? "text-[10.5px]" : "text-[11px]"}`}>
+          <PenIcon className={small ? "size-3" : "size-3.5"} />
+          დაწერე
+        </span>
+        <span className="grid size-7 place-items-center">
+          <BellIcon className={icon} />
+        </span>
+        <Avatar className={small ? "ml-0.5 size-5" : "ml-0.5 size-6"} />
+      </div>
     </div>
   );
 }
 
-function PanelHeader() {
+/* PostByline: avatar, name over date, the follow button, and the rule under it. */
+function Byline({ small }: { small?: boolean }) {
   return (
-    <div className="flex h-11 shrink-0 items-center justify-between px-4">
-      <span className="text-[13px] font-semibold">ჰკითხე სტატიას</span>
-      <Close />
+    <div className={`flex items-center border-b border-line ${small ? "mt-3 gap-2 pb-3" : "mt-4 gap-2.5 pb-4"}`}>
+      <Avatar className={small ? "size-7" : "size-8"} />
+      <div className="min-w-0 flex-1 leading-snug">
+        <p className={`truncate font-medium ${small ? "text-[11px]" : "text-[12.5px]"}`}>{article.author}</p>
+        <p className={`text-muted ${small ? "text-[10px]" : "text-[11px]"}`}>{article.date}</p>
+      </div>
+      <span
+        className={`rounded-md bg-accent font-medium text-white ${
+          small ? "px-2 py-1 text-[10px]" : "px-2.5 py-1 text-[11px]"
+        }`}
+      >
+        გამოწერა
+      </span>
+    </div>
+  );
+}
+
+/* The chat's title with the new-chat and close buttons, as the panel shows once a question is sent. */
+function PanelHeader({ small }: { small?: boolean }) {
+  const icon = small ? "size-3.5" : "size-4";
+  return (
+    <div className={`flex shrink-0 items-center justify-between ${small ? "h-9 pr-1.5 pl-3" : "h-11 pr-2 pl-4"}`}>
+      <span className={`font-semibold ${small ? "text-[12px]" : "text-[13px]"}`}>ჰკითხე სტატიას</span>
+      <div className="flex items-center gap-0.5 text-muted">
+        <span className="grid size-7 place-items-center">
+          <NewChatIcon className={icon} />
+        </span>
+        <span className="grid size-7 place-items-center">
+          <Close className={icon} />
+        </span>
+      </div>
     </div>
   );
 }
@@ -247,8 +281,8 @@ function PanelHeader() {
 function Question({ children, small }: { children: ReactNode; small?: boolean }) {
   return (
     <p
-      className={`ml-auto max-w-[85%] rounded-2xl rounded-br-md border border-line bg-surface ${
-        small ? "px-3 py-2" : "px-3.5 py-2.5 text-[12.5px]"
+      className={`ml-auto max-w-[85%] rounded-2xl rounded-br-md border border-line bg-surface leading-relaxed ${
+        small ? "px-3 py-2" : "px-3.5 py-2 text-[12.5px]"
       }`}
     >
       {children}
@@ -256,13 +290,9 @@ function Question({ children, small }: { children: ReactNode; small?: boolean })
   );
 }
 
+// The real chat's answers are plain text, without a label.
 function Answer({ children, small }: { children: ReactNode; small?: boolean }) {
-  return (
-    <div>
-      {!small && <AiLabel />}
-      <p className={`leading-relaxed ${small ? "" : "mt-1.5 text-[12.5px]"}`}>{children}</p>
-    </div>
-  );
+  return <p className={`leading-relaxed ${small ? "" : "text-[12.5px]"}`}>{children}</p>;
 }
 
 function AiLabel() {
@@ -285,7 +315,7 @@ export function SparkleIcon({ className }: { className: string }) {
 function ChatInput({ small }: { small?: boolean }) {
   return (
     <div
-      className={`flex items-center justify-between rounded-xl border border-line bg-bg text-muted ${
+      className={`flex items-center justify-between rounded-xl border border-line bg-bg text-faint ${
         small ? "h-8 pr-1 pl-3 text-[11px]" : "h-10 pr-1.5 pl-3.5 text-[13px]"
       }`}
     >
@@ -299,7 +329,7 @@ function ChatInput({ small }: { small?: boolean }) {
   );
 }
 
-function Avatar({ initial, tone }: { initial: string; tone: string }) {
+function InitialAvatar({ initial, tone }: { initial: string; tone: string }) {
   return (
     <span className={`grid size-6 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-ink ${tone}`}>
       {initial}
@@ -311,18 +341,35 @@ function ToolbarKey({ children, className = "" }: { children: ReactNode; classNa
   return <span className={`grid size-7 place-items-center rounded-md ${className}`}>{children}</span>;
 }
 
-function Close() {
+function Close({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 24 24" className="size-4 text-muted" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   );
 }
 
-function ChevronLeft() {
+function PenIcon({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m15 18-6-6 6-6" />
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  );
+}
+
+function BellIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </svg>
+  );
+}
+
+function NewChatIcon({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6" />
+      <path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z" />
     </svg>
   );
 }
