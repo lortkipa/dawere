@@ -13,6 +13,9 @@ export const users = pgTable(
   {
     id: uuid().primaryKey().defaultRandom(),
     email: text().notNull().unique(),
+    // The Facebook account this user signs in with, set on the first Facebook sign-in. Facebook
+    // often has no email to give (accounts made with a phone number), so the ID is what matches.
+    facebookId: text().unique(),
     // Random until users can pick their own. A volatile default also backfills existing rows.
     handle: text()
       .notNull()

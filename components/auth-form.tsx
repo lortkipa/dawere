@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { verifyCode } from "@/app/auth/actions";
@@ -14,10 +14,12 @@ const codeLength = 6;
 const emptyCode = Array<string>(codeLength).fill("");
 const resendCooldown = 60;
 
-// What /auth/google sends back in `?error=` when signing in with Google didn't work.
-const googleErrors: Record<string, string> = {
+// What /auth/google and /auth/facebook send back in `?error=` when signing in didn't work.
+const signInErrors: Record<string, string> = {
   google: "Google-ით შესვლა ვერ მოხერხდა. სცადე თავიდან.",
   "google-off": "Google-ით შესვლა ჯერ არ მუშაობს.",
+  facebook: "Facebook-ით შესვლა ვერ მოხერხდა. სცადე თავიდან.",
+  "facebook-off": "Facebook-ით შესვლა ჯერ არ მუშაობს.",
   banned: "ეს ანგარიში დაბლოკილია",
 };
 
@@ -27,7 +29,9 @@ export function AuthForm() {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("next");
-  const googleError = googleErrors[searchParams.get("error") ?? ""];
+  const signInError = signInErrors[searchParams.get("error") ?? ""];
+  // Back from Facebook without an email: only the email part is shown.
+  const facebookEmail = searchParams.get("facebook") === "email";
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,32 +51,38 @@ export function AuthForm() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h1 className={`mb-5 text-center ${headingClasses}`}>შესვლა ან რეგისტრაცია</h1>
+      {facebookEmail ? (
+        <>
+          <h1 className={`text-center ${headingClasses}`}>შეიყვანე ელფოსტა</h1>
+          <p className="mb-5 text-center text-[15px] leading-relaxed text-muted">
+            Facebook-მა შენი ელფოსტა არ გადმოგვცა. შეიყვანე ის და კოდს გამოგიგზავნით.
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className={`mb-5 text-center ${headingClasses}`}>შესვლა ან რეგისტრაცია</h1>
 
-      {/* A plain link: the route redirects to Google, which a client-side navigation can't follow. */}
-      <a
-        href={returnTo ? `/auth/google?next=${encodeURIComponent(returnTo)}` : "/auth/google"}
-        className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-lg border border-line bg-bg px-6 text-base font-medium text-ink transition-colors hover:bg-surface"
-      >
-        <GoogleIcon />
-        Google-ით გაგრძელება
-      </a>
-      {/* Links to /auth/facebook once that exists. */}
-      <Button variant="outline" size="lg" className="w-full gap-3">
-        <FacebookIcon />
-        Facebook-ით გაგრძელება
-      </Button>
-      {googleError && (
-        <p role="alert" className="text-center text-sm text-error">
-          {googleError}
-        </p>
+          <ProviderLink provider="google" returnTo={returnTo}>
+            <GoogleIcon />
+            Google-ით გაგრძელება
+          </ProviderLink>
+          <ProviderLink provider="facebook" returnTo={returnTo}>
+            <FacebookIcon />
+            Facebook-ით გაგრძელება
+          </ProviderLink>
+          {signInError && (
+            <p role="alert" className="text-center text-sm text-error">
+              {signInError}
+            </p>
+          )}
+
+          <div className="my-3 flex items-center gap-4 text-sm text-muted">
+            <span className="h-px flex-1 bg-line" />
+            ან
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
       )}
-
-      <div className="my-3 flex items-center gap-4 text-sm text-muted">
-        <span className="h-px flex-1 bg-line" />
-        ან
-        <span className="h-px flex-1 bg-line" />
-      </div>
 
       <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="flex flex-col gap-2">
@@ -120,13 +130,35 @@ export function AuthForm() {
   );
 }
 
+// A plain link: the route redirects to Google or Facebook, which a client-side navigation can't follow.
+function ProviderLink({
+  provider,
+  returnTo,
+  children,
+}: {
+  provider: "google" | "facebook";
+  returnTo: string | null;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={returnTo ? `/auth/${provider}?next=${encodeURIComponent(returnTo)}` : `/auth/${provider}`}
+      className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-lg border border-line bg-bg px-6 text-base font-medium text-ink transition-colors hover:bg-surface"
+    >
+      {children}
+    </a>
+  );
+}
+
 function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   const [digits, setDigits] = useState(emptyCode);
   // What the check returned: a wrong code, or a blocked address.
   const [error, setError] = useState("");
   const invalid = Boolean(error);
   const [pending, startTransition] = useTransition();
-  const returnTo = useSearchParams().get("next");
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("next");
+  const facebookEmail = searchParams.get("facebook") === "email";
   const [sends, setSends] = useState(1);
   const [secondsLeft, setSecondsLeft] = useState(resendCooldown);
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
@@ -149,7 +181,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
     if (next.every(Boolean)) {
       // On success the action redirects, so only a failure comes back.
       startTransition(async () => {
-        const result = await verifyCode(email, next.join(""), returnTo);
+        const result = await verifyCode(email, next.join(""), returnTo, facebookEmail);
         if (result?.error) setError(result.error);
       });
     }

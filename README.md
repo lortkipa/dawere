@@ -8,7 +8,7 @@ Signing in with `SUPERADMIN_EMAIL` (set it in `.env` / `.env.local`) makes you t
 
 The reading chat answers with OpenAI's `gpt-6-luna`: set `OPENAI_API_KEY` in `.env` (Docker) or `.env.local` (local dev). `OPENAI_MODEL` overrides the model.
 
-Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from a Google Cloud OAuth client whose redirect URI is `<SITE_URL>/auth/google/callback`.
+Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from a Google Cloud OAuth client whose redirect URI is `<SITE_URL>/auth/google/callback`. Facebook sign-in needs `FACEBOOK_APP_ID` and `FACEBOOK_APP_SECRET` from a Meta app with Facebook Login whose valid OAuth redirect URI is `<SITE_URL>/auth/facebook/callback`.
 
 ## Run with Docker (production / NAS)
 

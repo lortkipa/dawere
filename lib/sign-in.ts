@@ -9,7 +9,7 @@ import { superadminEmail } from "./roles";
 import { createSession } from "./session";
 import { deleteAvatar, saveAvatar } from "./uploads";
 
-// What a Google account brings along. Used only when the Google sign-in makes the account; an
+// What a Google or Facebook account brings along. Used only when that sign-in makes the account; an
 // account that already exists keeps its own name and photo, or the lack of them.
 type Extras = { name?: string; picture?: string };
 
@@ -52,20 +52,31 @@ export async function signIn(email: string, extras: Extras = {}): Promise<User |
   return user;
 }
 
+// Ties a Facebook account to the user, so the next Facebook sign-in finds them by it. A user
+// keeps the first Facebook account linked; the unique index turns away one already taken.
+export async function linkFacebook(userId: string, facebookId: string) {
+  await db
+    .update(users)
+    .set({ facebookId })
+    .where(and(eq(users.id, userId), isNull(users.facebookId)))
+    .catch(() => {});
+}
+
 // Where to go once signed in: onboarding first if it isn't finished, carrying `next` along.
 export function afterSignIn(user: User, next: string | null) {
   if (user.onboardedAt) return next ?? "/";
   return next ? `/onboarding?next=${encodeURIComponent(next)}` : "/onboarding";
 }
 
-// Google's profile photo as our own avatar file, or null when anything goes wrong; sign-in
-// goes on without a photo then.
+// Where Google and Facebook keep profile photos. Nothing else is fetched.
+const pictureHosts = [".googleusercontent.com", ".fbcdn.net", ".fbsbx.com"];
+
+// The Google or Facebook profile photo as our own avatar file, or null when anything goes
+// wrong; sign-in goes on without a photo then.
 async function savePicture(url: string) {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== "https:" || !parsed.hostname.endsWith(".googleusercontent.com")) return null;
-    // The URL ends in a size like "=s96-c"; ask for one as big as our avatars.
-    parsed.pathname = parsed.pathname.replace(/=s\d+(-c)?$/, "=s400-c");
+    if (parsed.protocol !== "https:" || !pictureHosts.some((host) => parsed.hostname.endsWith(host))) return null;
 
     const response = await fetch(parsed, { signal: AbortSignal.timeout(5000) });
     if (!response.ok) return null;

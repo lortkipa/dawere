@@ -4,8 +4,12 @@ export function safeNext(value: unknown) {
   return typeof value === "string" && /^\/(?![/\\])/.test(value) ? value : null;
 }
 
-// `error` is a sign-in that failed on the way back from Google; see components/auth-form.tsx.
-export function authUrl(next: string | null, error?: "google" | "google-off" | "banned") {
+// `error` is a sign-in that failed on the way back from Google or Facebook; see
+// components/auth-form.tsx.
+export function authUrl(
+  next: string | null,
+  error?: "google" | "google-off" | "facebook" | "facebook-off" | "banned",
+) {
   const params = new URLSearchParams();
   if (error) params.set("error", error);
   if (next) params.set("next", next);

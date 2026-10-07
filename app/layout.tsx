@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Georgian } from "next/font/google";
+import { FacebookHash } from "@/components/facebook-hash";
 import { getTheme } from "@/lib/theme";
 import { themeColors } from "@/lib/theme-options";
 import "./globals.css";
@@ -42,7 +43,10 @@ export async function generateViewport(): Promise<Viewport> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ka" data-theme={await getTheme()} className={notoSans.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <FacebookHash />
+      </body>
     </html>
   );
 }

@@ -63,5 +63,10 @@ export async function fetchGoogleProfile(origin: string, code: string, codeVerif
   };
   if (!profile.email || profile.email_verified !== true) return null;
 
-  return { email: normalizeEmail(profile.email), name: profile.name, picture: profile.picture };
+  return { email: normalizeEmail(profile.email), name: profile.name, picture: profile.picture && biggerPicture(profile.picture) };
+}
+
+// The photo URL ends in a size like "=s96-c"; ask for one as big as our avatars.
+function biggerPicture(url: string) {
+  return url.replace(/=s\d+(-c)?$/, "=s400-c");
 }
