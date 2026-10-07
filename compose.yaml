@@ -42,6 +42,23 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
 
+  # HTTPS for a public domain. Off unless COMPOSE_PROFILES=https and DOMAIN are set in .env.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    profiles: [https]
+    depends_on:
+      - app
+    environment:
+      DOMAIN: ${DOMAIN:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+
   # Dumps the database once a day into ./backups and keeps the newest 14.
   backup:
     image: postgres:17

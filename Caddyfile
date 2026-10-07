@@ -1,0 +1,6 @@
+# HTTPS in front of the app (compose profile "https"). Caddy gets and renews the certificate
+# from Let's Encrypt by itself; DOMAIN must point at this machine and ports 80 and 443 must reach it.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}

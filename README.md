@@ -64,7 +64,20 @@ docker compose start app
 - Synology Container Manager, QNAP Container Station and similar can run this folder as a Compose "project", or use the commands above over SSH.
 - Build the image on the NAS itself so it matches its CPU (x86 or ARM).
 - Keep this folder on the NAS's own disks, not on a network share mounted from another machine; Postgres can corrupt data on network storage.
-- For outside access, put the app behind the NAS's reverse proxy (or Caddy / a Cloudflare Tunnel) for HTTPS instead of exposing port 3000, and set `SITE_URL` to the public address.
+- For outside access, serve the site over HTTPS instead of exposing port 3000: either the bundled Caddy (below) or the NAS's own reverse proxy / a Cloudflare Tunnel. Set `SITE_URL` to the public `https://` address.
+
+### HTTPS
+
+With a domain pointing at this machine and ports 80 and 443 forwarded to it, set in `.env`:
+
+```
+COMPOSE_PROFILES=https
+DOMAIN=dawere.example.com
+SITE_URL=https://dawere.example.com
+APP_PORT=127.0.0.1:3000
+```
+
+and run `docker compose up -d`. Caddy gets the certificate from Let's Encrypt and renews it; its files are kept in `data/caddy/`.
 
 ## Local development
 
