@@ -14,10 +14,20 @@ const codeLength = 6;
 const emptyCode = Array<string>(codeLength).fill("");
 const resendCooldown = 60;
 
+// What /auth/google sends back in `?error=` when signing in with Google didn't work.
+const googleErrors: Record<string, string> = {
+  google: "Google-ით შესვლა ვერ მოხერხდა. სცადე თავიდან.",
+  "google-off": "Google-ით შესვლა ჯერ არ მუშაობს.",
+  banned: "ეს ანგარიში დაბლოკილია",
+};
+
 export function AuthForm() {
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("next");
+  const googleError = googleErrors[searchParams.get("error") ?? ""];
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,15 +49,24 @@ export function AuthForm() {
     <div className="flex flex-col gap-3">
       <h1 className={`mb-5 text-center ${headingClasses}`}>შესვლა ან რეგისტრაცია</h1>
 
-      {/* OAuth links to /auth/google and /auth/facebook once the backend exists. */}
-      <Button variant="outline" size="lg" className="w-full gap-3">
+      {/* A plain link: the route redirects to Google, which a client-side navigation can't follow. */}
+      <a
+        href={returnTo ? `/auth/google?next=${encodeURIComponent(returnTo)}` : "/auth/google"}
+        className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-lg border border-line bg-bg px-6 text-base font-medium text-ink transition-colors hover:bg-surface"
+      >
         <GoogleIcon />
         Google-ით გაგრძელება
-      </Button>
+      </a>
+      {/* Links to /auth/facebook once that exists. */}
       <Button variant="outline" size="lg" className="w-full gap-3">
         <FacebookIcon />
         Facebook-ით გაგრძელება
       </Button>
+      {googleError && (
+        <p role="alert" className="text-center text-sm text-error">
+          {googleError}
+        </p>
+      )}
 
       <div className="my-3 flex items-center gap-4 text-sm text-muted">
         <span className="h-px flex-1 bg-line" />

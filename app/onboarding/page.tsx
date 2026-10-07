@@ -26,7 +26,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       <LightOnly />
       <Header bare />
       <main className="flex flex-1 flex-col px-4 pt-4 sm:px-6 sm:pt-[8vh] sm:pb-16">
-        <Onboarding topics={await getCategories()} />
+        <Onboarding topics={await getCategories()} initialName={user.name ?? ""} />
       </main>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { logout } from "@/app/auth/actions";
 import { completeOnboarding } from "@/app/onboarding/actions";
 import {
@@ -18,9 +18,11 @@ import { TextInput } from "./text-input";
 
 const steps = ["name", "topics", "referral"] as const;
 
-export function Onboarding({ topics }: { topics: Option[] }) {
+// `initialName` is the name from a Google account, if any; the person can change it.
+export function Onboarding({ topics, initialName }: { topics: Option[]; initialName: string }) {
   const [step, setStep] = useState(0);
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
+  const nameInput = useRef<HTMLInputElement>(null);
   const [chosenTopics, setChosenTopics] = useState<string[]>([]);
   const [referral, setReferral] = useState("");
   const [referralOther, setReferralOther] = useState("");
@@ -36,6 +38,14 @@ export function Onboarding({ topics }: { topics: Option[] }) {
     topics: chosenTopics.length >= minTopics,
     referral: referral !== "" && (referral !== "other" || referralOther.trim().length > 0),
   }[current];
+
+  // A name filled in from Google gets the caret at its end, ready to edit. The browser's own
+  // autofocus puts it at the start, and that happens before hydration, so no focus event shows up.
+  useEffect(() => {
+    const input = nameInput.current;
+    if (current !== "name" || !input) return;
+    input.setSelectionRange(input.value.length, input.value.length);
+  }, [current]);
 
   function toggleTopic(slug: string) {
     setChosenTopics((chosen) =>
@@ -123,6 +133,7 @@ export function Onboarding({ topics }: { topics: Option[] }) {
               maxLength={maxNameLength}
               value={name}
               onChange={(event) => setName(event.target.value)}
+              ref={nameInput}
               className="mt-6 w-full"
             />
           </>

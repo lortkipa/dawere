@@ -4,13 +4,37 @@
     {
       "name": "dawere",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"],
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
       "port": 3000
     },
     {
       "name": "dawere-dev",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "-p", "3100"],
+      "runtimeArgs": [
+        "next",
+        "dev",
+        "-p",
+        "3100"
+      ],
+      "port": 3100
+    },
+    {
+      "name": "dawere-test",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DATABASE_URL=postgres://localhost/dawere_test",
+        "SUPERADMIN_EMAIL=test@gmail.com",
+        "UPLOAD_DIR=./uploads/test",
+        "SITE_URL=http://localhost:3100",
+        "npx",
+        "next",
+        "dev",
+        "-p",
+        "3100"
+      ],
       "port": 3100
     }
   ]
