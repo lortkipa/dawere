@@ -16,7 +16,7 @@ import {
 import { postExtensions } from "./post-schema";
 import { getCategories } from "./categories";
 import type { Option } from "./onboarding-options";
-import { maxTags, minTags, normalizeTag } from "./tags";
+import { maxTags, normalizeTag } from "./tags";
 import { deleteImages, saveImage } from "./uploads";
 import { imageUrl } from "./user-view";
 
@@ -46,7 +46,7 @@ function parseTags(value: FormDataEntryValue | null, categories: Option[]) {
   const tags = list.map((item) => normalizeTag(item, categories));
   if (tags.some((tag) => tag === null)) return null;
   const unique = [...new Set(tags as string[])];
-  return unique.length >= minTags && unique.length <= maxTags ? unique : null;
+  return unique.length <= maxTags ? unique : null;
 }
 
 function uploadedFile(formData: FormData, key: string) {

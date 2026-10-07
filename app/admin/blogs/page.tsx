@@ -123,12 +123,14 @@ export default async function AdminBlogs({ searchParams }: { searchParams: Promi
                     </td>
                     <td className={`${tdClass} text-sm text-muted`}>
                       <span className="line-clamp-2 max-w-52">
-                        {post.tags
-                          .map((tag) => {
-                            const view = tagView(tag, categories);
-                            return view.emoji ? view.label : `#${view.label}`;
-                          })
-                          .join(", ")}
+                        {post.tags.length
+                          ? post.tags
+                              .map((tag) => {
+                                const view = tagView(tag, categories);
+                                return view.emoji ? view.label : `#${view.label}`;
+                              })
+                              .join(", ")
+                          : "—"}
                       </span>
                     </td>
                     <td className={`${tdClass} text-right tabular-nums`}>{post.opens}</td>

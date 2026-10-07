@@ -72,16 +72,18 @@ export default async function AdminBlog({ params }: { params: Promise<{ id: stri
             {post.title}
           </h1>
           <p className="mt-2 text-lg leading-relaxed break-words text-muted">{post.description}</p>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {post.tags.map((tag) => {
-              const view = tagView(tag, categories);
-              return (
-                <span key={tag} className="rounded-full border border-line px-2.5 py-0.5 text-sm">
-                  {view.emoji ? `${view.emoji} ${view.label}` : `#${view.label}`}
-                </span>
-              );
-            })}
-          </div>
+          {post.tags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {post.tags.map((tag) => {
+                const view = tagView(tag, categories);
+                return (
+                  <span key={tag} className="rounded-full border border-line px-2.5 py-0.5 text-sm">
+                    {view.emoji ? `${view.emoji} ${view.label}` : `#${view.label}`}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           <div className="post-body mt-6">
             {renderToReactElement({ content: post.body, extensions: postExtensions })}
           </div>

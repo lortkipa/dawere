@@ -1,9 +1,9 @@
 import type { Option } from "./onboarding-options";
 
 // A post's tags, shared by the editor and the publish action. Categories are stored by slug, so
-// they match the topics readers picked; anything else is stored as typed, normalized.
+// they match the topics readers picked; anything else is stored as typed, normalized. A post may
+// have none.
 
-export const minTags = 1;
 export const maxTags = 5;
 export const maxTagLength = 30;
 

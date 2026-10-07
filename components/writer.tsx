@@ -12,7 +12,6 @@ import type { Option } from "@/lib/onboarding-options";
 import { imageTypes, maxDescriptionLength, maxImages, maxPickedImageBytes, maxTitleLength } from "@/lib/post-rules";
 import { postExtensions } from "@/lib/post-schema";
 import { shrinkImage } from "@/lib/shrink-image";
-import { minTags } from "@/lib/tags";
 import { Button } from "./button";
 import { TagInput } from "./tag-input";
 import { Toolbar } from "./writer-toolbar";
@@ -179,7 +178,7 @@ export function Writer({
   // having text until its body is touched.
   const hasText = initial && !bodyEdited ? true : Boolean(bodyHasText);
   const canPublish =
-    title.trim() !== "" && description.trim() !== "" && tags.length >= minTags && hasText && !pending;
+    title.trim() !== "" && description.trim() !== "" && hasText && !pending;
   const dirty = initial
     ? title !== initial.title ||
       description !== initial.description ||
