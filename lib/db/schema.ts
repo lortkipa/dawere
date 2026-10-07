@@ -66,6 +66,17 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
+// The latest email sign-in code for each address; see lib/sign-in-codes.ts. Deleted once used.
+export const signInCodes = pgTable("sign_in_codes", {
+  email: text().primaryKey(),
+  // sha256 hex of the code, like sessions.id.
+  codeHash: text().notNull(),
+  // Wrong guesses so far; the code stops working after a few.
+  attempts: integer().notNull().default(0),
+  sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp({ withTimezone: true }).notNull(),
+});
+
 export const posts = pgTable(
   "posts",
   {
@@ -265,6 +276,15 @@ export const legalVersions = pgTable(
   },
   (table) => [index().on(table.doc, table.createdAt.desc())],
 );
+
+// Texts admins can change, by key; see lib/site-texts.ts. A missing row means the built-in text.
+export const siteTexts = pgTable("site_texts", {
+  key: text().primaryKey(),
+  value: text().notNull(),
+  // Null once the admin who saved it deletes their account.
+  editorId: uuid().references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 // Emails that can't sign in. Keyed by address rather than account, so the block outlives a
 // deleted account. A banned account stays, but readers no longer see it; see lib/bans.ts.

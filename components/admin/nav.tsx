@@ -19,6 +19,7 @@ const sections = [
   { href: "/admin/chats", label: "AI ჩატები", icon: <ChatsIcon /> },
   { href: "/admin/categories", label: "კატეგორიები", icon: <CategoriesIcon /> },
   { href: "/admin/legal", label: "დოკუმენტები", icon: <LegalIcon /> },
+  { href: "/admin/email", label: "ელფოსტა", icon: <EmailIcon /> },
 ];
 
 // The sidebar on wide screens; under md a top bar whose button slides the same sidebar in from
@@ -244,6 +245,15 @@ function LegalIcon() {
     <NavIcon>
       <path d="M12 3v18M5 21h14M3 7h18" />
       <path d="m6 7-3 7a3 3 0 0 0 6 0zM18 7l-3 7a3 3 0 0 0 6 0z" />
+    </NavIcon>
+  );
+}
+
+function EmailIcon() {
+  return (
+    <NavIcon>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
     </NavIcon>
   );
 }

@@ -148,6 +148,20 @@
       "when": 1791374120235,
       "tag": "0020_facebook_id",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791374946840,
+      "tag": "0021_sign_in_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791375782590,
+      "tag": "0022_site_texts",
+      "breakpoints": true
     }
   ]
 }

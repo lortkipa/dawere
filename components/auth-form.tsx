@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { verifyCode } from "@/app/auth/actions";
+import { sendCode, verifyCode } from "@/app/auth/actions";
 import { emailPattern } from "@/lib/profile-rules";
 import { FacebookIcon, GoogleIcon } from "./brand-icons";
 import { Button } from "./button";
@@ -12,6 +12,7 @@ import { TextInput } from "./text-input";
 
 const codeLength = 6;
 const emptyCode = Array<string>(codeLength).fill("");
+// Matches resendCooldown in lib/sign-in-codes.ts.
 const resendCooldown = 60;
 
 // What /auth/google and /auth/facebook send back in `?error=` when signing in didn't work.
@@ -27,6 +28,7 @@ export function AuthForm() {
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [sending, startSending] = useTransition();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("next");
   const signInError = signInErrors[searchParams.get("error") ?? ""];
@@ -39,8 +41,11 @@ export function AuthForm() {
       setError("შეიყვანე სწორი ელფოსტა");
       return;
     }
-    // Sending the code comes with the backend; for now just move on.
-    setStep("code");
+    startSending(async () => {
+      const result = await sendCode(email.trim());
+      if (result.error) setError(result.error);
+      else setStep("code");
+    });
   }
 
   if (step === "code") {
@@ -110,7 +115,7 @@ export function AuthForm() {
             </p>
           )}
         </div>
-        <Button type="submit" size="lg" className="w-full">
+        <Button type="submit" size="lg" className="w-full" disabled={sending}>
           კოდის გაგზავნა
         </Button>
       </form>
@@ -218,12 +223,18 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   }, [sends]);
 
   function resend() {
-    // Resending comes with the backend.
     setDigits(emptyCode);
     setError("");
-    setSends((count) => count + 1);
-    setSecondsLeft(resendCooldown);
-    focusBox(0);
+    startTransition(async () => {
+      const result = await sendCode(email);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      setSends((count) => count + 1);
+      setSecondsLeft(resendCooldown);
+      focusBox(0);
+    });
   }
 
   return (
@@ -313,6 +324,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
             <button
               type="button"
               onClick={resend}
+              disabled={pending}
               className="cursor-pointer font-medium text-ink hover:underline"
             >
               თავიდან გაგზავნა
